@@ -1,6 +1,6 @@
 # Factory Tree Topology
 
-> **TLDR**: The factory is a tree of pre-signed transactions. The root spends the shared UTXO. Internal nodes split participants into smaller groups. The leaves are individual Lightning channels. The tree alternates between kickoff nodes (circuit breakers) and state nodes (DW state machine).
+> **TLDR**: The factory is a tree of pre-signed transactions rooted in a single shared UTXO. Internal nodes split participants into smaller groups. At the leaves, the shared UTXO resolves into standard Lightning channels. The tree alternates between kickoff nodes (circuit breakers) and state nodes (DW state machine).
 
 ## Why a Tree?
 

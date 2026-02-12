@@ -58,7 +58,7 @@ SuperScalar uses **both** Decker-Wattenhofer (for the factory tree) and Poon-Dry
 
 A regular Lightning channel is a payment channel between **two** people — you and your channel partner. That's great, but it means **one UTXO per channel**.
 
-SuperScalar extends this idea: instead of 2 people sharing one UTXO, what if **many people** shared one UTXO, and the internal structure gave each person their own individual channel? That's a [[factory-tree-topology|channel factory]].
+SuperScalar extends this idea: instead of each person needing their own UTXO, what if **many people** safely shared one? The shared UTXO funds an off-chain tree that resolves into standard Lightning channels at the leaves. That's a [[factory-tree-topology|channel factory]].
 
 ## Related Concepts
 

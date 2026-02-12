@@ -1,6 +1,6 @@
 # Building a Factory
 
-> **TLDR**: The LSP gathers online clients, constructs a tree of pre-signed transactions, funds it with one on-chain UTXO, and each client walks away with their own Lightning channel — all without any individual client needing on-chain Bitcoin.
+> **TLDR**: The LSP gathers online clients, constructs a tree of pre-signed transactions, and funds the whole structure with one on-chain UTXO — all without any individual client needing on-chain Bitcoin. Many users safely share a single UTXO, with standard Lightning channels at the leaves.
 
 ## Overview
 

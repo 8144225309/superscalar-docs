@@ -45,7 +45,7 @@ graph TD
         U4["UTXO 4"] --> C4["Dave ↔ LSP"]
     end
 
-    subgraph "SuperScalar: 1 UTXO for many channels"
+    subgraph "SuperScalar: 1 shared UTXO for many users"
         U5["UTXO 1"] --> F["Factory"]
         F --> C5["Alice ↔ LSP"]
         F --> C6["Bob ↔ LSP"]
