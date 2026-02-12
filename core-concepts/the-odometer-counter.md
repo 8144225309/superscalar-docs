@@ -1,6 +1,6 @@
 # The Odometer Counter
 
-> **TLDR**: By stacking multiple Decker-Wattenhofer layers, you get exponentially more states. 2 layers × 4 states each = 16 total states. 3 layers × 4 states = 64. It works like a car odometer — the inner digit ticks fastest and carries over.
+> **Summary**: By stacking multiple Decker-Wattenhofer layers, you get exponentially more states. 2 layers × 4 states each = 16 total states. 3 layers × 4 states = 64. It works like a car odometer — the inner digit ticks fastest and carries over.
 
 ## The Problem
 

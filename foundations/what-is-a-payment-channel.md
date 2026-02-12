@@ -1,6 +1,6 @@
 # What Is a Payment Channel?
 
-> **TLDR**: Two people lock Bitcoin into a shared address, then pass signed IOUs back and forth off-chain. Only the final balance ever hits the blockchain.
+> **Summary**: Two people lock Bitcoin into a shared address, then pass signed IOUs back and forth off-chain. Only the final balance ever hits the blockchain.
 
 ## The Analogy
 

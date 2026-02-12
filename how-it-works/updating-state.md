@@ -1,6 +1,6 @@
 # Updating State
 
-> **TLDR**: When clients buy liquidity or channels need restructuring, the factory's state must advance. A leaf update only needs 3 signers (2 clients + LSP). Each update ticks the odometer and produces a new set of pre-signed transactions with lower nSequence values.
+> **Summary**: When clients buy liquidity or channels need restructuring, the factory's state must advance. A leaf update only needs 3 signers (2 clients + LSP). Each update ticks the odometer and produces a new set of pre-signed transactions with lower nSequence values.
 
 ## What Triggers a State Update?
 

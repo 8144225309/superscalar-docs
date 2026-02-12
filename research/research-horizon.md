@@ -1,6 +1,6 @@
 # Research Horizon
 
-> **TLDR**: Technologies that don't exist in production yet but could meaningfully improve SuperScalar if and when they land. None of these are dependencies — SuperScalar works today without any of them.
+> **Summary**: Technologies that don't exist in production yet but could meaningfully improve SuperScalar if and when they land. None of these are dependencies — SuperScalar works today without any of them.
 
 ## Nested MuSig2
 

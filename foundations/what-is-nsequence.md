@@ -1,6 +1,6 @@
 # What Is nSequence? (Relative Timelocks)
 
-> **TLDR**: A field in every Bitcoin transaction input that can enforce a **waiting period** — "this transaction can't confirm until X blocks after its parent confirms." This is the core trick that makes Decker-Wattenhofer work.
+> **Summary**: A field in every Bitcoin transaction input that can enforce a **waiting period** — "this transaction can't confirm until X blocks after its parent confirms." This is the core trick that makes Decker-Wattenhofer work.
 
 ## The Analogy
 

@@ -1,6 +1,6 @@
 # Dual State Management
 
-> **TLDR**: When a factory updates state, the leaf channels must seamlessly transition from the old funding outpoint to the new one. During the transition, BOTH states are valid simultaneously. This is the same problem splicing solves — and it's critical infrastructure for SuperScalar, not optional.
+> **Summary**: When a factory updates state, the leaf channels must seamlessly transition from the old funding outpoint to the new one. During the transition, BOTH states are valid simultaneously. This is the same problem splicing solves — and it's critical infrastructure for SuperScalar, not optional.
 
 ## The Problem
 

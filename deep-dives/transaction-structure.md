@@ -1,6 +1,6 @@
 # Transaction Structure (Deep Dive)
 
-> **TLDR**: Every transaction in the SuperScalar factory tree is a standard Bitcoin transaction with specific version, nSequence, and witness fields that implement the DW mechanism, Taproot spending, and P2A fee-bumping.
+> **Summary**: Every transaction in the SuperScalar factory tree is a standard Bitcoin transaction with specific version, nSequence, and witness fields that implement the DW mechanism, Taproot spending, and P2A fee-bumping.
 
 ## Transaction Types in the Factory
 

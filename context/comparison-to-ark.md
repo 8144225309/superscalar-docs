@@ -1,6 +1,6 @@
 # Comparison to Ark
 
-> **TLDR**: Ark and SuperScalar both solve "many users, one UTXO" but with fundamentally different trust models. Ark uses a semi-custodial ASP (Ark Service Provider) that can double-spend during rounds. SuperScalar uses N-of-N multisig where the LSP physically cannot steal.
+> **Summary**: Ark and SuperScalar both solve "many users, one UTXO" but with fundamentally different trust models. Ark uses a semi-custodial ASP (Ark Service Provider) that can double-spend during rounds. SuperScalar uses N-of-N multisig where the LSP cryptographically cannot steal.
 
 ## The Shared Goal
 

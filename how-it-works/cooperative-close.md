@@ -1,6 +1,6 @@
 # Cooperative Close
 
-> **TLDR**: When a factory's lifetime ends and all clients cooperate, everyone signs a single transaction that distributes funds cleanly. No tree transactions need to be published. This is the ideal outcome — cheap, fast, and private.
+> **Summary**: When a factory's lifetime ends and all clients cooperate, everyone signs a single transaction that distributes funds cleanly. No tree transactions need to be published. This is the ideal outcome — cheap, fast, and private.
 
 ## The Happy Path
 

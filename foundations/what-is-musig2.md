@@ -1,6 +1,6 @@
 # What Is MuSig2?
 
-> **TLDR**: A protocol that lets N people produce a single Schnorr signature from a single aggregated public key. On-chain, it looks like one person signed — but all N had to cooperate.
+> **Summary**: A protocol that lets N people produce a single Schnorr signature from a single aggregated public key. On-chain, it looks like one person signed — but all N had to cooperate.
 
 ## The Analogy
 

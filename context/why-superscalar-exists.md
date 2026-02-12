@@ -1,6 +1,6 @@
 # Why SuperScalar Exists
 
-> **TLDR**: Lightning works brilliantly for payments — but getting onto Lightning still requires an on-chain UTXO, and on-chain space is finite. SuperScalar extends Lightning's reach by letting many users share one UTXO, solving the "last mile" problem of getting people with zero on-chain Bitcoin onto the network.
+> **Summary**: Lightning works brilliantly for payments — but getting onto Lightning still requires an on-chain UTXO, and on-chain space is finite. SuperScalar extends Lightning's reach by letting many users share one UTXO, solving the "last mile" problem of getting people with zero on-chain Bitcoin onto the network.
 
 ## The Onboarding Challenge
 
@@ -79,7 +79,7 @@ SuperScalar's key innovation: combining Decker-Wattenhofer + timeout-sig-trees +
 
 ## The P2A Breakthrough
 
-SuperScalar wasn't possible until Bitcoin Core 28 introduced **Pay-to-Anchor (P2A)** outputs. Before P2A, fee management in multi-party transactions was a nightmare — every participant needed their own anchor output for fee-bumping.
+SuperScalar wasn't possible until Bitcoin Core 28 introduced **Pay-to-Anchor (P2A)** outputs. Before P2A, fee management in multi-party transactions was a major obstacle — every participant needed their own anchor output for fee-bumping.
 
 > *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."* — ZmnSCPxj
 

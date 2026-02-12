@@ -1,6 +1,6 @@
 # Force Close (Unilateral Exit)
 
-> **TLDR**: If the LSP misbehaves or a client can't cooperate, anyone can publish the pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. It's expensive and slow, but funds are always recoverable.
+> **Summary**: If the LSP misbehaves or a client can't cooperate, anyone can publish the pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. It's expensive and slow, but funds are always recoverable.
 
 ## When Does Force-Close Happen?
 

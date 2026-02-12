@@ -1,12 +1,12 @@
 # Pluggable Channel Factories
 
-> **TLDR**: A proposed protocol extension that lets SuperScalar (and other factory designs) plug into existing Lightning Network software without forking the entire stack. New TLV fields during channel opening tell the LN node "this channel lives inside a factory" and a plugin handles the factory-specific logic.
+> **Summary**: A proposed protocol extension that lets SuperScalar (and other factory designs) plug into existing Lightning Network software without forking the entire stack. New TLV fields during channel opening tell the LN node "this channel lives inside a factory" and a plugin handles the factory-specific logic.
 
 ## The Problem
 
 Existing Lightning implementations (CLN, LND, Eclair, LDK) have years of battle-tested code for managing channels, forwarding HTLCs, handling fees, and enforcing timelocks. SuperScalar introduces a new **layer underneath** — the factory tree — but the channels at the leaves should work exactly like normal Lightning channels.
 
-Rewriting all that channel code from scratch would be insane. Instead: **make factories pluggable**.
+Rewriting all that channel code from scratch would be impractical. Instead: **make factories pluggable**.
 
 ## The Proposal
 

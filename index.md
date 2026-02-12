@@ -4,7 +4,7 @@
 
 ## The Problem
 
-Lightning Network works brilliantly for payments — but to get onto Lightning, you need a UTXO. Opening a channel means an on-chain transaction. That's a chicken-and-egg problem for billions of potential users — especially people in developing nations using mobile wallets who have **zero on-chain Bitcoin** to start with.
+Lightning Network works brilliantly for payments — but to get onto Lightning, you need a UTXO. Opening a channel means an on-chain transaction. That's a barrier for billions of potential users — especially people in developing nations using mobile wallets who have **zero on-chain Bitcoin** to start with.
 
 Bitcoin can handle ~7 transactions per second. If a million people each need their own UTXO to open a channel, the chain can't keep up. The on-chain bottleneck is the chief scaling problem of Lightning.
 

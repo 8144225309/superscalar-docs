@@ -1,6 +1,6 @@
 # What Is Multisig?
 
-> **TLDR**: A Bitcoin address that requires multiple private keys to spend from. N-of-N means ALL parties must sign — nobody can steal unilaterally.
+> **Summary**: A Bitcoin address that requires multiple private keys to spend from. N-of-N means ALL parties must sign — nobody can steal unilaterally.
 
 ## The Analogy
 

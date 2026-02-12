@@ -1,6 +1,6 @@
 # Soft Fork Landscape
 
-> **TLDR**: SuperScalar works today with no consensus changes. But several proposed Bitcoin soft forks would improve it — or make it obsolete. Here's how each one relates.
+> **Summary**: SuperScalar works today with no consensus changes. But several proposed Bitcoin soft forks would improve it — or make it obsolete. Here's how each one relates.
 
 ## Current Status: No Soft Fork Required
 

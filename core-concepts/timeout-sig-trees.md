@@ -1,6 +1,6 @@
 # Timeout-Sig-Trees
 
-> **TLDR**: Every output in the factory has two spending paths — an N-of-N multisig for cooperative spending, and a timeout that lets the LSP recover funds if clients vanish. This prevents capital from being locked forever.
+> **Summary**: Every output in the factory has two spending paths — an N-of-N multisig for cooperative spending, and a timeout that lets the LSP recover funds if clients vanish. This prevents capital from being locked forever.
 
 ## The Problem
 

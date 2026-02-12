@@ -1,6 +1,6 @@
 # Splicing Integration
 
-> **TLDR**: Splicing lets you resize a Lightning channel without closing it — adding or removing funds while it stays operational. In SuperScalar, splicing mechanics are directly relevant because factory state transitions work almost identically: the funding outpoint changes, but the channel stays live. Integrating splicing would let factory-hosted channels dynamically resize without restructuring the entire tree.
+> **Summary**: Splicing lets you resize a Lightning channel without closing it — adding or removing funds while it stays operational. In SuperScalar, splicing mechanics are directly relevant because factory state transitions work almost identically: the funding outpoint changes, but the channel stays live. Integrating splicing would let factory-hosted channels dynamically resize without restructuring the entire tree.
 
 ## What Is Splicing?
 

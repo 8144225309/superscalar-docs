@@ -1,6 +1,6 @@
 # Laddering
 
-> **TLDR**: Instead of one giant factory, the LSP runs ~33 factories at once with staggered lifetimes. Each day, one factory dies and a new one is born. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
+> **Summary**: Instead of one giant factory, the LSP runs ~33 factories at once with staggered lifetimes. Each day, one factory dies and a new one is born. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
 
 ## The Problem
 
@@ -108,7 +108,7 @@ The client receives their funds on-chain. More expensive (on-chain transaction) 
 ### Option 3: PTLC Assisted Exit
 The most elegant option. The client hands over their private key for the old factory (via a PTLC) and receives funds on-chain or in a new factory. The LSP can then sign as the departed client for the rest of the old factory's lifetime — simplifying cleanup.
 
-## The Economic Beauty
+## The On-Chain Footprint
 
 ```mermaid
 graph TD

@@ -1,6 +1,6 @@
 # MuSig2 Signing Rounds (Deep Dive)
 
-> **TLDR**: The complete cryptographic protocol for producing a single Schnorr signature from N signers, including key aggregation, nonce commitment, partial signatures, and Taproot tweak integration.
+> **Summary**: The complete cryptographic protocol for producing a single Schnorr signature from N signers, including key aggregation, nonce commitment, partial signatures, and Taproot tweak integration.
 
 ## Prerequisites
 

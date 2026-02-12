@@ -1,6 +1,6 @@
 # What Is an LSP?
 
-> **TLDR**: A Lightning Service Provider (LSP) is a single node that serves many users — providing channels, routing payments, and managing liquidity. In SuperScalar, one LSP coordinates an entire factory. All users in that factory share the same LSP. The LSP role can be filled by a company, a community node, or an individual operator.
+> **Summary**: A Lightning Service Provider (LSP) is a single node that serves many users — providing channels, routing payments, and managing liquidity. In SuperScalar, one LSP coordinates an entire factory. All users in that factory share the same LSP. The LSP role can be filled by a company, a community node, or an individual operator.
 
 ## The Core Relationship: One LSP, Many Clients
 

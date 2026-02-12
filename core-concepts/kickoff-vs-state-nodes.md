@@ -1,6 +1,6 @@
 # Kickoff vs State Nodes
 
-> **TLDR**: The factory tree alternates between two types of nodes. State nodes run the Decker-Wattenhofer time-delay mechanism. Kickoff nodes are "circuit breakers" that prevent a state update at one level from forcing all lower levels to be published on-chain.
+> **Summary**: The factory tree alternates between two types of nodes. State nodes run the Decker-Wattenhofer time-delay mechanism. Kickoff nodes are "circuit breakers" that prevent a state update at one level from forcing all lower levels to be published on-chain.
 
 ## The Two Node Types
 

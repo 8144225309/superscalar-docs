@@ -1,6 +1,6 @@
 # Shachain Revocation
 
-> **TLDR**: When the factory state updates, the LSP reveals a secret for the old state. If the LSP later tries to broadcast that old state, clients can use the secret to burn the LSP's funds. This makes cheating economically irrational.
+> **Summary**: When the factory state updates, the LSP reveals a secret for the old state. If the LSP later tries to broadcast that old state, clients can use the secret to claim the LSP's funds as penalty. This makes cheating economically irrational.
 
 ## The Problem
 

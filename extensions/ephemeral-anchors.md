@@ -1,6 +1,6 @@
 # Ephemeral Anchors & v3 Transactions
 
-> **TLDR**: Pay-to-Anchor (P2A) is the breakthrough that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fundamental problem of multi-party off-chain protocols: you sign now, but you don't know what fees will cost later. All three components are deployed on Bitcoin mainnet today.
+> **Summary**: Pay-to-Anchor (P2A) is the breakthrough that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fundamental problem of multi-party off-chain protocols: you sign now, but you don't know what fees will cost later. All three components are deployed on Bitcoin mainnet today.
 
 ## Why This Matters
 
@@ -57,7 +57,7 @@ graph TD
 
 > *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."*
 
-Before P2A, multi-party fee-bumping was a nightmare. Each participant needed their own anchor output (bloating the transaction), or fees had to be baked in at signing time (the guessing problem). P2A made Decker-Wattenhofer practical for the first time.
+Before P2A, multi-party fee-bumping was a major obstacle. Each participant needed their own anchor output (bloating the transaction), or fees had to be baked in at signing time (the guessing problem). P2A made Decker-Wattenhofer practical for the first time.
 
 ## Package Relay
 

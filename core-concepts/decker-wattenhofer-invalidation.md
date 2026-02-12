@@ -1,6 +1,6 @@
 # Decker-Wattenhofer Invalidation
 
-> **TLDR**: A state machine where newer states always beat older states on-chain, because each update gets a shorter time delay. No punishment needed — old states simply can't win the race.
+> **Summary**: A state machine where newer states always beat older states on-chain, because each update gets a shorter time delay. No punishment needed — old states simply can't win the race.
 
 ## The Core Idea
 

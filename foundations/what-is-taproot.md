@@ -1,6 +1,6 @@
 # What Is Taproot?
 
-> **TLDR**: A Bitcoin upgrade (activated 2021) that lets a UTXO be spent either by a single aggregated key (fast, private) or by revealing a hidden script (fallback). SuperScalar uses both paths.
+> **Summary**: A Bitcoin upgrade (activated 2021) that lets a UTXO be spent either by a single aggregated key (fast, private) or by revealing a hidden script (fallback). SuperScalar uses both paths.
 
 ## The Analogy
 

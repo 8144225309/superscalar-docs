@@ -1,6 +1,6 @@
 # JIT Channel Fallbacks
 
-> **TLDR**: When a factory can't rebalance liquidity off-chain (because too many clients are offline), the LSP falls back to opening a standard on-chain "Just-In-Time" channel for the client. The client then has two channels — one in the factory, one on-chain — and uses local multipath routing to handle large payments across both.
+> **Summary**: When a factory can't rebalance liquidity off-chain (because too many clients are offline), the LSP falls back to opening a standard on-chain "Just-In-Time" channel for the client. The client then has two channels — one in the factory, one on-chain — and uses local multipath routing to handle large payments across both.
 
 ## The Problem
 

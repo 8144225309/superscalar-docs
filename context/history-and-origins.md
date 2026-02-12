@@ -1,6 +1,6 @@
 # History and Origins
 
-> **TLDR**: SuperScalar was designed by ZmnSCPxj at Block Inc, published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining three previously-separate ideas into something that works today.
+> **Summary**: SuperScalar was designed by ZmnSCPxj at Block Inc, published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining three previously-separate ideas into something that works today.
 
 ## The Intellectual Lineage
 

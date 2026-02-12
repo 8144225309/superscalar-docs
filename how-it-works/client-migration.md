@@ -1,6 +1,6 @@
 # Client Migration
 
-> **TLDR**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. The best option is a PTLC-based "assisted exit" where the client hands over their old factory key and receives funds in the new factory — elegant and minimal on-chain footprint.
+> **Summary**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. The best option is a PTLC-based "assisted exit" where the client hands over their old factory key and receives funds in the new factory — elegant and minimal on-chain footprint.
 
 ## When Migration Happens
 
