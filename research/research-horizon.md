@@ -12,17 +12,26 @@ SuperScalar's biggest UX cost is **interactivity**. Every factory state update r
 
 ```mermaid
 graph TD
-    subgraph "Today: Flat N-of-N"
-        S1["MuSig2 Session"] --- LSP1["LSP"]
-        S1 --- A1["Alice"]
-        S1 --- B1["Bob"]
-        S1 --- C1["Carol"]
-        S1 --- D1["Dave"]
-        S1 --- E1["Eve"]
-        S1 --- F1["Frank"]
-        S1 --- G1["Grace"]
-        S1 --- H1["Heidi"]
-    end
+    S1["MuSig2 Session"]
+    LSP1["LSP"]
+    A1["Alice"]
+    B1["Bob"]
+    C1["Carol"]
+    D1["Dave"]
+    E1["Eve"]
+    F1["Frank"]
+    G1["Grace"]
+    H1["Heidi"]
+
+    S1 --- LSP1
+    S1 --- A1
+    S1 --- B1
+    S1 --- C1
+    S1 --- D1
+    S1 --- E1
+    S1 --- F1
+    S1 --- G1
+    S1 --- H1
 
     style S1 fill:#f85149,color:#fff
 ```
@@ -35,19 +44,30 @@ The paper proves that **composing MuSig2 sessions hierarchically** (MuSig2-of-Mu
 
 ```mermaid
 graph TD
-    subgraph "Nested: Subtree Signing"
-        TOP["Top-level MuSig2"] --- SUB1["Subtree MuSig2"]
-        TOP --- SUB2["Subtree MuSig2"]
-        SUB1 --- LSP1["LSP"]
-        SUB1 --- A2["Alice"]
-        SUB1 --- B2["Bob"]
-        SUB1 --- C2["Carol"]
-        SUB2 --- LSP2["LSP"]
-        SUB2 --- D2["Dave"]
-        SUB2 --- E2["Eve"]
-        SUB2 --- F2["Frank"]
-        SUB2 --- G2["Grace"]
-    end
+    TOP["Top-level MuSig2"]
+    SUB1["Subtree MuSig2"]
+    SUB2["Subtree MuSig2"]
+    LSP1["LSP"]
+    A2["Alice"]
+    B2["Bob"]
+    C2["Carol"]
+    LSP2["LSP"]
+    D2["Dave"]
+    E2["Eve"]
+    F2["Frank"]
+    G2["Grace"]
+
+    TOP --- SUB1
+    TOP --- SUB2
+    SUB1 --- LSP1
+    SUB1 --- A2
+    SUB1 --- B2
+    SUB1 --- C2
+    SUB2 --- LSP2
+    SUB2 --- D2
+    SUB2 --- E2
+    SUB2 --- F2
+    SUB2 --- G2
 
     style TOP fill:#3fb950,color:#000
     style SUB1 fill:#58a6ff,color:#000
@@ -60,6 +80,12 @@ Only the participants in an affected subtree need to be online. If Alice wants t
 
 SuperScalar targets people in developing nations using mobile phones. These devices are intermittently connected — battery saving, spotty data, etc. Reducing the number of people who must be simultaneously online for any given update is a direct UX improvement.
 
+| | Flat N-of-N (today) | Nested (future) |
+|---|---|---|
+| **Who signs** | All 9 participants | Only affected subtree (3-4 people) |
+| **One phone offline** | Entire factory stuck | Only that subtree stuck |
+| **Signing rounds** | 1 big round | Smaller independent rounds |
+
 ### Current Status
 
 - **Paper**: Published, peer review ongoing
@@ -67,96 +93,143 @@ SuperScalar targets people in developing nations using mobile phones. These devi
 - **Estimated timeline**: Unknown. Could be 6-12+ months before any library ships this
 - **For SuperScalar**: Watch and wait. Don't build on it yet.
 
-## Ephemeral Anchors
+---
 
-Unlike the other items on this page, ephemeral anchors are **fully deployed on Bitcoin** — all three required components are live. They're listed here because the SuperScalar codebase hasn't implemented them yet, even though the design docs call for them.
+## Async Payments
 
-### The Three Components
+### The Other Half of the Offline Problem
 
-| Component | What It Does | Where | When |
-|-----------|-------------|-------|------|
-| **TRUC / v3 transactions** | New transaction version with relay policy limits (1 parent, 1 child, restricted sizes) | Bitcoin Core 28.0 | October 2024 |
-| **Pay-to-Anchor (P2A)** | A standard anyone-can-spend anchor output (`OP_1 <0x4e73>`) that any party can use for CPFP fee bumping | Bitcoin Core 28.0 | October 2024 |
-| **Ephemeral dust exemption** | Allows zero-value P2A outputs in v3 transactions — the anchor doesn't need to carry any sats | Bitcoin Core 29.0 | April 2025 |
+Nested MuSig2 helps with **signing** while some participants are offline. Async payments solve the other side: **receiving payments** while offline.
 
-### Why This Matters
-
-Factory tree transactions are signed **ahead of time** during construction. At signing time, you don't know what the fee market will look like when the transaction eventually needs to broadcast (could be months later during a force-close).
+SuperScalar's target user has a phone that goes to sleep, loses signal, or runs out of battery. If someone sends them sats while they're unreachable, what happens?
 
 ```mermaid
-graph LR
-    subgraph "Current Code"
-        TX1["Tree Transaction<br/>nVersion=2<br/>fee = 500 sats<br/>(hardcoded)"] --> Q1["Fee too low?<br/>Transaction stuck.<br/>Fee too high?<br/>Wasted sats."]
-    end
+sequenceDiagram
+    participant S as Sender
+    participant LSP as LSP
+    participant R as Recipient
 
-    subgraph "With Ephemeral Anchors"
-        TX2["Tree Transaction<br/>nVersion=3<br/>fee = 0<br/>+ P2A anchor output"] --> CPFP["Anyone adds<br/>CPFP child tx<br/>with market-rate fee"]
-        CPFP --> Q2["Always confirms<br/>at the right fee"]
-    end
-
-    style Q1 fill:#f85149,color:#fff
-    style Q2 fill:#3fb950,color:#000
+    S->>LSP: Pay 1000 sats to Recipient
+    LSP->>LSP: Hold HTLC (Recipient offline)
+    Note over R: Hours pass... Phone wakes up
+    R->>LSP: I am back online
+    LSP->>R: Forward held HTLC
+    R->>LSP: Preimage (claim payment)
+    LSP->>S: Payment complete
 ```
 
-ZmnSCPxj explicitly cited P2A as the breakthrough that made Decker-Wattenhofer practical:
+The LSP acts as a buffer, holding incoming payments until the recipient comes online. Since the HTLC has a timeout, the sender gets their money back if the recipient never wakes up.
 
-> *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."*
+### Active Spec Work
 
-### Current Code Gap
+- **Trampoline routing**: Lets the LSP handle routing decisions, reducing what the mobile client needs to compute
+- **Async invoice protocol**: Being discussed in the Lightning spec — standardizing how to pay someone who isn't online
+- **BOLT 12 / Offers**: The new invoice format supports reusable payment codes, which pairs naturally with async delivery
 
-The implementation uses `nVersion=2` with a fixed 500 sat fee and no anchor outputs. The SUPERSCALAR-TECHNICAL.md design document specifies v3/P2A. This is a concrete upgrade to make.
+### For SuperScalar
 
-## Soft Fork Proposals
+Factory-hosted channels are a natural fit for async payments. The LSP already manages the factory and has a persistent relationship with each client. It knows which clients are in which factory and can hold payments for offline participants without additional infrastructure.
 
-Three Bitcoin consensus proposals would affect SuperScalar if activated. **None are activated.** SuperScalar's core value proposition is that it works without any of them.
+### Current Status
 
-### OP_CHECKTEMPLATEVERIFY (CTV) — BIP-119
+- **Spec work**: Active discussion, no finalized standard
+- **Implementations**: Some LSPs (like Phoenix/ACINQ) already do limited async holding
+- **For SuperScalar**: Important for production UX, not needed for PoC
 
-**What it does**: Lets a transaction commit to its exact outputs at creation time, enforced by consensus.
+---
 
-**SuperScalar impact**: Would eliminate the need for client presence during factory construction. Currently, all participants must be online to co-sign the factory tree (N-of-N MuSig2). With CTV, the LSP could construct the tree unilaterally using covenants.
+## Factory Watchtowers
 
-**Status**: Proposed. Not activated. Significant political debate around covenant proposals in general.
+### Why Factories Are Harder to Watch
 
-### SIGHASH_ANYPREVOUT (APO) — BIP-118
+Standard Lightning watchtowers have a simple job: watch for a single revoked commitment transaction and broadcast a penalty transaction if it appears.
 
-**What it does**: A new sighash flag that lets a signature apply to any transaction with compatible outputs, regardless of which input it's attached to.
-
-**SuperScalar impact**: Would enable eltoo/LN-Symmetry, which replaces Decker-Wattenhofer entirely. Instead of a fixed number of state updates (limited by the odometer counter), eltoo allows **unlimited** state updates with a simpler mechanism. The entire [[decker-wattenhofer-invalidation]] and [[the-odometer-counter]] layers would become unnecessary.
-
-**Status**: Proposed. Not activated.
-
-### OP_CAT — BIP-347
-
-**What it does**: Concatenates two stack items. Sounds simple but enables powerful covenant constructions when combined with Schnorr signatures.
-
-**SuperScalar impact**: Indirect. Would enable competing designs and more flexible script constructions. Not directly useful for SuperScalar's current architecture.
-
-**Status**: Proposed. Not activated.
-
-### The Bottom Line on Soft Forks
+Factory watchtowers are harder because there's a **tree** of transactions to monitor, not just one.
 
 ```mermaid
 graph TD
-    SF["Soft Fork Activates?"]
-    SF -->|"CTV"| CTV["Factory construction<br/>gets easier.<br/>Core design unchanged."]
-    SF -->|"APO"| APO["DW replaced by eltoo.<br/>Simpler, unlimited states.<br/>Major simplification."]
-    SF -->|"None"| NONE["SuperScalar works<br/>exactly as designed.<br/>This is the plan."]
+    W1["Standard LN Watchtower"] --> R1["Watch for 1 thing:<br/>revoked commitment tx"]
+    R1 --> P1["Broadcast penalty tx"]
 
-    style NONE fill:#3fb950,color:#000
-    style CTV fill:#58a6ff,color:#000
-    style APO fill:#58a6ff,color:#000
+    W2["Factory Watchtower"] --> R2["Watch for revoked state<br/>at ANY DW layer"]
+    R2 --> L1["Layer 0: broadcast<br/>current kickoff + state"]
+    R2 --> L2["Layer 1: broadcast<br/>current state at layer 1"]
+    R2 --> L3["Layer 2: broadcast<br/>current state at layer 2"]
+    L1 --> CH["Then watch for revoked<br/>channel commitments<br/>at leaf outputs"]
+    L2 --> CH
+    L3 --> CH
+
+    style W1 fill:#58a6ff,color:#000
+    style W2 fill:#d29922,color:#000
 ```
 
-Don't build on soft fork assumptions. If one activates, adapt then.
+The watchtower needs to:
+1. Recognize which DW layer a revoked state belongs to
+2. Broadcast the correct current state for that layer
+3. Handle the [[shachain-revocation]] punishment mechanism
+4. Monitor leaf channel outputs for revoked commitments too
+5. Manage fee-bumping for all these transactions
 
-## FROST Threshold Signatures
+### The Storage Problem
 
-**What it is**: Flexible Round-Optimized Schnorr Threshold signatures. Allows t-of-n signing (e.g., 5-of-9) instead of n-of-n.
+For a factory with 3 DW layers and 4 states per layer (64 epochs), the watchtower needs to store response data for each possible revoked state across each layer. With 8 clients, that's a lot of pre-signed penalty data to hold.
 
-**Why it's NOT suitable for SuperScalar**: SuperScalar's security model fundamentally depends on **n-of-n** — every participant must sign, meaning no single party (including the LSP) can move funds alone. Switching to t-of-n would mean a quorum of signers could collude to steal. That's a completely different (and weaker) trust model.
+### Current Status
 
-FROST is useful for other things (multisig wallets, federation signing) but is architecturally incompatible with what makes SuperScalar trustless.
+- **Research**: No published protocol for factory-specific watchtowers
+- **Standard LN watchtowers**: Exist (The Eye of Satoshi, LND's built-in) but only handle simple channels
+- **For SuperScalar**: Important for production security, especially for mobile users who can't monitor the chain. Not needed for PoC (regtest can be monitored manually).
+
+---
+
+## PTLCs (Point Time-Locked Contracts)
+
+### Beyond HTLCs
+
+Current Lightning uses **HTLCs** (Hash Time-Locked Contracts) for routing payments: the sender locks funds with a hash, and the recipient unlocks them with the preimage. Every hop in the route uses the **same hash**, which is a privacy leak — any two colluding nodes can tell they're on the same payment route.
+
+**PTLCs** replace the hash/preimage with **adaptor signatures** on elliptic curve points. Each hop uses a different point, breaking the correlation.
+
+```mermaid
+graph LR
+    A1["Alice"] -->|"hash H"| B1["Bob"]
+    B1 -->|"same hash H"| C1["Carol"]
+    C1 -->|"same hash H"| D1["Dave"]
+
+    A2["Alice "] -->|"point P1"| B2["Bob "]
+    B2 -->|"point P2"| C2["Carol "]
+    C2 -->|"point P3"| D2["Dave "]
+
+    style A1 fill:#f85149,color:#fff
+    style B1 fill:#f85149,color:#fff
+    style C1 fill:#f85149,color:#fff
+    style D1 fill:#f85149,color:#fff
+    style A2 fill:#3fb950,color:#000
+    style B2 fill:#3fb950,color:#000
+    style C2 fill:#3fb950,color:#000
+    style D2 fill:#3fb950,color:#000
+```
+
+**Red (top)**: HTLC — same hash H at every hop, linkable. **Green (bottom)**: PTLC — different point at every hop, unlinkable.
+
+### Why This Matters for SuperScalar
+
+SuperScalar already needs adaptor signatures for **PTLC key turnover** — the assisted exit mechanism where the client hands their factory signing key to the LSP in exchange for channel state in a new factory. The adaptor sig parameter exists in the codebase (`musig.c`) but is always passed as NULL.
+
+PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic primitive. Building one helps build the other.
+
+### Current Status
+
+- **Cryptography**: Well understood. Adaptor signatures on Schnorr are straightforward.
+- **LN spec**: No timeline for PTLC adoption across the network
+- **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API but unused
+- **For SuperScalar**: Key turnover (Phase 4) needs this. General PTLC routing is a broader LN upgrade.
+
+---
+
+## A Note on FROST
+
+**FROST** (Flexible Round-Optimized Schnorr Threshold signatures) enables t-of-n signing — for example, 5-of-9 instead of 9-of-9. It's worth knowing about, but it's **architecturally incompatible** with SuperScalar. The entire security model depends on n-of-n: every participant must sign, so no single party (including the LSP) can move funds alone. Switching to t-of-n means a colluding quorum could steal. Different trust model, different protocol.
 
 ## Related Concepts
 
@@ -165,3 +238,4 @@ FROST is useful for other things (multisig wallets, federation signing) but is a
 - [[factory-tree-topology]] — The tree structure that nested signing would optimize
 - [[soft-fork-landscape]] — Detailed analysis of each soft fork proposal
 - [[security-model]] — Why n-of-n matters for the trust model
+- [[ephemeral-anchors]] — The planned upgrade that's actually ready to implement now

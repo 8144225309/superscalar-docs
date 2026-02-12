@@ -386,6 +386,7 @@
   <a class="nav-link" data-page="extensions/pluggable-factories">Pluggable Factories</a>
   <a class="nav-link" data-page="extensions/dual-state-management">Dual State Management</a>
   <a class="nav-link" data-page="extensions/jit-channel-fallbacks">JIT Channel Fallbacks</a>
+  <a class="nav-link" data-page="extensions/ephemeral-anchors">Ephemeral Anchors & v3 Txs</a>
 
   <div class="nav-section">Research</div>
   <a class="nav-link" data-page="research/research-horizon">Research Horizon</a>
@@ -431,6 +432,7 @@ const WIKILINK_MAP = {
   'pluggable-factories': 'extensions/pluggable-factories',
   'dual-state-management': 'extensions/dual-state-management',
   'jit-channel-fallbacks': 'extensions/jit-channel-fallbacks',
+  'ephemeral-anchors': 'extensions/ephemeral-anchors',
   'research-horizon': 'research/research-horizon',
 };
 
@@ -454,22 +456,29 @@ function extractMermaid(md) {
   const processed = md.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
     const id = `mermaid-${blocks.length}`;
     blocks.push({ id, code: code.trim() });
-    return `<div class="mermaid" id="${id}">${code.trim()}</div>`;
+    return `<div class="mermaid" id="${id}"></div>`;
   });
   return { md: processed, blocks };
 }
 
-// Render mermaid diagrams
+// Render mermaid diagrams — each in isolation to prevent one failure from killing the rest
 async function renderMermaid(blocks) {
   if (blocks.length === 0) return;
   for (const block of blocks) {
     const el = document.getElementById(block.id);
     if (!el) continue;
     try {
-      const { svg } = await mermaid.render(`${block.id}-svg`, block.code);
+      // Use a unique ID with timestamp to avoid Mermaid's internal ID cache collisions
+      const renderId = `${block.id}-svg-${Date.now()}`;
+      const { svg } = await mermaid.render(renderId, block.code);
       el.innerHTML = svg;
+      // Clean up any detached error containers Mermaid may have injected
+      const stray = document.getElementById('d' + renderId);
+      if (stray) stray.remove();
     } catch (e) {
       el.innerHTML = `<pre style="color:var(--red);text-align:left;">${block.code}\n\nMermaid error: ${e.message}</pre>`;
+      // Mermaid v11 can inject error containers into document.body — clean them up
+      document.querySelectorAll('[id^="dmermaid-"]').forEach(n => n.remove());
     }
   }
 }

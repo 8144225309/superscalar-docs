@@ -93,6 +93,7 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 - [[pluggable-factories]] — Plugging into existing LN software
 - [[dual-state-management]] — Handling factory transitions safely (critical)
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
+- [[ephemeral-anchors]] — v3 transactions, P2A outputs, and proper fee management (ready to implement)
 
 ### Research
 - [[research-horizon]] — Nested MuSig2, ephemeral anchors, soft fork proposals, and other technologies worth watching
