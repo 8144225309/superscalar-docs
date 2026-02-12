@@ -97,11 +97,13 @@ The thread wasn't just critique — the design improved through discussion:
 
 The design was originally **zero code** — purely theoretical. The implementation accompanying these docs is building out the protocol in phases:
 
-- **Phase 1** (complete): DW factory tree with MuSig2 signing
-- **Phase 2** (complete): Timeout-sig-trees with CLTV script paths
-- **Phase 3** (future): Poon-Dryja channels at the leaves
-- **Phase 4** (future): PTLC key turnover for assisted exit
-- **Phase 5** (future): Laddering with factory rotation
+- **Phase 0** (complete): Decker-Wattenhofer invalidation prototype
+- **Phase 1** (complete): Factory transaction tree
+- **Phase 2** (complete): Timeout-sig-tree script paths
+- **Phase 3** (complete): Split-round MuSig2 signing and nonce pool
+- **Phase 4–5** (complete): Shachain revocation, L-output invalidation, Poon-Dryja channels
+- **Phase 6–7** (complete): HTLC outputs and cooperative close
+- **Phase 8** (in progress): Laddering with factory rotation
 
 ## Why It Took This Long
 
