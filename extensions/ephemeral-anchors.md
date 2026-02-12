@@ -1,23 +1,16 @@
 # Ephemeral Anchors & v3 Transactions
 
-> **TLDR**: All three components needed for proper fee management in factory trees are deployed on Bitcoin mainnet today. The SuperScalar design docs call for them, but the code hasn't implemented them yet. This is the most concrete upgrade to make.
+> **TLDR**: Pay-to-Anchor (P2A) is the breakthrough that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fundamental problem of multi-party off-chain protocols: you sign now, but you don't know what fees will cost later. All three components are deployed on Bitcoin mainnet today.
 
-## The Problem: Fee Guessing
+## Why This Matters
 
-Factory tree transactions are signed **ahead of time** during construction. At signing time, nobody knows what the fee market will look like when the transaction actually needs to broadcast — which could be months later during a force-close.
+Multi-party off-chain protocols have a fundamental tension: transactions are signed **cooperatively** during factory construction, but they might not be **broadcast** until months later during a force-close. Before ephemeral anchors, every participant needed their own anchor output for fee-bumping, which bloated transactions and didn't scale. The alternative — baking fees in at signing time — meant guessing the future fee market.
 
-The current code hardcodes `fee_per_tx = 500` sats. If the fee market is higher, the transaction gets stuck. If lower, sats are wasted.
+P2A solves this cleanly: a single anyone-can-spend anchor output that lets **any party** attach a fee-bumping child transaction at broadcast time. ZmnSCPxj called this the breakthrough that made Decker-Wattenhofer practical:
 
-```mermaid
-graph LR
-    subgraph "Current Code"
-        TX1["Tree Transaction<br/>nVersion=2<br/>fee = 500 sats<br/>(hardcoded)"] --> Q1["Fee too low?<br/>Stuck in mempool.<br/>Fee too high?<br/>Wasted sats."]
-    end
+> *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."*
 
-    style Q1 fill:#f85149,color:#fff
-```
-
-## The Solution: Three Components
+## The Three Components
 
 All three are **live on Bitcoin mainnet**:
 
