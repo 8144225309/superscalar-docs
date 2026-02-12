@@ -1,33 +1,40 @@
 # SuperScalar
 
-> **One UTXO. Many users. Each gets their own non-custodial Lightning channel. No soft fork required.**
+> **People who can't afford their own on-chain UTXO can safely share one. No soft fork required.**
 
 ## The Problem
 
-Right now, to use Lightning Network, you need to already own Bitcoin on-chain. You need a UTXO to open a channel. That's a chicken-and-egg problem for billions of potential users — especially people in developing nations using mobile wallets who have **zero on-chain Bitcoin** to start with.
+Lightning Network works brilliantly for payments — but to get onto Lightning, you need a UTXO. Opening a channel means an on-chain transaction. That's a chicken-and-egg problem for billions of potential users — especially people in developing nations using mobile wallets who have **zero on-chain Bitcoin** to start with.
 
-Every Lightning channel today is a 2-of-2 multisig between you and your channel partner. That means **one on-chain UTXO per user**. If a million people want Lightning channels, that's a million on-chain transactions just to get started. Bitcoin can handle ~7 transactions per second. Do the math — it doesn't work.
+Bitcoin can handle ~7 transactions per second. If a million people each need their own UTXO to open a channel, the chain can't keep up. The on-chain bottleneck is the chief scaling problem of Lightning.
 
 ## The Solution: SuperScalar
 
-SuperScalar lets a **Lightning Service Provider (LSP)** create a single shared structure on-chain that gives **many users** their own individual, non-custodial Lightning channels. All users in a factory share one LSP — the node that coordinates construction, provides liquidity, and manages the lifecycle.
+SuperScalar lets many users **safely share a single on-chain UTXO** through an off-chain factory tree — like a covenant, but without a soft fork. One LSP (Lightning Service Provider) coordinates the factory, and all participants are protected by N-of-N multisig.
 
 ```mermaid
 graph TD
-    F["🔒 One Funding UTXO<br/>(shared by everyone)"] --> T["Factory Tree<br/>(off-chain structure)"]
-    T --> A["Alice's Channel<br/>with LSP"]
-    T --> B["Bob's Channel<br/>with LSP"]
-    T --> C["Carol's Channel<br/>with LSP"]
-    T --> D["Dave's Channel<br/>with LSP"]
-    T --> L["LSP's Liquidity<br/>Stock"]
+    A["👤 Alice"] --> U["🔒 One Shared UTXO"]
+    B["👤 Bob"] --> U
+    C["👤 Carol"] --> U
+    D["👤 Dave"] --> U
+    LSP["⚡ LSP"] --> U
+    U --> T["Factory Tree<br/>(off-chain structure)"]
+    T --> CH["Individual Lightning channels<br/>at the leaves"]
+
+    style U fill:#fab005,color:#000
+    style T fill:#4c6ef5,color:#fff
 ```
 
 **The key properties:**
 
-- **Non-custodial**: The LSP cannot steal your funds. Ever. The structure uses N-of-N multisig, meaning the LSP is just one signer among many.
-- **Unilateral exit**: If the LSP disappears or misbehaves, every user can force-close their channel on-chain without anyone's permission.
-- **No on-chain Bitcoin required**: Users can be onboarded with zero existing funds. The LSP provides the initial liquidity.
+- **Shared UTXO**: Many users share one on-chain UTXO instead of each needing their own. This is how SuperScalar scales Lightning's reach.
+- **Non-custodial**: N-of-N multisig means no single party — including the LSP — can move funds alone.
+- **Unilateral exit**: If the LSP disappears, every user can force-close on-chain without anyone's permission.
+- **No on-chain Bitcoin required**: Users can be onboarded with zero existing funds. The LSP provides initial liquidity.
 - **No consensus changes**: This works on Bitcoin **today**. No soft fork needed.
+
+At the leaves of the factory tree, each user gets a standard Lightning channel (Poon-Dryja) with the LSP — but the breakthrough is that they get there by sharing a UTXO, not by each creating one.
 
 ## How Does It Actually Work?
 
