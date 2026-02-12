@@ -227,9 +227,69 @@ PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic
 
 ---
 
-## A Note on FROST
+## FROST & VLS for LSP Operational Security
 
-**FROST** (Flexible Round-Optimized Schnorr Threshold signatures) enables t-of-n signing — for example, 5-of-9 instead of 9-of-9. It's worth knowing about, but it's **architecturally incompatible** with SuperScalar. The entire security model depends on n-of-n: every participant must sign, so no single party (including the LSP) can move funds alone. Switching to t-of-n means a colluding quorum could steal. Different trust model, different protocol.
+**FROST** (Flexible Round-Optimized Schnorr Threshold signatures) enables t-of-n signing — for example, 3-of-5 instead of 5-of-5.
+
+### NOT for the Factory
+
+FROST is **architecturally incompatible** with SuperScalar's factory signing. The entire security model depends on n-of-n: every participant must sign, so no single party (including the LSP) can move funds alone. Replacing n-of-n with t-of-n at the factory level means a colluding quorum could steal. Different trust model, different protocol.
+
+### But Useful for the LSP's Own Keys
+
+The LSP is one signer in the n-of-n. What happens inside the LSP is its own business. If the LSP distributes its private key across multiple servers using FROST (e.g., 2-of-3), the factory stays n-of-n from everyone else's perspective — the LSP just produces one valid signature, assembled from threshold shares internally.
+
+```mermaid
+graph TD
+    FACTORY["Factory: N-of-N MuSig2<br/>LSP + Alice + Bob + Carol ..."]
+    LSP["LSP's signature"]
+    F1["Server 1<br/>(share)"]
+    F2["Server 2<br/>(share)"]
+    F3["Server 3<br/>(share)"]
+
+    FACTORY --> LSP
+    LSP --> F1
+    LSP --> F2
+    LSP --> F3
+```
+
+This gives the LSP:
+- **No single point of failure** — one compromised server doesn't leak the signing key
+- **Key share rotation** — rotate shares periodically without changing the public key (old leaked shares become useless)
+- **Cold reserve** — keep one share offline for disaster recovery
+
+### The Missing Piece: VLS
+
+**FROST alone is not enough.** FROST prevents key *theft* but doesn't validate *what* is being signed. If an attacker compromises the LSP's Lightning node (not the key), they can request signatures on malicious-but-protocol-valid state transitions — and the FROST signers will happily oblige.
+
+**VLS (Validating Lightning Signer)** solves this. VLS separates the signing function from the node and adds a policy engine that validates every signing request: is this a valid channel state? Does this HTLC make sense? Is this a revoked commitment? VLS refuses to sign anything that violates its rules.
+
+The strongest configuration is **VLS + FROST**: policy-validated signing with distributed key shares. An attacker must compromise multiple independent servers AND bypass policy validation to steal funds.
+
+| Layer | What It Protects Against |
+|-------|------------------------|
+| **FROST alone** | Key theft from a single server |
+| **VLS alone** | Malicious signing requests from a compromised node |
+| **VLS + FROST** | Both — distributed trust with policy enforcement |
+
+### Current Status
+
+| Component | Status |
+|-----------|--------|
+| **ZCash Foundation `frost-secp256k1-tr`** | Release candidate (v3.0.0-rc.0), audited by NCC Group. Most mature FROST library. |
+| **Frostsnap / `schnorr_fun`** | Alpha. By serious cryptographers (Lloyd Fournier). No formal audit. |
+| **VLS** | Approaching beta. Supports LDK. Funded by Spiral/Blockstream. |
+| **FROST + LDK** | Nobody has built this yet. Feasible in theory. |
+| **VLS + FROST** | On the VLS roadmap. Does not exist today. |
+| **FROST inside MuSig2** | No formal security proof for this composition. |
+
+### Practical Priority for an LSP Operator
+
+1. **Now**: VLS — separate signing from node logic. Most impactful, most mature.
+2. **Medium-term**: HSM for the VLS signer's key storage.
+3. **Future**: FROST to distribute the VLS signer's key across multiple machines.
+
+**Important caveat for solo operators**: FROST only helps if you run genuinely separate servers in different locations. Distributing key shares across processes on the same machine gains almost nothing — an attacker who compromises the host gets all shares.
 
 ## Related Concepts
 
