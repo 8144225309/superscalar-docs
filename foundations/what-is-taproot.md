@@ -8,7 +8,7 @@ Imagine a locked door with **two ways to open it**:
 
 1. **The front door key** — Everyone agrees, they combine their keys into one master key, and the door opens cleanly. Nobody watching can tell how many people were involved. This is the **key path**.
 
-2. **The emergency override** — Hidden behind a panel is a combination lock with specific rules (like "only works after January 2025"). You only use this if the key path fails. This is the **script path**.
+2. **The emergency override** — Hidden behind a panel is a combination lock with specific rules (like "only works after a certain date"). You only use this if the key path fails. This is the **script path**.
 
 Taproot lets every Bitcoin output work exactly like this: a fast, private cooperative path, and a fallback script path for when cooperation breaks down.
 

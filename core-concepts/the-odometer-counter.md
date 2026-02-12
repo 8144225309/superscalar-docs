@@ -74,7 +74,7 @@ The odometer gives you 64 states with a worst-case delay of 9 days. A flat count
 
 ## In the Factory Tree
 
-In the [[factory-tree-topology|SuperScalar factory tree]], each DW layer corresponds to a **pair of tree levels** (a kickoff node + a state node):
+In the [[factory-tree-topology|SuperScalar factory tree]], each DW layer corresponds to a **pair of tree levels** (a kickoff node + a state node). The number of DW layers depends on tree depth. The standard 8-client binary tree has 2 DW layers (16 states):
 
 ```
 Root kickoff  ─── (no delay)
@@ -85,10 +85,12 @@ Root state    ─── DW Layer 0 (outer, ticks slowly)
   └─ Right state   ─── DW Layer 1 (inner, ticks fast)
 ```
 
+A deeper tree with an additional level of branching would add a 3rd DW layer, giving 64 states — enough for busier factories.
+
 When a leaf state update happens:
-1. The inner layer (Layer 1) ticks — its nSequence decrements
+1. The inner layer ticks — its nSequence decrements
 2. When the inner layer exhausts all 4 states, it resets
-3. The outer layer (Layer 0) ticks — ITS nSequence decrements
+3. The next outer layer ticks — ITS nSequence decrements
 4. This "carry" is like the odometer rolling from 039 to 040
 
 ## What Happens When It Runs Out?
@@ -100,7 +102,7 @@ When all epochs are exhausted, the factory can no longer update state. But this 
 - Closing a channel in the factory
 - Rebalancing liquidity between subtrees
 
-This means 64 states is sufficient for a 30-day factory in most cases.
+With 2 layers (16 states) or 3 layers (64 states), this is sufficient for a 30-day factory in most cases.
 
 ## The Implementation
 
