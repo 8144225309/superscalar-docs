@@ -1,6 +1,6 @@
 # SuperScalar
 
-> **People who can't afford their own on-chain UTXO can safely share one. No soft fork required.**
+> **One shared UTXO. Many users. Non-custodial Lightning access without a soft fork.**
 
 ## The Problem
 
