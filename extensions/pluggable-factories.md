@@ -111,4 +111,4 @@ The pluggable factory protocol can't exist without a factory to plug in. This im
 - [[splicing-integration]] — Shares the "funding outpoint changes" mechanic
 - [[jit-channel-fallbacks]] — The fallback when factory operations fail
 - [[factory-tree-topology]] — The factory structure the plugin would manage
-- [[first-implementation]] — Why this is the first piece of the puzzle
+- [[factory-tree-topology]] — The factory structure the implementation provides

@@ -13,7 +13,7 @@ timeline
     2021 : Taproot activates<br/>Enables MuSig2 on Bitcoin
     2024 : P2A in Bitcoin Core 28<br/>Solves fee-bumping for multi-party txs
     2024 Sep : ZmnSCPxj publishes SuperScalar<br/>on Delving Bitcoin
-    2024-25 : First production implementation<br/>(this repository)
+    2024-25 : Implementation work begins
 ```
 
 ## The Key Papers
@@ -86,7 +86,7 @@ The thread wasn't just critique — the design improved through discussion:
 
 ## The Implementation
 
-The design was originally **zero code** — purely theoretical. This repository contains the first production implementation, building:
+The design was originally **zero code** — purely theoretical. The implementation accompanying these docs is building out the protocol in phases:
 
 - **Phase 1** (complete): DW factory tree with MuSig2 signing
 - **Phase 2** (complete): Timeout-sig-trees with CLTV script paths

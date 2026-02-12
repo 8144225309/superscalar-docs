@@ -20,7 +20,7 @@ But they make very different trade-offs.
 | **On-chain exit** | O(log N) transactions (tree publication) | O(1) transaction (VTXO redemption) |
 | **State updates** | Only affected subtree signers needed | All users participate in round |
 | **Interactivity** | High (MuSig2 signing ceremonies) | Lower (ASP constructs rounds) |
-| **Maturity** | First implementation (2024-2025) | Ark Labs funded, building (2024+) |
+| **Maturity** | Implementation in progress | Ark Labs funded, building (2024+) |
 
 ## Trust Model Deep Dive
 

@@ -88,8 +88,6 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 - [[comparison-to-ark]] — Different trust models compared
 - [[soft-fork-landscape]] — CTV, APO, OP_CAT and what they'd change
 - [[history-and-origins]] — ZmnSCPxj, Block Inc, and the Delving Bitcoin thread
-- [[first-implementation]] — Why this is the first implementation
-
 ### Extensions (Future Roadmap)
 - [[splicing-integration]] — Resizing channels inside factories
 - [[pluggable-factories]] — Plugging into existing LN software
@@ -102,6 +100,6 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 
 SuperScalar was designed by **ZmnSCPxj** (researcher at Block Inc) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
 
-The implementation in this repository is the **first production implementation** — ZmnSCPxj's original post was design-only with zero code.
+ZmnSCPxj's original post was design-only with zero code. This documentation accompanies a working implementation of the protocol.
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj

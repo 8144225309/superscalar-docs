@@ -73,7 +73,7 @@ SuperScalar gives users the **same convenience as a custodial wallet** (no on-ch
 | **eltoo / LN-Symmetry** | Waiting for APO | Self-custodial | Yes (BIP-118) |
 | **Ark** | In development | Semi-custodial (ASP) | None (but better with CTV) |
 | **Timeout trees** (bare) | Theory | Self-custodial | Better with CTV |
-| **SuperScalar** | **First implementation** | Self-custodial | **None** |
+| **SuperScalar** | Implementation in progress | Self-custodial | **None** |
 
 SuperScalar's key innovation: combining Decker-Wattenhofer + timeout-sig-trees + laddering into something that works **today**, without waiting for any soft fork.
 
@@ -93,7 +93,7 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 4. **2024 (early)**: ZmnSCPxj experiments with laddered timeout trees — "it sucked"
 5. **2024 (mid)**: P2A finalized in Bitcoin Core 28
 6. **2024 September**: ZmnSCPxj publishes SuperScalar design on Delving Bitcoin
-7. **2024-2025**: First production implementation (this repository)
+7. **2024-2025**: Implementation work begins
 
 ## Related Concepts
 
