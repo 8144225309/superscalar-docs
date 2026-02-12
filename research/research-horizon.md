@@ -276,9 +276,9 @@ The strongest configuration is **VLS + FROST**: policy-validated signing with di
 
 | Component | Status |
 |-----------|--------|
-| **ZCash Foundation `frost-secp256k1-tr`** | Release candidate (v3.0.0-rc.0), audited by NCC Group. Most mature FROST library. |
+| **ZCash Foundation `frost-secp256k1-tr`** | Stable (latest 2.2.0). Most mature FROST library. The broader FROST crates were audited by NCC Group, but frost-secp256k1-tr was not in audit scope. |
 | **Frostsnap / `schnorr_fun`** | Alpha. By serious cryptographers (Lloyd Fournier). No formal audit. |
-| **VLS** | Approaching beta. Supports LDK. Funded by Spiral/Blockstream. |
+| **VLS** | Beta (since June 2023), working toward production. Supports LDK and CLN. Funded by Spiral/Blockstream. |
 | **FROST + LDK** | Nobody has built this yet. Feasible in theory. |
 | **VLS + FROST** | On the VLS roadmap. Does not exist today. |
 | **FROST inside MuSig2** | No formal security proof for this composition. |

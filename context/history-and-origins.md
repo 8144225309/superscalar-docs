@@ -1,6 +1,6 @@
 # History and Origins
 
-> **Summary**: SuperScalar was designed by ZmnSCPxj at Block Inc, published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining three previously-separate ideas into something that works today.
+> **Summary**: SuperScalar was designed by ZmnSCPxj, funded by Spiral (Block), and published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining three previously-separate ideas into something buildable today.
 
 ## The Intellectual Lineage
 
@@ -44,14 +44,14 @@ Proposed a simpler state machine where any newer state simply replaces any older
 
 ## The Designer: ZmnSCPxj
 
-ZmnSCPxj is a pseudonymous Bitcoin and Lightning Network researcher employed by **Block Inc** (formerly Square). Known for prolific contributions to:
+ZmnSCPxj is a pseudonymous Bitcoin and Lightning Network researcher funded by **Spiral** (Block's open-source arm, formerly Square Crypto). Known for prolific contributions to:
 
 - Lightning Network protocol design
 - Bitcoin covenant proposals
 - Payment channel research
 - The bitcoin-dev and lightning-dev mailing lists
 
-ZmnSCPxj developed SuperScalar while at Block Inc but has publicly stated:
+ZmnSCPxj developed SuperScalar while funded by Spiral but has publicly stated:
 
 > *"Block has no intention of patenting SuperScalar or otherwise limiting the use of SuperScalar."*
 

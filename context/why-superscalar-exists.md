@@ -69,7 +69,7 @@ SuperScalar gives users the **same convenience** (no on-chain Bitcoin needed, mo
 | Approach | Status | Trust Model | Consensus Changes |
 |----------|--------|------------|------------------|
 | **Regular Lightning** | Production | Self-custodial | None |
-| **Channel factories** (Burchert et al.) | Theory (2018) | Self-custodial | None (but needed eltoo) |
+| **Channel factories** (Burchert et al.) | Theory (2017) | Self-custodial | None (but needed eltoo) |
 | **eltoo / LN-Symmetry** | Waiting for APO | Self-custodial | Yes (BIP-118) |
 | **Ark** | In development | Semi-custodial (ASP) | None (but better with CTV) |
 | **Timeout trees** (bare) | Theory | Self-custodial | Better with CTV |
@@ -88,7 +88,7 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 ## The Timeline
 
 1. **2015**: Decker & Wattenhofer publish "Duplex Micropayment Channels"
-2. **2018**: Burchert, Decker, Wattenhofer publish "Channel Factories" paper
+2. **2017**: Burchert, Decker, Wattenhofer publish "Channel Factories" paper
 3. **2021**: Taproot activates on Bitcoin (enabling MuSig2)
 4. **2024 (early)**: ZmnSCPxj experiments with laddered timeout trees — "it sucked"
 5. **2024 (mid)**: P2A finalized in Bitcoin Core 28

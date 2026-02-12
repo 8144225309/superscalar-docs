@@ -109,7 +109,7 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 
 ## Origin
 
-SuperScalar was designed by **ZmnSCPxj** (researcher at Block Inc) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
+SuperScalar was designed by **ZmnSCPxj** (funded by Spiral, Block's open-source arm) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
 
 ZmnSCPxj's original post was design-only with zero code. This documentation accompanies an implementation in progress.
 
