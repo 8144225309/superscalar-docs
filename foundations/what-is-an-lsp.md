@@ -14,8 +14,8 @@ The key insight: **anyone with a Lightning node and some Bitcoin can be an LSP.*
 |----------|---------|
 | **A company** | Phoenix (ACINQ), Breez — mobile wallet providers |
 | **A community node** | A Bitcoin meetup group running a shared node |
-| **A pleb with a server** | Your friend with a Raspberry Pi and some sats |
-| **A group of friends** | A clique that pools resources and runs a node together |
+| **An individual node runner** | Anyone with a server, some liquidity, and the willingness to help onboard others |
+| **A group of friends** | People who pool resources and run a node together |
 
 SuperScalar is designed so that the LSP role is **accessible**, not exclusive. The protocol doesn't care who runs the node — it only cares that the cryptographic guarantees hold.
 
@@ -109,16 +109,28 @@ The worst case for a client: the LSP node goes offline permanently. In this case
 
 If a client misses the dying period, they must [[force-close]] — but their funds are safe.
 
+## The Bigger Picture
+
+SuperScalar isn't just a scaling optimization. ZmnSCPxj designed it with a specific mission: enabling financial self-sovereignty for people who have **nothing** to start with.
+
+> *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
+
+Consider someone in a developing nation with a mobile phone and zero Bitcoin. Today, they can't use Lightning because they need an on-chain UTXO to open a channel. SuperScalar lets them receive their first sats through a factory-hosted channel — no on-chain transaction needed.
+
+> *"One may consider this scheme as ways for a client to build up their Bitcoin holdings without having an onchain UTXO, but with an assurance that the service provider has no incentive to rug their funds until they have accumulated enough to own their own unique UTXO."* — ZmnSCPxj
+
+The design even accounts for clients who have no funds at all to pay for exit fees. If an LSP misbehaves, a truly destitute client can take their pre-signed exit transactions to a **competing LSP**, who can broadcast them and earn a bounty for punishing the bad actor. You don't need money to have recourse — the cryptographic guarantees work regardless.
+
 ## The Decentralization Goal
 
 The vision isn't one LSP serving everyone. It's **many LSPs** — big and small — competing on terms, with users free to move between them. SuperScalar makes this practical:
 
-- **Low barrier to entry**: Anyone with a node and liquidity can run a factory
+- **Low barrier to entry**: Anyone with a node and liquidity can coordinate a factory
 - **Client migration**: Users can move from one LSP to another during factory transitions
 - **No lock-in**: Pre-signed exit transactions mean you can always leave
 - **Competitive market**: Multiple LSPs competing drives down fees and improves service
 
-The more LSP operators there are, the more resilient and decentralized the network becomes.
+The more operators there are, the more resilient and decentralized the network becomes.
 
 ## Related Concepts
 
