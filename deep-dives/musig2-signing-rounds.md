@@ -60,9 +60,10 @@ Each signer creates their partial signature:
 e = H("BIP0340/challenge", R.x || P.x || message)
 
 Signer i computes:
-  sᵢ = aᵢ × (r₁ᵢ + b × r₂ᵢ + e × xᵢ)  mod n
+  sᵢ = r₁ᵢ + b × r₂ᵢ + e × aᵢ × xᵢ  mod n
 
-where xᵢ is signer i's private key
+where aᵢ is the key aggregation coefficient for signer i
+and xᵢ is signer i's private key
 ```
 
 ### Step 4: Signature Aggregation

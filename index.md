@@ -1,4 +1,4 @@
-# SuperScalar: The First Explainer
+# SuperScalar
 
 > **One UTXO. Many users. Each gets their own non-custodial Lightning channel. No soft fork required.**
 
@@ -10,7 +10,7 @@ Every Lightning channel today is a 2-of-2 multisig between you and your channel 
 
 ## The Solution: SuperScalar
 
-SuperScalar lets a **Lightning Service Provider (LSP)** — any node operator with liquidity, from a company to your friend with a server — create a single shared structure on-chain that gives **many users** their own individual, non-custodial Lightning channels.
+SuperScalar lets a **Lightning Service Provider (LSP)** create a single shared structure on-chain that gives **many users** their own individual, non-custodial Lightning channels. All users in a factory share one LSP — the node that coordinates construction, provides liquidity, and manages the lifecycle.
 
 ```mermaid
 graph TD
@@ -59,7 +59,7 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 3. [[what-is-taproot]] — The Bitcoin upgrade that makes this efficient
 4. [[what-is-musig2]] — How N people produce one signature
 5. [[what-is-nsequence]] — Relative timelocks: the core trick
-6. [[what-is-an-lsp]] — Who coordinates factories (anyone can)
+6. [[what-is-an-lsp]] — The node that coordinates a factory
 
 ### Core Concepts
 1. [[decker-wattenhofer-invalidation]] — The time-delay state machine
@@ -104,6 +104,6 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 
 SuperScalar was designed by **ZmnSCPxj** (researcher at Block Inc) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
 
-ZmnSCPxj's original post was design-only with zero code. This documentation accompanies a working implementation of the protocol.
+ZmnSCPxj's original post was design-only with zero code. This documentation accompanies an implementation in progress.
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj

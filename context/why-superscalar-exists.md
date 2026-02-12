@@ -97,7 +97,7 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 
 ## Related Concepts
 
-- [[what-is-an-lsp]] — Who coordinates factories (anyone can)
+- [[what-is-an-lsp]] — The node that coordinates a factory
 - [[factory-tree-topology]] — The structure that enables UTXO sharing
 - [[laddering]] — How factories scale over time
 - [[comparison-to-ark]] — SuperScalar vs Ark

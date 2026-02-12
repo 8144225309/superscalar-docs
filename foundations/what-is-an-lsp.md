@@ -1,23 +1,34 @@
 # What Is an LSP?
 
-> **TLDR**: A Lightning Service Provider is any node that helps other users get onto Lightning — providing channels, routing payments, and managing liquidity. In SuperScalar, an LSP is whoever coordinates a factory. That could be a company, a community node, or your friend with a server in their closet.
+> **TLDR**: A Lightning Service Provider (LSP) is a single node that serves many users — providing channels, routing payments, and managing liquidity. In SuperScalar, one LSP coordinates an entire factory. All users in that factory share the same LSP. The LSP role can be filled by a company, a community node, or an individual operator.
 
-## The Analogy
+## The Core Relationship: One LSP, Many Clients
 
-Think of running a Lightning node today. If you open a channel to someone, you're already providing them with connectivity to the network. An LSP just does this more deliberately — offering channels and liquidity to users who need it.
+A SuperScalar factory always has **one LSP and multiple clients**. The LSP is in every subtree of the factory, participates in every signing round, and has a channel with every client. Clients do not have channels with each other — every channel is between a client and the LSP.
 
-The key insight: **anyone with a Lightning node and some Bitcoin can be an LSP.** It's a role, not a corporate title.
+```mermaid
+graph TD
+    LSP["One LSP Node"] -->|"channel"| A["Alice"]
+    LSP -->|"channel"| B["Bob"]
+    LSP -->|"channel"| C["Carol"]
+    LSP -->|"channel"| D["Dave"]
+
+    style LSP fill:#4c6ef5,color:#fff
+```
+
+The LSP role isn't restricted to corporations — anyone with a Lightning node, liquidity, and a server can operate as an LSP. But within any given factory, there is exactly one.
 
 ## Who Can Run an LSP?
 
-| Operator | Example |
-|----------|---------|
-| **A company** | Phoenix (ACINQ), Breez — mobile wallet providers |
-| **A community node** | A Bitcoin meetup group running a shared node |
-| **An individual node runner** | Anyone with a server, some liquidity, and the willingness to help onboard others |
-| **A group of friends** | People who pool resources and run a node together |
+Any of these could serve as the single LSP for a factory full of clients:
 
-SuperScalar is designed so that the LSP role is **accessible**, not exclusive. The protocol doesn't care who runs the node — it only cares that the cryptographic guarantees hold.
+| Operator | Example | Serves |
+|----------|---------|--------|
+| **A company** | Phoenix (ACINQ), Breez | Thousands of mobile wallet users |
+| **A community node** | A Bitcoin meetup group | Local community members |
+| **An individual node runner** | Someone with a server and liquidity | Anyone who connects |
+
+The protocol doesn't care who runs the LSP node — it only cares that the cryptographic guarantees hold. But in every case, the LSP is **one node serving many clients**.
 
 ## The Current Model (Without Factories)
 
@@ -51,15 +62,15 @@ graph TD
 
 **The improvement**: Many users share one UTXO through a factory. The LSP node coordinates factory construction, provides initial liquidity, and manages the lifecycle — but **cannot steal or censor** because every transaction requires N-of-N multisig.
 
-## Discovery and Matching
+## How Users Find an LSP
 
-For SuperScalar to be decentralized in practice, users need a way to **find** LSPs and LSPs need a way to **find** clients. Think of it like a marketplace:
+Users don't run their own LSPs — they **connect to** one. For this to work, users need a way to discover LSPs and LSPs need a way to gather clients into factories:
 
-- **LSP discovery**: A node advertises that it runs SuperScalar factories and has liquidity available
-- **Client matching**: Users looking for a factory can browse available LSPs, compare terms (fees, capacity, liveness requirements), and join one
-- **Friend groups**: A group of friends could form their own factory with one of them running the LSP node — no stranger required
+- **LSP discovery**: An LSP advertises that it runs SuperScalar factories and has liquidity available
+- **Client onboarding**: Users browse available LSPs, compare terms (fees, capacity, liveness requirements), and join one
+- **Multiple LSPs competing**: If one LSP has bad terms or goes offline, users can migrate to another during factory transitions
 
-The protocol doesn't mandate a specific discovery mechanism. It could be a simple directory, a decentralized bulletin board, or peer-to-peer gossip. What matters is that users have **choice** — if one LSP has bad terms or goes offline, you move to another.
+The protocol doesn't mandate a specific discovery mechanism. It could be a directory, a decentralized bulletin board, or peer-to-peer gossip. What matters is that users have **choice** among LSPs.
 
 ## The LSP's Role in SuperScalar
 
