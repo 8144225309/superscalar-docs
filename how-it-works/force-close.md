@@ -137,7 +137,7 @@ Worst-case timing for a 2-layer DW factory:
 | Poon-Dryja to_self_delay | ~144 blocks (~1 day) |
 | **Total worst case** | **~7 days** |
 
-This is significantly worse than a regular Lightning force-close (~1 day), but the trade-off is worth it for the scaling benefits.
+This is significantly worse than a regular Lightning force-close (~1 day). The longer delay is the cost of sharing a UTXO among multiple participants.
 
 ## The Inverted Timelock Safety Net
 

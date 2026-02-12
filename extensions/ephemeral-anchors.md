@@ -53,11 +53,9 @@ graph TD
     style CONFIRM fill:#3fb950,color:#000
 ```
 
-## Why ZmnSCPxj Said This Was the Breakthrough
+## Why This Was the Breakthrough
 
-> *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."*
-
-Before P2A, multi-party fee-bumping was a major obstacle. Each participant needed their own anchor output (bloating the transaction), or fees had to be baked in at signing time (the guessing problem). P2A made Decker-Wattenhofer practical for the first time.
+Before P2A, multi-party fee-bumping was a major obstacle. Each participant needed their own anchor output (bloating the transaction), or fees had to be baked in at signing time (the guessing problem). P2A eliminated both issues — one shared anchor, anyone can bump, no fee guessing. This made Decker-Wattenhofer practical for the first time.
 
 ## Package Relay
 

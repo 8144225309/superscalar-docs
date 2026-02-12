@@ -51,11 +51,12 @@ graph TD
     A2["Alice"]
     B2["Bob"]
     C2["Carol"]
-    LSP2["LSP"]
     D2["Dave"]
+    LSP2["LSP"]
     E2["Eve"]
     F2["Frank"]
     G2["Grace"]
+    H2["Heidi"]
 
     TOP --- SUB1
     TOP --- SUB2
@@ -63,18 +64,19 @@ graph TD
     SUB1 --- A2
     SUB1 --- B2
     SUB1 --- C2
+    SUB1 --- D2
     SUB2 --- LSP2
-    SUB2 --- D2
     SUB2 --- E2
     SUB2 --- F2
     SUB2 --- G2
+    SUB2 --- H2
 
     style TOP fill:#3fb950,color:#000
     style SUB1 fill:#58a6ff,color:#000
     style SUB2 fill:#58a6ff,color:#000
 ```
 
-Only the participants in an affected subtree need to be online. If Alice wants to update her channel, only Alice, Bob, Carol, and the LSP sign — Dave through Grace don't need to be awake.
+Only the participants in an affected subtree need to be online. If Alice wants to update her channel, only Alice, Bob, Carol, Dave, and the LSP sign (5 participants) — Eve through Heidi don't need to be awake.
 
 ### Why This Matters for Mobile Users
 
@@ -82,7 +84,7 @@ SuperScalar targets people in developing nations using mobile phones. These devi
 
 | | Flat N-of-N (today) | Nested (future) |
 |---|---|---|
-| **Who signs** | All 9 participants | Only affected subtree (3-4 people) |
+| **Who signs** | All 9 participants | Only affected subtree (5 people) |
 | **One phone offline** | Entire factory stuck | Only that subtree stuck |
 | **Signing rounds** | 1 big round | Smaller independent rounds |
 
@@ -222,8 +224,8 @@ PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic
 
 - **Cryptography**: Well understood. Adaptor signatures on Schnorr are straightforward.
 - **LN spec**: No timeline for PTLC adoption across the network
-- **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API but unused
-- **For SuperScalar**: Key turnover during assisted exit needs this. The adaptor sig parameter exists in the API but is currently unused. General PTLC routing is a broader LN upgrade.
+- **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API (`musig.c`) but currently unused
+- **For SuperScalar**: Key turnover during assisted exit needs this. General PTLC routing is a broader LN upgrade.
 
 ---
 

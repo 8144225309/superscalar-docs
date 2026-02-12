@@ -29,7 +29,7 @@ b1                                                  ← OP_CHECKLOCKTIMEVERIFY
 ac                                                  ← OP_CHECKSIG
 ```
 
-Total script size: **39 bytes** (4 + 1 + 1 + 1 + 32 + 1 + header byte).
+Total script size: **41 bytes** (1 push opcode + 4 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG).
 
 ## TapLeaf Hashing
 

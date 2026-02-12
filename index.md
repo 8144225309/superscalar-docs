@@ -103,7 +103,7 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 - [[ephemeral-anchors]] — v3 transactions, P2A outputs, and proper fee management (ready to implement)
 
 ### Research
-- [[research-horizon]] — Nested MuSig2, ephemeral anchors, soft fork proposals, and other technologies worth watching
+- [[research-horizon]] — Nested MuSig2, async payments, factory watchtowers, PTLCs, FROST/VLS, and other technologies worth watching
 
 ---
 

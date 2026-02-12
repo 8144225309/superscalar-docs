@@ -61,7 +61,7 @@ graph TD
 
 ### Threat 3: Client Goes Offline
 
-**Attack**: Client loses phone, forgets about wallet, dies.
+**Attack**: Client loses phone, forgets about wallet, or becomes permanently unreachable.
 
 **Defense**: [[timeout-sig-trees|CLTV timeout]] — after the factory's absolute timeout, the LSP can recover its own funds. With the inverted timelock design, a pre-signed nLockTime'd transaction distributes the client's funds on-chain.
 
@@ -112,7 +112,7 @@ Beyond cryptographic guarantees, SuperScalar relies on **economic incentives**:
 |-----------|-------------|---------------|
 | Cooperate honestly | Operational costs | Revenue from liquidity sales |
 | Broadcast old state | Liquidity stock burned (shachain) | Whatever was in the old state |
-| Refuse to cooperate | Loses all future revenue from client | Saves... nothing? |
+| Refuse to cooperate | Loses all future revenue from client | Nothing |
 | Shut down entirely | Loses all business | N/A |
 
 **Cheating is always unprofitable** because the shachain punishment destroys more value than the LSP could gain from an old state.

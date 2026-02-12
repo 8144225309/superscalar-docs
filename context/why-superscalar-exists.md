@@ -91,9 +91,10 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 2. **2017**: Burchert, Decker, Wattenhofer publish "Channel Factories" paper
 3. **2021**: Taproot activates on Bitcoin (enabling MuSig2)
 4. **2024 (early)**: ZmnSCPxj experiments with laddered timeout trees alone — insufficient
-5. **2024 (October)**: P2A finalized in Bitcoin Core 28
-6. **2024 September**: ZmnSCPxj publishes SuperScalar design on Delving Bitcoin
-7. **2024-2025**: Implementation work begins
+5. **2024 (June)**: P2A merged into Bitcoin Core (solving the fee-bumping problem)
+6. **2024 (September)**: ZmnSCPxj publishes SuperScalar design on Delving Bitcoin
+7. **2024 (October)**: Bitcoin Core 28 released (includes P2A, TRUC/v3)
+8. **2024-2025**: Implementation work begins
 
 ## Related Concepts
 

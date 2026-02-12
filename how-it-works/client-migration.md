@@ -1,6 +1,6 @@
 # Client Migration
 
-> **Summary**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. The best option is a PTLC-based "assisted exit" where the client hands over their old factory key and receives funds in the new factory — elegant and minimal on-chain footprint.
+> **Summary**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. The best option is a PTLC-based "assisted exit" where the client hands over their old factory key and receives funds in the new factory — no on-chain transaction needed.
 
 ## When Migration Happens
 
@@ -23,7 +23,7 @@ flowchart TD
     S["Factory dying!<br/>Client comes online"]
     S --> O1["Option 1:<br/>Lightning Payment<br/>⭐ Simplest"]
     S --> O2["Option 2:<br/>On-chain Swap"]
-    S --> O3["Option 3:<br/>PTLC Assisted Exit<br/>⭐ Most elegant"]
+    S --> O3["Option 3:<br/>PTLC Assisted Exit<br/>⭐ Most efficient"]
 
     O1 --> R1["Funds move to new<br/>factory channel via LN"]
     O2 --> R2["Client gets a<br/>real on-chain UTXO"]
@@ -50,9 +50,9 @@ The client cashes out to an on-chain UTXO:
 **Pros**: Client gets full sovereignty — their own UTXO
 **Cons**: On-chain transaction required; client needs to pay fees to join new factory
 
-### Option 3: PTLC Assisted Exit (The Elegant Path)
+### Option 3: PTLC Assisted Exit
 
-This is the innovation unique to SuperScalar — using **Point Time-Locked Contracts** for private key handover:
+Uses **Point Time-Locked Contracts** for private key handover:
 
 ```mermaid
 sequenceDiagram

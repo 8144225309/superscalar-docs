@@ -10,11 +10,12 @@ graph TD
     Y2017["2017<br/>Burchert, Decker, Wattenhofer<br/>Scalable Funding of Bitcoin<br/>Micropayment Channel Networks<br/>First channel factory concept"]
     Y2018["2018<br/>Decker, Russell, Osuntokun<br/>eltoo / LN-Symmetry<br/>Requires SIGHASH_ANYPREVOUT"]
     Y2021["2021<br/>Taproot activates<br/>Enables MuSig2 on Bitcoin"]
-    Y2024a["2024<br/>P2A in Bitcoin Core 28<br/>Solves fee-bumping<br/>for multi-party txs"]
+    Y2024a["2024 Jun<br/>P2A merged into Bitcoin Core<br/>Solves fee-bumping<br/>for multi-party txs"]
     Y2024b["2024 Sep<br/>ZmnSCPxj publishes SuperScalar<br/>on Delving Bitcoin"]
+    Y2024c["2024 Oct<br/>Bitcoin Core 28 released<br/>(includes P2A, TRUC/v3)"]
     Y2025["2024-25<br/>Implementation work begins"]
 
-    Y2015 --> Y2017 --> Y2018 --> Y2021 --> Y2024a --> Y2024b --> Y2025
+    Y2015 --> Y2017 --> Y2018 --> Y2021 --> Y2024a --> Y2024b --> Y2024c --> Y2025
 
     style Y2015 fill:#1f3a5f,color:#e6edf3
     style Y2017 fill:#1f3a5f,color:#e6edf3
@@ -22,6 +23,7 @@ graph TD
     style Y2021 fill:#1f3a5f,color:#e6edf3
     style Y2024a fill:#1f3a5f,color:#e6edf3
     style Y2024b fill:#3fb950,color:#000
+    style Y2024c fill:#1f3a5f,color:#e6edf3
     style Y2025 fill:#3fb950,color:#000
 ```
 
@@ -35,7 +37,7 @@ Introduced the idea of using **decreasing nSequence values** to invalidate old c
 ### Burchert, Decker & Wattenhofer (2017)
 **"Scalable Funding of Bitcoin Micropayment Channel Networks"**
 
-First formal description of **channel factories** — a multi-party structure where many users share a single funding UTXO. Each user gets their own Lightning channel at the "leaves" of the factory. The paper assumed eltoo (SIGHASH_ANYPREVOUT) would be available.
+First formal description of **channel factories** — a multi-party structure where many users share a single funding UTXO. Each user gets their own Lightning channel at the "leaves" of the factory. The paper assumed a future state-replacement mechanism would be available (eltoo, which requires SIGHASH_ANYPREVOUT, was proposed separately the following year).
 
 ### eltoo / LN-Symmetry (2018)
 **Decker, Russell, Osuntokun**

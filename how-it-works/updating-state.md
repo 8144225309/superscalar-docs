@@ -97,7 +97,7 @@ The [[the-odometer-counter|odometer]] ticked from epoch 4 to epoch 5. The new st
 Each leaf update ticks the **inner layer** of the odometer. When the inner layer exhausts all states:
 
 ```
-Epoch 3:  Layer0=432, Layer1=0     (inner layer maxed out)
+Epoch 3:  Layer0=432, Layer1=0     (inner layer exhausted — all states used)
 Epoch 4:  Layer0=288, Layer1=432   (CARRY! Outer ticks, inner resets)
 ```
 
