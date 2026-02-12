@@ -94,6 +94,9 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 - [[dual-state-management]] — Handling factory transitions safely (critical)
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
 
+### Research
+- [[research-horizon]] — Nested MuSig2, ephemeral anchors, soft fork proposals, and other technologies worth watching
+
 ---
 
 ## Origin
