@@ -101,7 +101,7 @@ For production:
 
 - **Proposed**: By ZmnSCPxj on Delving Bitcoin (Nov 2024)
 - **Implemented**: Nowhere — no public code exists
-- **Depends on**: Working factory implementation (which this project provides)
+- **Depends on**: A working factory implementation
 
 The pluggable factory protocol can't exist without a factory to plug in. A working factory implementation is the prerequisite.
 

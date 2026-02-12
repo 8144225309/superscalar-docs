@@ -54,7 +54,7 @@ sequenceDiagram
     L->>A: commitment_signed (for new outpoint def456:0)
 
     Note over A,L: 4. Resume channel operations
-    A->>L: stfu_end
+    Note over A,L: Quiescence ends
     Note over A,L: Channel live again — using new state,<br/>old state commitments kept as backup
 ```
 

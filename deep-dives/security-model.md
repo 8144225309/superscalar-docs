@@ -129,7 +129,7 @@ The PTLC-based key handover is atomic, but there's no guarantee the LSP will ini
 If a client's channel balance is very small, the on-chain force-close transaction might cost more in fees than the channel is worth. The client's funds are effectively "dust" — they exist in theory but aren't economically recoverable.
 
 ### 4. Are 64 States Enough?
-With 3 DW layers × 4 states = 64 total epochs over a 30-day factory lifetime, that's about 2 state updates per day. If the factory is busy, this could run out. Open question.
+With 2 DW layers × 4 states = 16 total epochs (the default 8-client tree), or 3 DW layers for 64 epochs (deeper tree), the factory has a limited number of state updates over its 30-day lifetime. If the factory is busy, this could run out. Open question.
 
 ## Comparison to Other Trust Models
 

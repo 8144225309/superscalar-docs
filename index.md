@@ -79,7 +79,7 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 
 ### How It Works
 1. [[building-a-factory]] — Step-by-step construction
-2. [[updating-state]] — What happens when Alice pays Bob
+2. [[updating-state]] — What happens when factory state changes
 3. [[cooperative-close]] — The happy path
 4. [[force-close]] — When someone disappears
 5. [[client-migration]] — Moving between factories

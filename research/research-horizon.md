@@ -223,7 +223,7 @@ PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic
 - **Cryptography**: Well understood. Adaptor signatures on Schnorr are straightforward.
 - **LN spec**: No timeline for PTLC adoption across the network
 - **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API but unused
-- **For SuperScalar**: Key turnover (Phase 4) needs this. General PTLC routing is a broader LN upgrade.
+- **For SuperScalar**: Key turnover during assisted exit needs this. The adaptor sig parameter exists in the API but is currently unused. General PTLC routing is a broader LN upgrade.
 
 ---
 
