@@ -6,7 +6,7 @@
 
 In an N-of-N [[what-is-multisig|multisig]], **every** signer must cooperate. If even one client disappears forever, the funds are stuck — nobody can spend them.
 
-For an [[what-is-an-lsp|LSP]] running a business, this is a dealbreaker. The LSP has capital locked in factories. If a client loses their phone and never comes back, that capital can't be trapped indefinitely.
+For any [[what-is-an-lsp|LSP]] — whether a company or a pleb running a node — this is a dealbreaker. The operator has capital locked in factories. If a client loses their phone and never comes back, that capital can't be trapped indefinitely.
 
 ## The Solution: Two Paths
 
@@ -94,7 +94,7 @@ graph TD
 - If the LSP disappears → pre-signed timeout tx gives funds to clients
 - The LSP is **forced** to actively participate or lose capital
 
-This shifts economic risk to the LSP, which is the correct incentive for a service provider.
+This shifts economic risk to the LSP operator, which is the correct incentive for whoever coordinates the factory.
 
 ## Where Timeout-Sig-Trees Appear in the Factory
 

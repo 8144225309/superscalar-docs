@@ -122,6 +122,6 @@ For production LSP deployment:
 
 - [[updating-state]] — The off-chain path that JIT replaces when it fails
 - [[pluggable-factories]] — How JIT channels coexist with factory channels in LN software
-- [[what-is-an-lsp]] — The service provider that manages both channel types
+- [[what-is-an-lsp]] — Who coordinates factories and channels
 - [[laddering]] — Factory lifecycle events that may trigger JIT fallbacks
 - [[dual-state-management]] — Needed when factory + JIT channels coexist

@@ -237,7 +237,7 @@ FROST is **architecturally incompatible** with SuperScalar's factory signing. Th
 
 ### But Useful for the LSP's Own Keys
 
-The LSP is one signer in the n-of-n. What happens inside the LSP is its own business. If the LSP distributes its private key across multiple servers using FROST (e.g., 2-of-3), the factory stays n-of-n from everyone else's perspective — the LSP just produces one valid signature, assembled from threshold shares internally.
+The LSP is one signer in the n-of-n. What happens inside the LSP's own infrastructure is up to the operator. If the LSP distributes its private key across multiple servers using FROST (e.g., 2-of-3), the factory stays n-of-n from everyone else's perspective — the LSP just produces one valid signature, assembled from threshold shares internally.
 
 ```mermaid
 graph TD

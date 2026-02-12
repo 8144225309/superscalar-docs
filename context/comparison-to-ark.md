@@ -96,6 +96,6 @@ They might even coexist: an LSP could run SuperScalar factories for high-value c
 ## Related Concepts
 
 - [[security-model]] — SuperScalar's full trust analysis
-- [[what-is-an-lsp]] — The service provider model
+- [[what-is-an-lsp]] — Who coordinates factories
 - [[soft-fork-landscape]] — How future Bitcoin upgrades affect both protocols
 - [[why-superscalar-exists]] — The problem both protocols are solving

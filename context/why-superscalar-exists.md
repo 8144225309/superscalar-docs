@@ -1,8 +1,8 @@
 # Why SuperScalar Exists
 
-> **TLDR**: Lightning Network can't onboard billions of users because every channel needs its own on-chain UTXO. SuperScalar lets many users share one UTXO, solving the "last mile" problem of getting people with zero on-chain Bitcoin onto Lightning.
+> **TLDR**: Lightning works brilliantly for payments — but getting onto Lightning still requires an on-chain UTXO, and on-chain space is finite. SuperScalar extends Lightning's reach by letting many users share one UTXO, solving the "last mile" problem of getting people with zero on-chain Bitcoin onto the network.
 
-## The Numbers Don't Work
+## The Onboarding Challenge
 
 Bitcoin processes ~7 transactions per second. That's ~600,000 per day, ~220 million per year.
 
@@ -60,9 +60,9 @@ With 8 clients per factory and [[laddering]] ≈ 33 concurrent factories, one LS
 
 The simplest solution is custodial: the LSP holds everyone's Bitcoin and lets them "use Lightning" through accounts. This is what many wallet apps actually do today.
 
-The problem: **if the LSP gets hacked, goes bankrupt, or gets shut down by the government, everyone loses their money.**
+The problem: **if the custodian gets hacked, goes bankrupt, or disappears, everyone loses their money.**
 
-SuperScalar gives users the **same convenience as a custodial wallet** (no on-chain Bitcoin needed, mobile-friendly, LSP manages everything) with the **security of self-custody** (your funds are always recoverable on-chain, no trust in the LSP required).
+SuperScalar gives users the **same convenience** (no on-chain Bitcoin needed, mobile-friendly, the node operator handles the complexity) with the **security of self-custody** (your funds are always recoverable on-chain, no trust required).
 
 ## What Existed Before SuperScalar
 
@@ -97,7 +97,7 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 
 ## Related Concepts
 
-- [[what-is-an-lsp]] — The business that operates factories
+- [[what-is-an-lsp]] — Who coordinates factories (anyone can)
 - [[factory-tree-topology]] — The structure that enables UTXO sharing
 - [[laddering]] — How factories scale over time
 - [[comparison-to-ark]] — SuperScalar vs Ark

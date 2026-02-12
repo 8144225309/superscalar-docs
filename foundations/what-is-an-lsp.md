@@ -1,18 +1,29 @@
 # What Is an LSP?
 
-> **TLDR**: A Lightning Service Provider is the always-online server that runs behind your Lightning wallet app. It provides you with a channel, routes your payments, and manages liquidity. In SuperScalar, the LSP is the entity that constructs and manages factories.
+> **TLDR**: A Lightning Service Provider is any node that helps other users get onto Lightning — providing channels, routing payments, and managing liquidity. In SuperScalar, an LSP is whoever coordinates a factory. That could be a company, a community node, or your friend with a server in their closet.
 
 ## The Analogy
 
-Think of an **internet service provider (ISP)** but for Lightning payments. You don't connect directly to every person you want to pay — your ISP connects you to the network. Similarly, your LSP gives you a Lightning channel and routes your payments through the network.
+Think of running a Lightning node today. If you open a channel to someone, you're already providing them with connectivity to the network. An LSP just does this more deliberately — offering channels and liquidity to users who need it.
 
-Just like you don't need to understand TCP/IP to browse the web, you don't need to understand channel factories to use a Lightning wallet. The LSP handles all of that behind the scenes.
+The key insight: **anyone with a Lightning node and some Bitcoin can be an LSP.** It's a role, not a corporate title.
+
+## Who Can Run an LSP?
+
+| Operator | Example |
+|----------|---------|
+| **A company** | Phoenix (ACINQ), Breez — mobile wallet providers |
+| **A community node** | A Bitcoin meetup group running a shared node |
+| **A pleb with a server** | Your friend with a Raspberry Pi and some sats |
+| **A group of friends** | A clique that pools resources and runs a node together |
+
+SuperScalar is designed so that the LSP role is **accessible**, not exclusive. The protocol doesn't care who runs the node — it only cares that the cryptographic guarantees hold.
 
 ## The Current Model (Without Factories)
 
 ```mermaid
 graph TD
-    LSP["LSP<br/>(always online)"]
+    LSP["LSP Node<br/>(always online)"]
     LSP -->|"1 UTXO each"| A["Alice's Channel"]
     LSP -->|"1 UTXO each"| B["Bob's Channel"]
     LSP -->|"1 UTXO each"| C["Carol's Channel"]
@@ -21,13 +32,13 @@ graph TD
     style LSP fill:#4c6ef5,color:#fff
 ```
 
-**Problem**: Each user requires their own on-chain UTXO. 1 million users = 1 million UTXOs = 1 million on-chain transactions just to onboard them.
+**The bottleneck**: Each user requires their own on-chain UTXO. If a node operator wants to serve 1,000 users, that's 1,000 on-chain transactions just to get started.
 
 ## The SuperScalar Model (With Factories)
 
 ```mermaid
 graph TD
-    LSP["LSP<br/>(always online)"]
+    LSP["LSP Node<br/>(always online)"]
     LSP -->|"1 shared UTXO"| F["Factory<br/>(off-chain tree)"]
     F --> A["Alice's Channel"]
     F --> B["Bob's Channel"]
@@ -38,69 +49,81 @@ graph TD
     style F fill:#fab005,color:#000
 ```
 
-**Solution**: Many users share one UTXO through a factory. The LSP constructs the factory, provides initial liquidity, and manages the lifecycle.
+**The improvement**: Many users share one UTXO through a factory. The LSP node coordinates factory construction, provides initial liquidity, and manages the lifecycle — but **cannot steal or censor** because every transaction requires N-of-N multisig.
+
+## Discovery and Matching
+
+For SuperScalar to be decentralized in practice, users need a way to **find** LSPs and LSPs need a way to **find** clients. Think of it like a marketplace:
+
+- **LSP discovery**: A node advertises that it runs SuperScalar factories and has liquidity available
+- **Client matching**: Users looking for a factory can browse available LSPs, compare terms (fees, capacity, liveness requirements), and join one
+- **Friend groups**: A group of friends could form their own factory with one of them running the LSP node — no stranger required
+
+The protocol doesn't mandate a specific discovery mechanism. It could be a simple directory, a decentralized bulletin board, or peer-to-peer gossip. What matters is that users have **choice** — if one LSP has bad terms or goes offline, you move to another.
 
 ## The LSP's Role in SuperScalar
 
-### What the LSP Does
+### What the LSP Node Does
 | Responsibility | Details |
 |---------------|---------|
-| **Constructs factories** | Creates the funding transaction and tree structure |
-| **Provides liquidity** | Locks up its own Bitcoin as "liquidity stock" that clients can buy |
-| **Coordinates signing** | Manages MuSig2 signing rounds with online clients |
-| **Manages lifecycle** | Runs [[laddering]] — ~33 concurrent factories with staggered lifetimes |
+| **Coordinates factory construction** | Creates the funding transaction and tree structure with participating clients |
+| **Provides liquidity** | Locks up Bitcoin as "liquidity stock" that clients can receive into |
+| **Manages signing rounds** | Coordinates MuSig2 signing with online clients |
+| **Runs the lifecycle** | Manages [[laddering]] — ~33 concurrent factories with staggered lifetimes |
 | **Facilitates exits** | Helps clients move between factories or exit to on-chain |
 
-### What the LSP Cannot Do
+### What the LSP Node Cannot Do
 | Guarantee | Why |
 |-----------|-----|
-| **Cannot steal funds** | Every transaction uses N-of-N multisig — LSP is just one signer |
-| **Cannot censor unilaterally** | State updates require all participants in the subtree to sign |
+| **Cannot steal funds** | Every transaction uses N-of-N multisig — the LSP is just one signer among many |
+| **Cannot censor unilaterally** | State updates require all participants in the affected subtree to sign |
 | **Cannot prevent exit** | Exit transactions are pre-signed during construction; clients can always broadcast them |
-| **Cannot refuse refund** | If LSP stops cooperating, clients force-close and get their funds on-chain |
+| **Cannot refuse refund** | If the LSP stops cooperating, clients force-close and get their funds on-chain |
 
-### What the LSP Wants
-The LSP is a **business**. It earns revenue by selling **inbound liquidity** — the capacity for clients to receive payments. The economic model:
+### The Economics
 
-1. LSP locks up Bitcoin as liquidity stock in each factory
-2. Clients "buy" inbound liquidity by paying the LSP (via Lightning payments)
-3. Once liquidity is sold, the LSP doesn't take it back — it's committed
-4. LSP recovers capital when factories expire and new ones are created
+LSP operators earn revenue by providing **inbound liquidity** — the capacity for clients to receive payments:
+
+1. The operator locks up Bitcoin as liquidity stock in each factory
+2. Clients pay for inbound liquidity (via Lightning payments or fees)
+3. The operator recovers capital when factories expire and new ones are created
+
+This works whether the operator is a company serving thousands of users or a node runner serving a dozen friends. The scale is flexible.
 
 > *"Once the LSP has sold some unit of inbound liquidity, it wants to not take back that liquidity."* — ZmnSCPxj
 
 ## The Trust Model
 
-SuperScalar explicitly shifts risk to the LSP rather than clients:
+SuperScalar shifts risk to the LSP operator rather than clients:
 
-> *"I have been refining SuperScalar to shift much of the risk to the LSP, precisely to prevent risks on clients... it can be done in practice such that it is more economical for the LSP to not screw over its clients, just as typical capitalism works. You cannot earn money from a dead customer."* — ZmnSCPxj
+> *"I have been refining SuperScalar to shift much of the risk to the LSP, precisely to prevent risks on clients."* — ZmnSCPxj
 
-The worst case for a client: the LSP shuts down entirely (e.g., shut down by authorities). In this case, all clients **must** perform a [[force-close|unilateral exit]], which puts their funds on-chain. It's inconvenient and costs fees, but funds are never lost.
+The worst case for a client: the LSP node goes offline permanently. In this case, clients perform a [[force-close|unilateral exit]], which puts their funds on-chain. It's inconvenient and costs fees, but **funds are never lost**.
 
 ## The Liveness Requirement
 
-For SuperScalar to work, users have a minimal liveness requirement:
-
 | Actor | Must Be Online |
 |-------|---------------|
-| **LSP** | Always (it's a server) |
+| **LSP node** | Always (it coordinates the factory) |
 | **Client** | At least once during the 3-day dying period of each factory (~once per month) |
 
 If a client misses the dying period, they must [[force-close]] — but their funds are safe.
 
-## Real-World Examples
+## The Decentralization Goal
 
-Current LSP implementations (pre-SuperScalar):
-- **Phoenix** (ACINQ) — Mobile wallet with integrated LSP
-- **Breez** — SDK for building LSP-powered apps
-- **Mutiny** — Self-custodial wallet with LSP backend
+The vision isn't one LSP serving everyone. It's **many LSPs** — big and small — competing on terms, with users free to move between them. SuperScalar makes this practical:
 
-SuperScalar would let these LSPs serve **orders of magnitude more users** with the same on-chain footprint.
+- **Low barrier to entry**: Anyone with a node and liquidity can run a factory
+- **Client migration**: Users can move from one LSP to another during factory transitions
+- **No lock-in**: Pre-signed exit transactions mean you can always leave
+- **Competitive market**: Multiple LSPs competing drives down fees and improves service
+
+The more LSP operators there are, the more resilient and decentralized the network becomes.
 
 ## Related Concepts
 
-- [[why-superscalar-exists]] — The scaling problem LSPs face today
-- [[factory-tree-topology]] — The structure the LSP builds and manages
-- [[laddering]] — How the LSP rotates factories over time
+- [[why-superscalar-exists]] — The scaling challenge SuperScalar addresses
+- [[factory-tree-topology]] — The structure the LSP node builds with its clients
+- [[laddering]] — How factories rotate over time
 - [[building-a-factory]] — Step-by-step factory construction
 - [[security-model]] — Full analysis of trust assumptions

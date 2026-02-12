@@ -5,15 +5,24 @@
 ## The Intellectual Lineage
 
 ```mermaid
-timeline
-    title Road to SuperScalar
-    2015 : Decker & Wattenhofer<br/>"Duplex Micropayment Channels"<br/>nSequence-based state invalidation
-    2017 : Burchert, Decker, Wattenhofer<br/>"Scalable Funding of Bitcoin<br/>Micropayment Channel Networks"<br/>First channel factory concept
-    2018 : Decker, Russell, Osuntokun<br/>"eltoo/LN-Symmetry"<br/>Requires SIGHASH_ANYPREVOUT
-    2021 : Taproot activates<br/>Enables MuSig2 on Bitcoin
-    2024 : P2A in Bitcoin Core 28<br/>Solves fee-bumping for multi-party txs
-    2024 Sep : ZmnSCPxj publishes SuperScalar<br/>on Delving Bitcoin
-    2024-25 : Implementation work begins
+graph TD
+    Y2015["2015<br/>Decker & Wattenhofer<br/>Duplex Micropayment Channels<br/>nSequence-based state invalidation"]
+    Y2017["2017<br/>Burchert, Decker, Wattenhofer<br/>Scalable Funding of Bitcoin<br/>Micropayment Channel Networks<br/>First channel factory concept"]
+    Y2018["2018<br/>Decker, Russell, Osuntokun<br/>eltoo / LN-Symmetry<br/>Requires SIGHASH_ANYPREVOUT"]
+    Y2021["2021<br/>Taproot activates<br/>Enables MuSig2 on Bitcoin"]
+    Y2024a["2024<br/>P2A in Bitcoin Core 28<br/>Solves fee-bumping<br/>for multi-party txs"]
+    Y2024b["2024 Sep<br/>ZmnSCPxj publishes SuperScalar<br/>on Delving Bitcoin"]
+    Y2025["2024-25<br/>Implementation work begins"]
+
+    Y2015 --> Y2017 --> Y2018 --> Y2021 --> Y2024a --> Y2024b --> Y2025
+
+    style Y2015 fill:#1f3a5f,color:#e6edf3
+    style Y2017 fill:#1f3a5f,color:#e6edf3
+    style Y2018 fill:#1f3a5f,color:#e6edf3
+    style Y2021 fill:#1f3a5f,color:#e6edf3
+    style Y2024a fill:#1f3a5f,color:#e6edf3
+    style Y2024b fill:#3fb950,color:#000
+    style Y2025 fill:#3fb950,color:#000
 ```
 
 ## The Key Papers

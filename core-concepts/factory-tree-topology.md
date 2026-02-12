@@ -116,12 +116,12 @@ Funds the LSP has set aside to sell inbound liquidity to clients. Protected by [
 
 Notice that the **LSP participates in every single node** of the tree. This is by design:
 
-- The LSP is always online (it's a server)
-- The LSP is the counterparty in every Lightning channel
-- The LSP coordinates all state updates
+- The LSP node is always online (it's the coordinator)
+- The LSP is one party in every Lightning channel at the leaves
+- The LSP coordinates signing rounds for state updates
 - The LSP provides liquidity at every level
 
-This makes the LSP the **hub** — which is fine because the N-of-N multisig prevents it from being a dictator. It's a service provider, not a custodian.
+This makes the LSP a **coordinator** — but the N-of-N multisig means it has no special power. It can't move funds without every other participant signing. Coordinator, not custodian.
 
 ## Arity: How Many Branches Per Node?
 
