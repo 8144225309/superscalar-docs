@@ -88,6 +88,13 @@ Instead of one giant factory, the LSP runs **~33 factories at once** with stagge
 - [[comparison-to-ark]] — Different trust models compared
 - [[soft-fork-landscape]] — CTV, APO, OP_CAT and what they'd change
 - [[history-and-origins]] — ZmnSCPxj, Block Inc, and the Delving Bitcoin thread
+- [[first-implementation]] — Why this is the first implementation
+
+### Extensions (Future Roadmap)
+- [[splicing-integration]] — Resizing channels inside factories
+- [[pluggable-factories]] — Plugging into existing LN software
+- [[dual-state-management]] — Handling factory transitions safely (critical)
+- [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
 
 ---
 
