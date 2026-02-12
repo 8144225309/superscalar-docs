@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuperScalar Docs</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --accent-subtle: #1f3a5f;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --sidebar-w: 300px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #sidebar-header {
+    padding: 12px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  #sidebar-header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  #sidebar-header p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .nav-section {
+    padding: 14px 16px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .nav-link {
+    display: block;
+    padding: 6px 14px 6px 22px;
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    background: var(--bg-tertiary);
+  }
+
+  .nav-link.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: var(--accent-subtle);
+    font-weight: 500;
+  }
+
+  /* Subtle top border on section labels (except the first) */
+  .nav-section:not(:first-of-type) {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+  }
+
+  /* Main content */
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 60px;
+    max-width: 100%;
+  }
+
+  #content {
+    max-width: 820px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Typography */
+  #content h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.02em;
+  }
+
+  #content h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #content h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 8px;
+  }
+
+  #content p {
+    margin-bottom: 16px;
+  }
+
+  #content a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  #content a:hover {
+    text-decoration: underline;
+  }
+
+  #content blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 16px;
+    margin: 16px 0;
+    background: var(--bg-secondary);
+    border-radius: 0 6px 6px 0;
+    color: var(--text-muted);
+  }
+
+  #content blockquote strong,
+  #content blockquote em {
+    color: var(--text);
+  }
+
+  #content code {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+    border: 1px solid var(--border);
+  }
+
+  #content pre {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  #content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* Tables */
+  #content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+
+  #content th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+  }
+
+  #content td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+  }
+
+  #content tr:nth-child(even) {
+    background: var(--bg-secondary);
+  }
+
+  /* Lists */
+  #content ul, #content ol {
+    margin: 8px 0 16px 24px;
+  }
+
+  #content li {
+    margin-bottom: 4px;
+  }
+
+  /* Mermaid diagrams */
+  .mermaid {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  .mermaid svg {
+    max-width: 100%;
+  }
+
+  /* Wikilinks */
+  a.wikilink {
+    color: var(--green);
+    cursor: pointer;
+    border-bottom: 1px dashed var(--green);
+  }
+
+  a.wikilink:hover {
+    text-decoration: none;
+    border-bottom-style: solid;
+  }
+
+  /* TLDR callout — first blockquote on the page (right after the h1) */
+  #content > h1 + blockquote,
+  #content > h1 + p + blockquote {
+    border-left-color: var(--green);
+    background: #0d2818;
+    font-size: 15px;
+  }
+
+  /* Breadcrumb */
+  #breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  #breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  #breadcrumb a:hover {
+    color: var(--accent);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    #sidebar { display: none; }
+    #main { padding: 20px; }
+  }
+
+  /* Hamburger for mobile */
+  #menu-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 100;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  @media (max-width: 768px) {
+    #menu-toggle { display: block; }
+    #sidebar.open { display: flex; position: fixed; z-index: 99; height: 100vh; }
+  }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+  }
+
+  /* Horizontal rule */
+  #content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  /* Strong/em in context */
+  #content strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<button id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</button>
+
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <h1>SuperScalar Docs</h1>
+    <p>The first explainer of channel factories</p>
+  </div>
+
+  <div class="nav-section">Home</div>
+  <a class="nav-link" data-page="index">SuperScalar Overview</a>
+
+  <div class="nav-section">Foundations</div>
+  <a class="nav-link" data-page="foundations/what-is-a-payment-channel">Payment Channels</a>
+  <a class="nav-link" data-page="foundations/what-is-multisig">Multisig</a>
+  <a class="nav-link" data-page="foundations/what-is-taproot">Taproot</a>
+  <a class="nav-link" data-page="foundations/what-is-musig2">MuSig2</a>
+  <a class="nav-link" data-page="foundations/what-is-nsequence">nSequence (Timelocks)</a>
+  <a class="nav-link" data-page="foundations/what-is-an-lsp">Lightning Service Providers</a>
+
+  <div class="nav-section">Core Concepts</div>
+  <a class="nav-link" data-page="core-concepts/decker-wattenhofer-invalidation">DW Invalidation</a>
+  <a class="nav-link" data-page="core-concepts/the-odometer-counter">The Odometer Counter</a>
+  <a class="nav-link" data-page="core-concepts/timeout-sig-trees">Timeout-Sig-Trees</a>
+  <a class="nav-link" data-page="core-concepts/factory-tree-topology">Factory Tree Topology</a>
+  <a class="nav-link" data-page="core-concepts/kickoff-vs-state-nodes">Kickoff vs State Nodes</a>
+  <a class="nav-link" data-page="core-concepts/shachain-revocation">Shachain Revocation</a>
+  <a class="nav-link" data-page="core-concepts/laddering">Laddering</a>
+
+  <div class="nav-section">How It Works</div>
+  <a class="nav-link" data-page="how-it-works/building-a-factory">Building a Factory</a>
+  <a class="nav-link" data-page="how-it-works/updating-state">Updating State</a>
+  <a class="nav-link" data-page="how-it-works/cooperative-close">Cooperative Close</a>
+  <a class="nav-link" data-page="how-it-works/force-close">Force Close</a>
+  <a class="nav-link" data-page="how-it-works/client-migration">Client Migration</a>
+
+  <div class="nav-section">Deep Dives</div>
+  <a class="nav-link" data-page="deep-dives/musig2-signing-rounds">MuSig2 Signing Rounds</a>
+  <a class="nav-link" data-page="deep-dives/tapscript-construction">Tapscript Construction</a>
+  <a class="nav-link" data-page="deep-dives/transaction-structure">Transaction Structure</a>
+  <a class="nav-link" data-page="deep-dives/security-model">Security Model</a>
+
+  <div class="nav-section">Context</div>
+  <a class="nav-link" data-page="context/why-superscalar-exists">Why SuperScalar Exists</a>
+  <a class="nav-link" data-page="context/comparison-to-ark">Comparison to Ark</a>
+  <a class="nav-link" data-page="context/soft-fork-landscape">Soft Fork Landscape</a>
+  <a class="nav-link" data-page="context/history-and-origins">History &amp; Origins</a>
+</nav>
+
+<main id="main">
+  <div id="breadcrumb"></div>
+  <div id="content">
+    <div class="loading">Loading...</div>
+  </div>
+</main>
+
+<script>
+// Page slug → file path mapping for wikilinks
+const WIKILINK_MAP = {
+  'what-is-a-payment-channel': 'foundations/what-is-a-payment-channel',
+  'what-is-multisig': 'foundations/what-is-multisig',
+  'what-is-taproot': 'foundations/what-is-taproot',
+  'what-is-musig2': 'foundations/what-is-musig2',
+  'what-is-nsequence': 'foundations/what-is-nsequence',
+  'what-is-an-lsp': 'foundations/what-is-an-lsp',
+  'decker-wattenhofer-invalidation': 'core-concepts/decker-wattenhofer-invalidation',
+  'the-odometer-counter': 'core-concepts/the-odometer-counter',
+  'timeout-sig-trees': 'core-concepts/timeout-sig-trees',
+  'factory-tree-topology': 'core-concepts/factory-tree-topology',
+  'kickoff-vs-state-nodes': 'core-concepts/kickoff-vs-state-nodes',
+  'shachain-revocation': 'core-concepts/shachain-revocation',
+  'laddering': 'core-concepts/laddering',
+  'building-a-factory': 'how-it-works/building-a-factory',
+  'updating-state': 'how-it-works/updating-state',
+  'cooperative-close': 'how-it-works/cooperative-close',
+  'force-close': 'how-it-works/force-close',
+  'client-migration': 'how-it-works/client-migration',
+  'musig2-signing-rounds': 'deep-dives/musig2-signing-rounds',
+  'tapscript-construction': 'deep-dives/tapscript-construction',
+  'transaction-structure': 'deep-dives/transaction-structure',
+  'security-model': 'deep-dives/security-model',
+  'why-superscalar-exists': 'context/why-superscalar-exists',
+  'comparison-to-ark': 'context/comparison-to-ark',
+  'soft-fork-landscape': 'context/soft-fork-landscape',
+  'history-and-origins': 'context/history-and-origins',
+};
+
+// Resolve a wikilink slug to a full page path
+function resolveWikilink(slug) {
+  return WIKILINK_MAP[slug] || slug;
+}
+
+// Convert [[wikilinks]] and [[slug|display text]] in markdown
+function processWikilinks(md) {
+  return md.replace(/\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g, (match, slug, display) => {
+    const pagePath = resolveWikilink(slug);
+    const text = display || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return `<a class="wikilink" href="#${pagePath}">${text}</a>`;
+  });
+}
+
+// Extract mermaid blocks before marked processes them
+function extractMermaid(md) {
+  const blocks = [];
+  const processed = md.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
+    const id = `mermaid-${blocks.length}`;
+    blocks.push({ id, code: code.trim() });
+    return `<div class="mermaid" id="${id}">${code.trim()}</div>`;
+  });
+  return { md: processed, blocks };
+}
+
+// Render mermaid diagrams
+async function renderMermaid(blocks) {
+  if (blocks.length === 0) return;
+  for (const block of blocks) {
+    const el = document.getElementById(block.id);
+    if (!el) continue;
+    try {
+      const { svg } = await mermaid.render(`${block.id}-svg`, block.code);
+      el.innerHTML = svg;
+    } catch (e) {
+      el.innerHTML = `<pre style="color:var(--red);text-align:left;">${block.code}\n\nMermaid error: ${e.message}</pre>`;
+    }
+  }
+}
+
+// Section name from path
+function sectionFromPath(path) {
+  if (path === 'index') return 'Home';
+  const parts = path.split('/');
+  if (parts.length < 2) return '';
+  return parts[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Load and render a page
+async function loadPage(pagePath) {
+  const contentEl = document.getElementById('content');
+  const breadcrumbEl = document.getElementById('breadcrumb');
+
+  contentEl.innerHTML = '<div class="loading">Loading...</div>';
+
+  // Update active nav link
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.toggle('active', link.dataset.page === pagePath);
+  });
+
+  try {
+    const res = await fetch(`${pagePath}.md`);
+    if (!res.ok) throw new Error(`${res.status}`);
+    let md = await res.text();
+
+    // Process wikilinks first (before marked touches them)
+    md = processWikilinks(md);
+
+    // Extract mermaid blocks
+    const { md: processedMd, blocks } = extractMermaid(md);
+
+    // Configure marked
+    marked.setOptions({
+      breaks: false,
+      gfm: true,
+    });
+
+    // Render markdown
+    contentEl.innerHTML = marked.parse(processedMd);
+
+    // Breadcrumb
+    const section = sectionFromPath(pagePath);
+    if (section && section !== 'Home') {
+      breadcrumbEl.innerHTML = `<a href="#index">Home</a> / ${section}`;
+    } else {
+      breadcrumbEl.innerHTML = '';
+    }
+
+    // Render mermaid
+    await renderMermaid(blocks);
+
+    // Scroll to top
+    document.getElementById('main').scrollTop = 0;
+
+    // Close mobile sidebar
+    document.getElementById('sidebar').classList.remove('open');
+
+  } catch (e) {
+    contentEl.innerHTML = `<h1>Page not found</h1><p>Could not load <code>${pagePath}.md</code></p><p>${e.message}</p>`;
+  }
+}
+
+// Handle hash-based routing
+function handleRoute() {
+  const hash = location.hash.slice(1) || 'index';
+  loadPage(hash);
+}
+
+// Click handlers for wikilinks (delegated)
+document.getElementById('content')?.addEventListener('click', (e) => {
+  const link = e.target.closest('a.wikilink');
+  if (link) {
+    e.preventDefault();
+    const href = link.getAttribute('href');
+    location.hash = href.startsWith('#') ? href.slice(1) : href;
+  }
+});
+
+// Nav click handlers
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    location.hash = link.dataset.page;
+  });
+});
+
+// Init
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1f3a5f',
+    primaryTextColor: '#e6edf3',
+    primaryBorderColor: '#30363d',
+    lineColor: '#58a6ff',
+    secondaryColor: '#161b22',
+    tertiaryColor: '#0d2818',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
+    fontSize: '14px',
+  },
+  securityLevel: 'loose',
+  flowchart: { useMaxWidth: true, htmlLabels: true },
+});
+
+window.addEventListener('hashchange', handleRoute);
+handleRoute();
+</script>
+</body>
+</html>
