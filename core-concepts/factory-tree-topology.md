@@ -157,7 +157,7 @@ If Alice force-closes:
 - **Alice**: Fully exits to on-chain
 - **Bob** (same leaf): Channel goes on-chain, still works, but loses cheap off-chain liquidity management
 - **Carol, Dave** (same half): Same impact as Bob
-- **Eve, Frank, George, Helen** (other half): **Zero impact** — their subtree was never published
+- **Eve, Frank, Grace, Heidi** (other half): **Zero impact** — their subtree was never published
 
 ## Related Concepts
 

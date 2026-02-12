@@ -100,7 +100,7 @@ graph TD
 | **Alice** (exiting) | Fully exits — gets her funds on-chain |
 | **Bob** (same leaf as Alice) | Channel goes on-chain; still functional but loses factory benefits |
 | **Carol, Dave** (same half of tree) | Same as Bob — their kickoff must also be resolved |
-| **Eve, Frank, George, Helen** (other half) | **Completely unaffected** — their subtree was never published |
+| **Eve, Frank, Grace, Heidi** (other half) | **Completely unaffected** — their subtree was never published |
 
 The tree structure **contains the blast radius**. Only Alice's half of the tree is affected.
 

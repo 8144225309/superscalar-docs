@@ -6,7 +6,7 @@
 
 In the [[factory-tree-topology|factory tree]], the LSP has **liquidity stock** — funds it owns that it uses to sell inbound liquidity to clients. When the factory state advances (via the [[the-odometer-counter|odometer]]), the liquidity stock amounts change. What stops the LSP from broadcasting an old state where it had MORE liquidity stock?
 
-[[Decker-Wattenhofer invalidation|decker-wattenhofer-invalidation]] handles this for the tree structure (newer states confirm first), but the LSP might still try to broadcast an old state just before its nSequence catches up. We need an additional punishment layer.
+[[decker-wattenhofer-invalidation|Decker-Wattenhofer invalidation]] handles this for the tree structure (newer states confirm first), but the LSP might still try to broadcast an old state just before its nSequence catches up. We need an additional punishment layer.
 
 ## The Solution: Secret-Based Punishment
 

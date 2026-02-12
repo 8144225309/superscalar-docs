@@ -76,7 +76,7 @@ Deployed in Bitcoin Core 28.0 alongside TRUC.
 
 ## Related Concepts
 
-- [[transaction-structure]] — Current transaction format
+- [[transaction-structure]] — Transaction format (design specification)
 - [[force-close]] — When tree transactions actually get broadcast
 - [[building-a-factory]] — When tree transactions get signed
 - [[research-horizon]] — Other future improvements

@@ -43,7 +43,7 @@ state_root (nSeq = 288)
 
 Now you update the leaf state. The new leaf transaction has `nSeq = 288`. But wait — **the leaf transaction's nSequence is relative to when its parent confirms**. If the parent (state_root) is also a DW transaction that might be replaced, which version of the parent does the leaf's delay start from?
 
-**The answer: chaos.** If state_root gets replaced (because a newer version confirms first), ALL of its child transactions become invalid — they reference an output that no longer exists. You'd have to re-publish everything.
+**The answer: all child transactions break.** If state_root gets replaced (because a newer version confirms first), ALL of its child transactions become invalid — they reference an output that no longer exists. You'd have to re-publish everything.
 
 ### How Kickoff Nodes Fix This
 

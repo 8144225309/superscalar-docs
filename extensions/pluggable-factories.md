@@ -103,7 +103,7 @@ For production:
 - **Implemented**: Nowhere — no public code exists
 - **Depends on**: Working factory implementation (which this project provides)
 
-The pluggable factory protocol can't exist without a factory to plug in. This implementation is the foundation that makes pluggable factories possible.
+The pluggable factory protocol can't exist without a factory to plug in. A working factory implementation is the prerequisite.
 
 ## Related Concepts
 

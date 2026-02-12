@@ -6,7 +6,7 @@
 
 In an N-of-N [[what-is-multisig|multisig]], **every** signer must cooperate. If even one client disappears forever, the funds are stuck — nobody can spend them.
 
-For any [[what-is-an-lsp|LSP]] — whether a company or an individual running a node — this is a dealbreaker. The operator has capital locked in factories. If a client loses their phone and never comes back, that capital can't be trapped indefinitely.
+For any [[what-is-an-lsp|LSP]] — whether a company or an individual running a node — this is unacceptable. The operator has capital locked in factories. If a client loses their phone and never comes back, that capital can't be trapped indefinitely.
 
 ## The Solution: Two Paths
 

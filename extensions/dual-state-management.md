@@ -39,7 +39,7 @@ sequenceDiagram
     participant L as LSP
 
     Note over A,L: 1. Quiesce the channel
-    A->>L: stfu (shut the f*** up)
+    A->>L: stfu (quiesce channel)
     L->>A: stfu
     Note over A,L: Channel paused — no new HTLCs
 
@@ -60,7 +60,7 @@ sequenceDiagram
 
 ### Step 1: Quiesce
 
-The channel is paused using the `stfu` (Silence The Funding Uncertainty) message. No new HTLCs can be added while the transition is happening. This prevents race conditions where an HTLC is created on the old state but not the new one.
+The channel is paused using the `stfu` message (a quiescence protocol from the Lightning spec). No new HTLCs can be added while the transition is happening. This prevents race conditions where an HTLC is created on the old state but not the new one.
 
 ### Step 2: Exchange New Funding Info
 

@@ -6,7 +6,7 @@
 
 A single [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] layer with 4 states only gives you 4 updates. That's nowhere near enough — a factory running for 30 days might need 64 state changes (for channel opens, closes, and rebalances).
 
-You could have a single layer with 64 states, but the starting delay would be `64 × 144 = 9,216 blocks` ≈ **64 days**. That's absurd.
+You could have a single layer with 64 states, but the starting delay would be `63 × 144 = 9,072 blocks` ≈ **63 days**. That's impractical.
 
 ## The Solution: Stack Layers
 
@@ -68,9 +68,9 @@ graph TD
 | 1 layer × 4 states | 4 | 432 blocks (~3 days) | 3 days |
 | 2 layers × 4 states | 16 | 432 blocks (~3 days) | 6 days |
 | 3 layers × 4 states | **64** | 432 blocks (~3 days) | 9 days |
-| 1 layer × 64 states | 64 | 9,216 blocks (~64 days) | **64 days** |
+| 1 layer × 64 states | 64 | 9,072 blocks (~63 days) | **63 days** |
 
-The odometer gives you 64 states with a worst-case delay of 9 days. A flat counter would need 64 days. That's a **7× improvement** in worst-case force-close time.
+The odometer gives you 64 states with a worst-case delay of 9 days. A flat counter would need 63 days. That's a **7× improvement** in worst-case force-close time.
 
 ## In the Factory Tree
 

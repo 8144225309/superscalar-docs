@@ -40,7 +40,7 @@ First formal description of **channel factories** — a multi-party structure wh
 ### eltoo / LN-Symmetry (2018)
 **Decker, Russell, Osuntokun**
 
-Proposed a simpler state machine where any newer state simply replaces any older state. Requires the SIGHASH_ANYPREVOUT (APO) soft fork, which has not been activated as of 2025. If APO activates, it would make the Decker-Wattenhofer component of SuperScalar unnecessary.
+Proposed a simpler state machine where any newer state simply replaces any older state. Requires the SIGHASH_ANYPREVOUT (APO) soft fork, which has not been activated. If APO activates, it would make the Decker-Wattenhofer component of SuperScalar unnecessary.
 
 ## The Designer: ZmnSCPxj
 

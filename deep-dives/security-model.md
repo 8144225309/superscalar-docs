@@ -43,7 +43,7 @@ graph TD
 
 **Attack**: LSP broadcasts an old state where it had more liquidity stock.
 
-**Defense (Layer 1)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence and confirms first. Old state physically cannot win the race.
+**Defense (Layer 1)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence and confirms first. Old state cannot win the race.
 
 **Defense (Layer 2)**: [[shachain-revocation]] — if the old state somehow confirms (e.g., the honest party is offline), clients can burn the LSP's liquidity stock using the revealed shachain secret. Cheating costs more than it gains.
 

@@ -97,11 +97,11 @@ Each state layer runs its own independent DW counter. The [[the-odometer-counter
 
 Christian Decker and Roger Wattenhofer published "A Fast and Scalable Payment Network with Bitcoin Duplex Micropayment Channels" in 2015. Their construction used the same nSequence trick, but applied it to two-party channels. SuperScalar generalizes it to multi-party factory trees by combining it with [[timeout-sig-trees]] and [[what-is-musig2|MuSig2]].
 
-The original paper envisioned a future soft fork (eltoo/LN-Symmetry) that would make DW obsolete by allowing unlimited state updates. That soft fork (SIGHASH_ANYPREVOUT, BIP-118) has not been activated as of 2025 — which is exactly why SuperScalar builds on the original DW construction instead.
+A later paper by some of the same researchers proposed eltoo/LN-Symmetry (2018), which would make DW obsolete by allowing unlimited state updates. The required soft fork (SIGHASH_ANYPREVOUT, BIP-118) has not been activated — which is exactly why SuperScalar builds on the original DW construction instead.
 
 ## Related Concepts
 
-- [[the-odometer-counter]] — How to get 64+ states from just 2 layers
+- [[the-odometer-counter]] — How to get 64+ states from just 3 layers
 - [[what-is-nsequence]] — The Bitcoin mechanism that makes this possible
 - [[kickoff-vs-state-nodes]] — Why state nodes alternate with kickoff nodes
 - [[factory-tree-topology]] — Where DW fits in the full tree structure

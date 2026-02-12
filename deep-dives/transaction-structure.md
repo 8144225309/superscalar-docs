@@ -52,8 +52,8 @@ The output looks like any standard P2TR (Pay-to-Taproot) output. On-chain, it's 
 │   scriptPubKey: OP_1 <tweaked_key>          │
 │                                             │
 │ Output 1: P2A (fee-bump anchor)             │
-│   amount: 240 sats (dust)                   │
-│   scriptPubKey: OP_1 <P2A_key>              │
+│   amount: 0 sats (ephemeral dust)           │
+│   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘
@@ -88,7 +88,7 @@ Key properties:
 │     script tree: CLTV timeout               │
 │                                             │
 │ Output 2: P2A (fee-bump anchor)             │
-│   amount: 240 sats                          │
+│   amount: 0 sats (ephemeral dust)           │
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘
@@ -126,7 +126,7 @@ Key properties:
 │     script tree: shachain secret path       │
 │                                             │
 │ Output 3: P2A (fee-bump anchor)             │
-│   amount: 240 sats                          │
+│   amount: 0 sats (ephemeral dust)           │
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘

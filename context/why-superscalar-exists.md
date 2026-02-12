@@ -28,7 +28,7 @@ Even if you already use Lightning, you needed on-chain Bitcoin first:
 3. Open a Lightning channel (on-chain tx)
 4. Now you can use Lightning
 
-For someone in a developing nation with a mobile phone and zero Bitcoin, step 1-3 are huge barriers. They might receive their first sats as a Lightning payment — but they need a channel first. Catch-22.
+For someone in a developing nation with a mobile phone and zero Bitcoin, steps 1-3 are huge barriers. They might receive their first sats as a Lightning payment — but they need a channel first, and they need Bitcoin to open a channel.
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
 
@@ -90,8 +90,8 @@ P2A lets **anyone** fee-bump a transaction using a single shared anchor output. 
 1. **2015**: Decker & Wattenhofer publish "Duplex Micropayment Channels"
 2. **2017**: Burchert, Decker, Wattenhofer publish "Channel Factories" paper
 3. **2021**: Taproot activates on Bitcoin (enabling MuSig2)
-4. **2024 (early)**: ZmnSCPxj experiments with laddered timeout trees — "it sucked"
-5. **2024 (mid)**: P2A finalized in Bitcoin Core 28
+4. **2024 (early)**: ZmnSCPxj experiments with laddered timeout trees alone — insufficient
+5. **2024 (October)**: P2A finalized in Bitcoin Core 28
 6. **2024 September**: ZmnSCPxj publishes SuperScalar design on Delving Bitcoin
 7. **2024-2025**: Implementation work begins
 
