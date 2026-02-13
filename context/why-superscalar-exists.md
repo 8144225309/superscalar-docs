@@ -50,12 +50,6 @@ graph TD
 
 With 8 clients per factory and [[laddering]] across staggered expiry periods (see [[laddering]] for the derivation), one LSP can serve ~260 users from 33 UTXOs instead of 260 individual UTXOs.
 
-## Why Not Just Trust the LSP?
-
-A custodial model is simpler: the LSP holds funds in omnibus accounts and settles internally. Several production wallets operate this way today. The trade-off is well understood — custodial concentration reintroduces the counterparty risk that Bitcoin was designed to eliminate. Regulatory exposure, operational failure, and theft all become single points of failure for every user on the platform.
-
-SuperScalar preserves the LSP's role as coordinator and liquidity provider while keeping fund custody with the user. The N-of-N multisig ensures the LSP cannot unilaterally move funds, and pre-signed exit transactions guarantee that every client can recover on-chain without cooperation. The goal is the onboarding convenience of a managed service with the security properties of a self-custodial channel.
-
 ## What Existed Before SuperScalar
 
 | Approach | Status | Trust Model | Consensus Changes |
