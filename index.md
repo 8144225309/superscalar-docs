@@ -90,6 +90,8 @@ SuperScalar combines three mechanisms:
 - [[history-and-origins]] — ZmnSCPxj, Spiral (Block), and the Delving Bitcoin thread
 
 ### Extensions (Future Roadmap)
+- [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
+- [[feerate-futures]] — LSP fee hedging via miner contracts
 - [[splicing-integration]] — Resizing channels inside factories
 - [[pluggable-factories]] — Plugging into existing LN software
 - [[dual-state-management]] — Handling factory transitions safely

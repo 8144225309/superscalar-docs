@@ -84,7 +84,7 @@ ariard raised concerns about the Lightning Developer Summit being selective in i
 Several design changes emerged from the thread discussion:
 
 1. **Inverted timelock default** (Post #26): Changed from LSP-favored timeout to client-favored timeout, shifting economic risk to the LSP
-2. **Wide leaf variant** (Post #16): Alternative topology with fewer DW layers
+2. **[[pseudo-spilman-leaves|Pseudo-Spilman wide leaves]]** (Post #16, later expanded in a dedicated thread): Alternative topology with fewer DW layers, reducing CLTV delta
 3. **P2A integration** (instagibbs): Confirmed that P2A from Bitcoin Core 28 solves the fee-bumping problem that previously made DW impractical
 4. **Shachain for liquidity stock**: Added a compact [[shachain-revocation|revocation mechanism]] to punish an LSP that broadcasts stale liquidity allocations
 
