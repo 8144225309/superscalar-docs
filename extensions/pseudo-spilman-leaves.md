@@ -2,11 +2,21 @@
 
 > **Summary**: An alternative leaf design that replaces one layer of Decker-Wattenhofer with a simpler unidirectional construct. Each "wide leaf" groups four clients under two pseudo-Spilman factories, reducing the total DW depth and shortening the CLTV delta imposed on public-network HTLCs.
 
+## The Base Design vs This Refinement
+
+The current SuperScalar prototype uses **pure Decker-Wattenhofer all the way down** — every level of the [[factory-tree-topology|factory tree]] is a DW layer, and the leaves are standard 2-of-2 Poon-Dryja channels. This is simpler to implement and is what the prototype builds.
+
+Pseudo-Spilman leaves are an **optional optimization** proposed two months after the original design. The prototype does not use them. They become relevant if CLTV budget constraints prove to be a real bottleneck in production.
+
 ## The Problem with Deep DW Trees
 
-In the base SuperScalar design, every level of the [[factory-tree-topology|factory tree]] is a Decker-Wattenhofer layer. Each layer adds a relative timelock (via [[what-is-nsequence|nSequence]]) that accumulates from root to leaf. This total delay directly inflates the `min_final_cltv_expiry_delta` that clients must advertise on the public network.
+Every DW layer adds a relative timelock (via [[what-is-nsequence|nSequence]]) that accumulates from root to leaf. This total delay directly inflates the `min_final_cltv_expiry_delta` that clients must advertise on the public network.
 
 For a 3-layer DW tree with ~3 days per layer, the total DW-imposed delay is ~9 days — consuming most of the typical 2-week CLTV budget and limiting the number of hops an HTLC can traverse before reaching the client.
+
+### Why this matters concretely
+
+Every HTLC routed through the Lightning Network needs a CLTV budget — time for each hop to claim or refund the payment. The BOLT spec allows roughly 2 weeks total. If the factory's internal DW layers eat 9 of those 14 days, only 5 days remain for the rest of the route. That means fewer hops, which means the client must be well-connected (typically 1-2 hops from the LSP to the destination). Removing one DW layer frees ~3 days of CLTV budget, allowing more routing flexibility.
 
 ## The Refinement: Wide Leaves
 
@@ -67,11 +77,19 @@ The trade-off: every state update adds another transaction to the unilateral-exi
 | **Unilateral exit cost** | Fixed (one tx per DW layer) | Grows with updates (K txs per PS leaf) |
 | **Direction** | Bidirectional (DW supports any reallocation) | Unidirectional (LSP → clients only) |
 
-## The Trade-Off
+## The Core Difference: Replace vs Append
 
-Pseudo-Spilman leaves **reduce the CLTV delta** at the cost of **increased unilateral exit size** proportional to the number of leaf-level state updates. Since leaf updates are the most common operation (they require the fewest signers), this trade-off can result in longer on-chain transaction chains during force-close.
+This is the key distinction between DW and pseudo-Spilman at the leaves:
 
-In practice, the number of leaf updates is bounded by the factory's lifetime — a 30-day factory with infrequent liquidity purchases may only accumulate a handful of pseudo-Spilman states.
+**Decker-Wattenhofer** uses decrementing nSequence to **replace** old states. State 5 has a shorter delay than state 4, so it confirms first. Only the latest state hits the chain during force-close. The cost: each replacement consumes one nSequence tick, and the total delay across all ticks adds to the CLTV budget.
+
+**Pseudo-Spilman** doesn't replace anything — it **appends**. State 1 spends state 0's output. State 2 spends state 1's output. There's no timelock race because the chain is structurally ordered: you can't publish state 2 without state 1 already being on-chain. No nSequence needed, so no CLTV cost.
+
+The trade-off is direct:
+- **DW**: Fixed force-close size, but eats CLTV budget
+- **Pseudo-Spilman**: Zero CLTV cost, but force-close grows by one transaction per state update
+
+In practice, the number of leaf updates is bounded by the factory's lifetime — a 30-day factory with infrequent liquidity purchases may only accumulate a handful of pseudo-Spilman states, keeping the force-close chain short.
 
 ## Old State Poisoning Protection
 
@@ -91,8 +109,8 @@ ZmnSCPxj presented pseudo-Spilman leaves as a refinement for mobile-first deploy
 ## Current Status
 
 - **Proposed**: By ZmnSCPxj on Delving Bitcoin (November 4, 2024)
-- **Implemented**: Nowhere — no public code exists
-- **Depends on**: Base SuperScalar factory implementation
+- **Prototype**: Uses pure DW leaves (no pseudo-Spilman)
+- **When relevant**: If CLTV budget becomes a constraint in production deployments with multi-hop routing
 
 ## Related Concepts
 
