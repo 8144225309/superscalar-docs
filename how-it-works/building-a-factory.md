@@ -4,11 +4,11 @@
 
 ## Overview
 
-Building a factory is a coordinated ceremony between the LSP and all participating clients. It happens once when the factory is born, and the result is a set of pre-signed transactions that encode every possible exit path.
+Building a factory is a coordinated ceremony between the LSP and all participating clients. It runs once at factory creation, producing a set of pre-signed transactions that encode all unilateral exit paths.
 
 ```mermaid
 flowchart LR
-    G["1. Gather<br/>Clients"] --> T["2. Build<br/>Tree"] --> S["3. Sign<br/>Everything"] --> F["4. Fund<br/>On-Chain"] --> L["5. Live!<br/>Channels work"]
+    G["1. Gather<br/>Clients"] --> T["2. Build<br/>Tree"] --> S["3. Sign<br/>Everything"] --> F["4. Fund<br/>On-Chain"] --> L["5. Channels<br/>Go Live"]
 ```
 
 ## Step 1: Gather Clients
@@ -31,8 +31,8 @@ The LSP constructs the [[factory-tree-topology|factory tree]] — determining wh
 ```mermaid
 graph TD
     Fund["Funding UTXO<br/>Created by LSP<br/>Amount: sum of all channels + liquidity stock"]
-    Fund --> KR["Kickoff Root<br/>Signers: ALL + LSP"]
-    KR --> SR["State Root<br/>Signers: ALL + LSP<br/>nSeq: DW Layer 0"]
+    Fund --> KR["Kickoff Root<br/>Signers: All clients + LSP"]
+    KR --> SR["State Root<br/>Signers: All clients + LSP<br/>nSeq: DW Layer 0"]
     SR --> KL["Kickoff Left<br/>Signers: A, B + LSP"]
     SR --> KRi["Kickoff Right<br/>Signers: C, D + LSP"]
     KL --> SL["State Left<br/>Signers: A, B + LSP<br/>nSeq: DW Layer 1"]
@@ -53,11 +53,11 @@ For each node, the LSP computes:
 
 ## Step 3: Sign Everything (The MuSig2 Ceremony)
 
-This is the most complex step. Every transaction in the tree must be pre-signed before the funding UTXO is created — because once the funding UTXO exists on-chain, the exit paths must already be guaranteed.
+Every transaction in the tree must be pre-signed before the funding UTXO is created — because once the funding UTXO exists on-chain, the exit paths must already be guaranteed.
 
 ### Signing Order: Inside-Out
 
-Transactions are signed from **leaves to root**, not root to leaves. Why? Because you need to know a child transaction's txid to compute the parent's output. And you should never fund a parent before the child exit paths are signed.
+Transactions are signed from **leaves to root**. Each parent transaction's output commits to the child's txid, so children must be fully signed before their parent can be constructed.
 
 ```mermaid
 flowchart BT
@@ -68,7 +68,7 @@ flowchart BT
     SR --> KR["1. Sign kickoff_root"]
     KR --> F["0. Sign & broadcast funding tx"]
 
-    style F fill:#51cf66,color:#fff
+    style F fill:#4c6ef5,color:#fff
 ```
 
 ### The Two-Round MuSig2 Flow
@@ -76,7 +76,7 @@ flowchart BT
 For each transaction in the tree:
 
 **Round 1 — Nonce Exchange:**
-1. Each signer in the subset generates a fresh nonce pair
+1. Each signer in the subset generates two fresh nonce pairs (per the MuSig2 two-nonce scheme)
 2. Public nonces are shared with all other signers in the subset
 3. The LSP collects and distributes nonces
 
@@ -85,7 +85,7 @@ For each transaction in the tree:
 2. Partial signatures are collected by the LSP
 3. The LSP aggregates them into a final Schnorr signature
 
-With N nodes in the tree, each requiring its own MuSig2 session, the LSP coordinates **N parallel signing sessions** across two rounds.
+With N nodes in the tree, each requiring its own MuSig2 session, the LSP coordinates **N signing sessions** across two rounds — parallelized within each tree depth, but sequential across depths (inside-out).
 
 ### Nonce Pools
 
@@ -126,14 +126,14 @@ Once the funding transaction confirms:
 
 > *"Tree node fees are default-paid by the LSP. The result is that tree node fees are recovered if the LSP reaps the UTXO without publishing the entire tree."* — ZmnSCPxj
 
-Clients can enter the factory with **zero on-chain Bitcoin**. The LSP fronts all capital and earns it back through liquidity sales.
+Clients can enter the factory with **zero on-chain Bitcoin**. The LSP provides all initial capital, recovering costs through liquidity fees.
 
 ## What Could Go Wrong During Construction?
 
 | Problem | Impact | Solution |
 |---------|--------|----------|
 | Client goes offline mid-ceremony | Can't complete signing | LSP restarts with remaining clients |
-| Nonce reuse | Private key leaked! | Never happens — nonce pools are single-use |
+| Nonce reuse | Private key leaked | Mitigated by single-use nonce pools with consumption tracking |
 | LSP refuses to fund after signing | No factory created | Clients lose nothing (no funds were committed) |
 | Funding tx doesn't confirm | Factory delayed | Wait for confirmation, or RBF the funding tx |
 

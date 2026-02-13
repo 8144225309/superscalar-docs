@@ -38,7 +38,7 @@ Signer i generates:
 Sends (R₁ᵢ, R₂ᵢ) to all other signers
 ```
 
-**Why two nonces?** A single nonce would allow a malicious signer who sees all other nonces first to choose their nonce to control the aggregate nonce. Two nonces are combined with a binding factor derived from the message, preventing this attack.
+**Why two nonces?** A single nonce per signer makes aggregation vulnerable to Wagner's generalized birthday attack: an adversary who controls the timing of nonce submission can solve for a nonce that biases the aggregate. The second nonce is bound to the message via `b`, making the aggregate nonce unpredictable to any signer before the message is fixed.
 
 ### Step 2: Nonce Aggregation
 
@@ -61,9 +61,6 @@ e = H("BIP0340/challenge", R.x || P.x || message)
 
 Signer i computes:
   sᵢ = r₁ᵢ + b × r₂ᵢ + e × aᵢ × xᵢ  mod n
-
-where aᵢ is the key aggregation coefficient for signer i
-and xᵢ is signer i's private key
 ```
 
 ### Step 4: Signature Aggregation
@@ -74,7 +71,7 @@ s = Σ(sᵢ) mod n
 Final signature: (R.x, s)  — a standard 64-byte Schnorr signature
 ```
 
-This signature is valid under the aggregate key `P` and is **indistinguishable** from a single-signer Schnorr signature.
+The result is a standard 64-byte Schnorr signature, valid under `P` and indistinguishable on-chain from a single-signer signature.
 
 ## Taproot Tweaking
 
@@ -92,7 +89,7 @@ The tweak must be incorporated during signing. In the implementation, this happe
 musig_session_finalize_nonces(session, agg_nonce, message, taproot_tweak);
 ```
 
-The tweaked signature is valid for `Q` (the output key), not `P` (the internal key).
+The tweaked signature is valid for `Q` (the output key), not `P` (the internal key). For how the script tree's Merkle root is constructed, see [[tapscript-construction]].
 
 ## In the SuperScalar Codebase
 
@@ -122,10 +119,10 @@ musig_aggregate_partial_sigs(&session, partial_sigs, n_sigs, &final_sig);
 
 ## Nonce Pool Management
 
-For a factory with 6 tree nodes, each signer needs at least 6 nonces (one per transaction to sign). In practice, pools are larger to accommodate state updates:
+For a factory with N tree nodes (see [[factory-tree-topology]]), each signer needs at least N nonces — one per transaction to sign. Pools are over-provisioned to cover state updates, re-signing after partial failures, and concurrent signing sessions:
 
 ```c
-#define NONCE_POOL_SIZE 64  // Pre-generate 64 nonces per signer
+#define NONCE_POOL_SIZE 64  // ~10x headroom over a typical 6-node tree
 ```
 
 **Critical**: Nonces are **single-use**. The pool tracks which nonces have been consumed. Reusing a nonce across two different signing sessions would leak the signer's private key.
@@ -135,10 +132,10 @@ For a factory with 6 tree nodes, each signer needs at least 6 nonces (one per tr
 | Property | Guarantee |
 |----------|-----------|
 | **Unforgeability** | No subset of <N signers can produce a valid signature |
-| **Non-interactivity** | Only 2 rounds of communication needed |
+| **Two-round protocol** | Only 2 rounds of communication needed (reduced from 3 in MuSig1) |
 | **Key aggregation** | On-chain key reveals nothing about individual signers |
 | **Taproot compatibility** | Tweaked signatures work with BIP-341 script trees |
-| **Nonce safety** | Two-nonce scheme prevents Wagner's attack on nonce aggregation |
+| **Nonce safety** | Two-nonce scheme with message-bound coefficient mitigates ROS-family attacks on nonce aggregation |
 
 ## Related Concepts
 

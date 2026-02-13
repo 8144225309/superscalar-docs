@@ -1,26 +1,24 @@
 # Comparison to Ark
 
-> **Summary**: Ark and SuperScalar both solve "many users, one UTXO" but with fundamentally different trust models. Ark uses a semi-custodial ASP (Ark Service Provider) that can double-spend during rounds. SuperScalar uses N-of-N multisig where the LSP cryptographically cannot steal.
+> **Summary**: Ark and SuperScalar both address the "many users, one UTXO" problem but make different trust and interactivity trade-offs. Ark uses an ASP (Ark Service Provider) that constructs rounds with a double-spend window during transitions. SuperScalar uses N-of-N multisig requiring full participant cooperation.
 
 ## The Shared Goal
 
-Both Ark and SuperScalar try to solve the same problem: **how to give many users non-custodial (or near-non-custodial) Lightning access without one UTXO per user.**
-
-But they make very different trade-offs.
+Both Ark and SuperScalar address the same constraint: **how to give many users Lightning access without requiring one UTXO per user.** They make different trade-offs in trust model, interactivity, and soft-fork dependency.
 
 ## Side-by-Side Comparison
 
 | Feature | **SuperScalar** | **Ark** |
 |---------|----------------|---------|
-| **Provider role** | LSP (one signer among many) | ASP (Ark Service Provider, more centralized) |
+| **Provider role** | LSP (one signer among N) | ASP (Ark Service Provider, round coordinator) |
 | **Trust model** | N-of-N — LSP cannot steal | ASP could double-spend during rounds |
-| **Provider can steal?** | **No** (multisig prevents it) | **Conditional** (during round transitions) |
+| **Provider can steal?** | No (N-of-N multisig) | Double-spend window during round transitions |
 | **Consensus changes needed** | None | None (but significantly better with CTV) |
-| **User liveness requirement** | Once per month | Must refresh before expiry |
+| **User liveness requirement** | Must come online before factory expiry (~30 days) | Must refresh VTXOs before expiry (~4 weeks typical) |
 | **On-chain exit** | O(log N) transactions (tree publication) | O(1) transaction (VTXO redemption) |
 | **State updates** | Only affected subtree signers needed | All users participate in round |
 | **Interactivity** | High (MuSig2 signing ceremonies) | Lower (ASP constructs rounds) |
-| **Maturity** | Implementation in progress | Ark Labs funded, building (2024+) |
+| **Maturity** | Implementation in progress | Testnet implementations exist; production development ongoing |
 
 ## Trust Model Deep Dive
 
@@ -36,7 +34,7 @@ graph TD
     LSP -.->|"Cannot steal alone"| F
 ```
 
-The LSP is **mathematically unable** to move funds without all other participants signing. This is the same trust model as an on-chain multisig — you trust math, not people.
+The LSP cannot move funds without all other participants signing — the same trust model as an on-chain multisig.
 
 **Trade-off**: Everyone must cooperate for state updates. If someone goes offline, the affected subtree can't update until they return (or the factory enters its dying period).
 
@@ -52,23 +50,21 @@ graph TD
     ASP -.->|"Could double-spend<br/>during round transition"| F
 ```
 
-The ASP constructs "rounds" where users' Virtual UTXOs (VTXOs) are refreshed. During the transition between rounds, the ASP has a window where it could potentially double-spend.
+The ASP constructs "rounds" where users' Virtual UTXOs (VTXOs) are refreshed. During the transition between rounds, the ASP has a window where it could attempt a double-spend. However, users can detect this on-chain and redeem their VTXO unilaterally before the timeout expires.
 
-**Trade-off**: Much less interactivity needed (ASP does most of the work), but users must trust the ASP during round transitions.
+**Trade-off**: Less interactivity needed (ASP does most of the work), but users must monitor for ASP misbehavior during round transitions and exit if necessary.
 
-## When SuperScalar Is Better
+## Where Each Design Fits
 
-- **Maximum security**: If you absolutely cannot accept any trust in the service provider
-- **Developing nations**: Where service providers might be unreliable or subject to government seizure
-- **Large channel balances**: When the amount at risk justifies the stronger trust model
-- **No soft fork dependency**: Works fully today, no CTV needed
+**SuperScalar strengths:**
+- No trust assumption beyond N-of-N multisig
+- No soft fork dependency — works on Bitcoin today
+- Suited for higher-value channels where the stronger trust model justifies interactivity costs
 
-## When Ark Might Be Better
-
-- **Less interactivity**: Users don't need to participate in MuSig2 signing ceremonies
-- **Simpler exit**: O(1) on-chain transactions to exit vs O(log N) for SuperScalar
-- **With CTV**: If CTV is activated, Ark's model becomes significantly more efficient
-- **Casual users**: For small amounts where the weaker trust model is acceptable
+**Ark strengths:**
+- Lower interactivity — ASP constructs rounds without real-time participant cooperation
+- Simpler exit: O(1) on-chain transactions vs O(log N)
+- With CTV, the double-spend window can be eliminated, achieving trustlessness with less interactivity
 
 ## The Soft Fork Dimension
 
@@ -76,22 +72,15 @@ Both protocols would benefit from Bitcoin consensus changes, but in different wa
 
 | Soft Fork | SuperScalar Impact | Ark Impact |
 |-----------|-------------------|------------|
-| **CTV (OP_CHECKTEMPLATEVERIFY)** | Nice-to-have: removes need for client presence during factory construction | Transformative: eliminates ASP trust issue |
-| **APO (SIGHASH_ANYPREVOUT)** | Could replace DW with eltoo (unlimited states) | Marginal |
+| **CTV (OP_CHECKTEMPLATEVERIFY)** | Removes need for client presence during factory construction | Eliminates ASP double-spend window |
+| **APO (SIGHASH_ANYPREVOUT)** | Replaces DW with eltoo (unlimited states) | Limited direct benefit to current Ark round model |
 | **OP_CAT** | Enables competition from other designs | Enables advanced covenant constructions |
 
-If CTV activates, Ark's trust model improves dramatically. SuperScalar's advantage (stronger trust model) becomes less important because Ark would also be trustless.
+If CTV activates, Ark achieves trustlessness without requiring N-of-N interactivity, which would make its trade-off profile more competitive with SuperScalar. Without soft forks, SuperScalar remains the only construction that achieves full self-custody today.
 
-If no soft forks activate, SuperScalar's "works today" advantage persists.
+## Coexistence
 
-## The Real Competition
-
-In practice, SuperScalar and Ark serve slightly different niches:
-
-- **Ark** → Optimized for casual users who want simple UX and don't mind mild trust assumptions
-- **SuperScalar** → Optimized for users who need the strongest possible trust guarantees without consensus changes
-
-They might even coexist: an LSP could run SuperScalar factories for high-value clients and point casual users to Ark-based solutions.
+SuperScalar and Ark occupy different points in the design space. They are not mutually exclusive — an operator could use SuperScalar for clients requiring strong trust guarantees and Ark for clients who prefer lower interactivity.
 
 ## Related Concepts
 

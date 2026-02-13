@@ -1,6 +1,6 @@
 # Force Close (Unilateral Exit)
 
-> **Summary**: If the LSP misbehaves or a client can't cooperate, anyone can publish the pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. It's expensive and slow, but funds are always recoverable.
+> **Summary**: If the LSP misbehaves or a client cannot cooperate, any participant can publish pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. The process is expensive and slow, but funds are recoverable (subject to dust economics — very small balances may cost more in fees than they are worth).
 
 ## When Does Force-Close Happen?
 
@@ -8,11 +8,11 @@
 |----------|--------------|
 | LSP goes offline permanently | Client |
 | LSP refuses to cooperate | Client |
-| Client misses dying period and never returns | LSP (via timeout) |
+| Client misses dying period and never returns | LSP (via CLTV timeout path) |
 | Suspected cheating | Either party |
 | LSP shut down by authorities | All clients |
 
-Force-close is the **last resort**. It's always available, but it's expensive — multiple transactions must hit the blockchain, each paying fees, and time delays add up.
+Force-close is the **last resort**. Multiple tree transactions must be published on-chain, and Decker-Wattenhofer delays accumulate at each state layer.
 
 ## The Process (8-Client Factory, Arity 2)
 
@@ -24,23 +24,23 @@ sequenceDiagram
     participant Chain as Blockchain
 
     A->>Chain: 1. Publish kickoff_root (confirms next block)
-    Note over Chain: ⏱️ No delay — kickoff has nSeq disabled
+    Note over Chain: No relative timelock (kickoff nSequence = 0xFFFFFFFF)
 
-    A->>Chain: 2. Publish state_root (latest version!)
-    Note over Chain: ⏱️ DW Layer 0 delay: up to 432 blocks
+    A->>Chain: 2. Publish state_root (latest version)
+    Note over Chain: DW Layer 0 delay: up to 432 blocks
 
     Note over Chain: If cheater published old state_root,<br/>Alice's newer version wins the race
 
     A->>Chain: 3. After state_root confirms:<br/>Publish kickoff_left (confirms next block)
-    Note over Chain: ⏱️ No delay
+    Note over Chain: No relative timelock
 
-    A->>Chain: 4. Publish state_left (latest version!)
-    Note over Chain: ⏱️ DW Layer 1 delay: up to 432 blocks
+    A->>Chain: 4. Publish state_left (latest version)
+    Note over Chain: DW Layer 1 delay: up to 432 blocks
 
     A->>Chain: 5. Publish state_left_sibling (must also resolve)
-    Note over Chain: ⏱️ DW Layer 1 delay
+    Note over Chain: DW Layer 1 delay
 
-    Note over Chain: Alice's channel is now on-chain!
+    Note over Chain: Alice's channel is now on-chain
 
     A->>Chain: 6. Standard Poon-Dryja close of A&L channel
 ```
@@ -61,18 +61,18 @@ At each state node level, a race happens:
 ```mermaid
 graph TD
     subgraph "The Race at State Root Level"
-        SR_OLD["Old state_root<br/>nSeq = 432<br/>⏱️ Must wait 432 blocks"]
-        SR_NEW["New state_root<br/>nSeq = 144<br/>⚡ Only waits 144 blocks"]
+        SR_OLD["Old state_root (epoch 0)<br/>nSeq = 432<br/>Must wait 432 blocks"]
+        SR_NEW["New state_root (epoch 2)<br/>nSeq = 144<br/>Waits 144 blocks"]
     end
 
-    SR_NEW -->|"Wins!"| CONFIRM["Confirms first ✅"]
-    SR_OLD -->|"Too slow"| INVALID["Becomes invalid ❌<br/>(UTXO already spent)"]
+    SR_NEW -->|"Confirms first"| CONFIRM["Spends the UTXO"]
+    SR_OLD -->|"Delay not yet elapsed"| INVALID["Becomes invalid<br/>(UTXO already spent)"]
 
     style SR_NEW fill:#51cf66,color:#fff
     style SR_OLD fill:#ff6b6b,color:#fff
 ```
 
-Even if a cheater broadcasts their old state transaction first, it can't confirm before the honest party's newer transaction (which has a shorter nSequence). This is the [[decker-wattenhofer-invalidation|Decker-Wattenhofer mechanism]] at work.
+This is the [[decker-wattenhofer-invalidation|Decker-Wattenhofer mechanism]]: a shorter nSequence always wins the race for the same UTXO.
 
 ## The [[kickoff-vs-state-nodes|Kickoff Circuit Breaker]]
 
@@ -85,10 +85,10 @@ Not everyone is equally affected:
 ```mermaid
 graph TD
     R["Root"] --> L["Left Half"]
-    R --> Ri["Right Half<br/>✅ UNAFFECTED<br/>Subtree stays off-chain"]
+    R --> Ri["Right Half<br/>(unaffected)<br/>Subtree stays off-chain"]
 
-    L --> LL["Alice & Bob<br/>⚠️ Channels go on-chain"]
-    L --> LR["Carol & Dave<br/>⚠️ Channels go on-chain"]
+    L --> LL["Alice & Bob<br/>(affected)<br/>Channels go on-chain"]
+    L --> LR["Carol & Dave<br/>(affected)<br/>Channels go on-chain"]
 
     style Ri fill:#51cf66,color:#fff
     style LL fill:#ff922b,color:#fff
@@ -120,9 +120,9 @@ This solves the fee estimation problem: tree transactions are pre-signed with lo
 
 What prevents a griefing attack where someone fee-bumps an OLD state transaction? The [[shachain-revocation|shachain mechanism]]:
 
-- Old state transactions have liquidity stock outputs with revealed secrets
-- If someone publishes an old state, clients burn the LSP's liquidity stock to fees
-- This makes it economically irrational to fee-bump old states
+- Old state transactions have liquidity stock outputs locked to revealed shachain secrets
+- If an old state confirms, clients can burn the LSP's liquidity stock to miner fees
+- This makes it economically irrational for the LSP to broadcast old states
 
 ## Timing: How Long Does It Take?
 
@@ -134,18 +134,16 @@ Worst-case timing for a 2-layer DW factory:
 | State root DW delay | Up to 432 blocks (~3 days) |
 | Kickoff left confirms | 1 block (~10 min) |
 | State left DW delay | Up to 432 blocks (~3 days) |
-| Poon-Dryja to_self_delay | ~144 blocks (~1 day) |
+| Channel-level to_self_delay (Poon-Dryja) | ~144 blocks (~1 day) |
 | **Total worst case** | **~7 days** |
 
 This is significantly worse than a regular Lightning force-close (~1 day). The longer delay is the cost of sharing a UTXO among multiple participants.
 
 ## The Inverted Timelock Safety Net
 
-With the [[timeout-sig-trees|inverted timelock]] design, even if a client CAN'T publish the tree (e.g., they don't have the pre-signed transactions), a pre-signed nLockTime'd transaction ensures:
+With the [[timeout-sig-trees|inverted timelock]] design, even if a client cannot publish the tree (e.g., they lost the pre-signed transactions), a pre-signed `nLockTime` transaction exists that distributes funds to clients once the factory's CLTV timeout height is reached:
 
-> At the factory's CLTV timeout, funds are automatically distributed to clients.
-
-The client just has to wait. The LSP is forced to act before the timeout or lose capital.
+> Any party holding a copy of the pre-signed timeout transaction can broadcast it after the CLTV height. The LSP must act before the timeout or lose its capital locked in the factory.
 
 ## Related Concepts
 
@@ -153,4 +151,4 @@ The client just has to wait. The LSP is forced to act before the timeout or lose
 - [[kickoff-vs-state-nodes]] — Why the alternation prevents cascade failures
 - [[shachain-revocation]] — Punishment for broadcasting old states
 - [[cooperative-close]] — The much better alternative
-- [[security-model]] — Full analysis of force-close guarantees
+- [[security-model]] — Threat analysis and trust assumptions, including force-close guarantees

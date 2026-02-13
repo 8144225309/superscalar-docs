@@ -1,28 +1,20 @@
 # What Is nSequence? (Relative Timelocks)
 
-> **Summary**: A field in every Bitcoin transaction input that can enforce a **waiting period** — "this transaction can't confirm until X blocks after its parent confirms." This is the core trick that makes Decker-Wattenhofer work.
-
-## The Analogy
-
-Imagine a race where different runners have different **head starts**:
-
-- Runner A (newest state) starts at the starting line — no delay
-- Runner B starts 1 mile back — 144 blocks of delay
-- Runner C starts 2 miles back — 288 blocks of delay
-- Runner D (oldest state) starts 3 miles back — 432 blocks of delay
-
-No matter how fast Runner D is, Runner A always wins. That's how nSequence prevents old states from beating new ones.
+> **Summary**: A field in every Bitcoin transaction input that can enforce a **relative timelock** — "this transaction cannot confirm until X blocks after its parent confirms." This is the mechanism that makes Decker-Wattenhofer invalidation work.
 
 ## How nSequence Works (BIP-68)
 
 Every Bitcoin transaction input has a 32-bit `nSequence` field. When certain bits are set, it enforces a **relative timelock**:
 
 ```
-nSequence bits:
-[31]    = disable flag (if set, no timelock enforced)
-[22]    = type flag (0 = blocks, 1 = seconds)
-[15:0]  = value (number of blocks or 512-second intervals)
+BIP-68 nSequence encoding:
+[31]    = disable flag (if set, BIP-68 relative timelock is not enforced)
+[30:23] = reserved (must be zero for BIP-68 enforcement)
+[22]    = type flag (0 = blocks, 1 = 512-second intervals)
+[15:0]  = value (number of blocks or number of 512-second intervals)
 ```
+
+The relative timelock encoded in `nSequence` is enforced at the consensus level (BIP-68). Scripts can additionally require a minimum relative timelock using `OP_CHECKSEQUENCEVERIFY` (BIP-112/CSV), which verifies that the spending transaction's `nSequence` is at least a specified value.
 
 ```mermaid
 graph LR
@@ -31,26 +23,24 @@ graph LR
 
 **Example**: If a parent transaction confirms at block 100 and the child has `nSequence = 144`, the child cannot be included in any block before 244.
 
-## The Decker-Wattenhofer Trick
+## Application in Decker-Wattenhofer
 
-This is where it gets clever. In [[decker-wattenhofer-invalidation|Decker-Wattenhofer]], every time the state updates, the new version gets a **lower** nSequence than the old one:
+In [[decker-wattenhofer-invalidation|Decker-Wattenhofer]], each state update gets a **lower** nSequence than the previous one:
 
 ```mermaid
 graph TD
-    F["Funding TX<br/>(on-chain)"] --> S0["State 0<br/>nSequence = 432 blocks<br/>❌ Oldest — trapped"]
+    F["Funding TX<br/>(on-chain)"] --> S0["State 0<br/>nSequence = 432 blocks<br/>(oldest)"]
     F --> S1["State 1<br/>nSequence = 288 blocks"]
     F --> S2["State 2<br/>nSequence = 144 blocks"]
-    F --> S3["State 3<br/>nSequence = 0 blocks<br/>✅ Newest — wins"]
+    F --> S3["State 3<br/>nSequence = 0 blocks<br/>(newest — wins race)"]
 
     style S0 fill:#ff6b6b,color:#fff
     style S3 fill:#51cf66,color:#fff
 ```
 
-All these state transactions spend the **same output** (only one can confirm). Since State 3 has `nSequence = 0`, it can confirm immediately. State 0 must wait 432 blocks. Even if a cheater broadcasts State 0 first, State 3 will confirm first.
+All these state transactions spend the **same output** (only one can confirm). Since State 3 has `nSequence = 0`, it is eligible for inclusion in the next block. State 0 must wait 432 blocks. Even if a cheater broadcasts State 0 first, State 3 becomes eligible sooner.
 
-**Important**: Only one of these transactions can actually confirm (they all spend the same UTXO). The nSequence just ensures the **newest** one always wins the race.
-
-## The Trade-off: Finite States
+## Trade-off: Finite States
 
 Each step costs you some delay. With a step size of 144 blocks:
 
@@ -66,7 +56,7 @@ This is why SuperScalar uses the [[the-odometer-counter|odometer counter]] — b
 
 ## nSequence = 0 vs nSequence Disabled
 
-There's a subtle but important distinction:
+These two values have different semantics:
 
 | Value | Meaning |
 |-------|---------|
@@ -75,7 +65,7 @@ There's a subtle but important distinction:
 
 In the SuperScalar [[factory-tree-topology|factory tree]]:
 - **State nodes** use decreasing nSequence values (the DW mechanism)
-- **Kickoff nodes** use `nSequence = disabled` — they confirm immediately and aren't part of the time-delay race
+- **Kickoff nodes** use `nSequence = 0xFFFFFFFF` (disabled) — they confirm immediately and aren't part of the time-delay race
 
 ## Related Concepts
 

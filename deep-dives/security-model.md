@@ -2,11 +2,11 @@
 
 > **Summary**: SuperScalar's security guarantee is simple — every client can always exit unilaterally, and the LSP cannot steal funds. The N-of-N multisig means no single party has unilateral control. The trade-offs are in liveness requirements, force-close costs, and the unsolved forced expiration spam problem.
 
-## The Core Guarantee
+## Core Property
 
 > *"Each client can unilaterally exit; LSP cannot steal."*
 
-This is the non-negotiable property. Everything else — efficiency, scalability, user experience — is secondary to this.
+This property is enforced by the N-of-N multisig and pre-signed exit transactions. All other design decisions (efficiency, scalability, UX) are secondary.
 
 ## Trust Assumptions
 
@@ -19,7 +19,7 @@ graph TD
     end
 
     subgraph "What You DON'T Trust"
-        LSP["The LSP<br/>(cannot steal, cannot censor)"]
+        LSP["The LSP<br/>(cannot steal; can refuse to<br/>sign updates but cannot take funds)"]
         OTHER["Other clients<br/>(cannot affect your funds)"]
         MINER["Miners<br/>(normal Bitcoin assumptions)"]
     end
@@ -41,11 +41,11 @@ graph TD
 
 ### Threat 1: LSP Tries to Steal
 
-**Attack**: LSP broadcasts an old state where it had more liquidity stock.
+**Attack**: LSP broadcasts an old state to reclaim liquidity it had already sold to clients.
 
-**Defense (Layer 1)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence and confirms first. Old state cannot win the race.
+**Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay and confirms first. The old state cannot win the race, regardless of whether the honest party is online.
 
-**Defense (Layer 2)**: [[shachain-revocation]] — if the old state somehow confirms (e.g., the honest party is offline), clients can burn the LSP's liquidity stock using the revealed shachain secret. Cheating costs more than it gains.
+**Defense (secondary)**: [[shachain-revocation]] — even if the LSP attempts to broadcast an old state, clients hold the revealed shachain secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational.
 
 **Verdict**: LSP cannot profitably steal.
 
@@ -87,7 +87,7 @@ graph TD
 
 **Attack**: A miner colludes with the LSP to censor the honest client's newer state transaction, allowing the old state to confirm after the DW delay.
 
-**Defense**: Standard Bitcoin censorship resistance — the client can submit to any miner. The DW delay window (432 blocks ≈ 3 days) gives the client ample time to get their transaction included by ANY honest miner.
+**Defense**: Standard Bitcoin censorship resistance — the client can submit their newer state transaction to any miner. The defense window equals the nSequence difference between the old and new states (at minimum 144 blocks per DW step, approximately 1 day). The client's newer transaction, having a shorter delay, confirms first as long as any honest miner includes it within this window.
 
 **Verdict**: Requires sustained mining censorship. Same assumption as all Lightning.
 
@@ -100,7 +100,7 @@ graph TD
 2. Force-close and take funds on-chain
 3. Wait for the inverted timelock to distribute funds automatically
 
-**Verdict**: Annoying but not dangerous. Client has multiple fallback paths.
+**Verdict**: Inconvenient but not dangerous. Client has multiple fallback paths.
 
 ## The Economic Security Model
 
@@ -115,12 +115,12 @@ Beyond cryptographic guarantees, SuperScalar relies on **economic incentives**:
 | Refuse to cooperate | Loses all future revenue from client | Nothing |
 | Shut down entirely | Loses all business | N/A |
 
-**Cheating is always unprofitable** because the shachain punishment destroys more value than the LSP could gain from an old state.
+Cheating is unprofitable under normal conditions because the shachain punishment destroys more value than the LSP could gain from an old state.
 
 ## Open Problems
 
 ### 1. Forced Expiration Spam
-Mass force-close events could overwhelm block space. No protocol-level solution exists.
+See [Threat 4](#threat-4-forced-expiration-spam) above. No protocol-level solution exists for any timelock-based protocol. Laddering and subtree isolation mitigate but do not eliminate the risk.
 
 ### 2. Fair Exchange of Private Keys
 The PTLC-based key handover is atomic, but there's no guarantee the LSP will initiate the on-chain PTLC before timelocks expire. In theory, this is an unsolved problem. In practice, the LSP is incentivized to cooperate.
@@ -129,18 +129,18 @@ The PTLC-based key handover is atomic, but there's no guarantee the LSP will ini
 If a client's channel balance is very small, the on-chain force-close transaction might cost more in fees than the channel is worth. The client's funds are effectively "dust" — they exist in theory but aren't economically recoverable.
 
 ### 4. Are 64 States Enough?
-With 2 DW layers × 4 states = 16 total epochs (the default 8-client tree), or 3 DW layers for 64 epochs (deeper tree), the factory has a limited number of state updates over its 30-day lifetime. If the factory is busy, this could run out. Open question.
+With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. This remains an open question.
 
 ## Comparison to Other Trust Models
 
 | System | Trust Model | Can Provider Steal? |
 |--------|------------|-------------------|
 | **Custodial wallet** | Full trust in provider | Yes |
-| **Ark (ASP model)** | Trust ASP won't double-spend during round | Conditional |
-| **SuperScalar** | Zero trust in LSP | **No** (N-of-N prevents it) |
+| **Ark (ASP model)** | Trust ASP won't double-spend during round | During round transitions |
+| **SuperScalar** | N-of-N multisig | No (requires all signers) |
 | **On-chain Bitcoin** | Zero trust | No (you hold the keys) |
 
-SuperScalar's trust model is as close to on-chain self-custody as you can get while sharing a UTXO with others.
+SuperScalar's trust model matches on-chain multisig: no single party can move funds unilaterally, and pre-signed transactions guarantee exit without cooperation.
 
 ## Related Concepts
 

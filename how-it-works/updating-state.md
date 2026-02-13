@@ -17,13 +17,13 @@ Factory state updates are triggered by:
 
 ## Update Scope: Who Needs to Be Online?
 
-This is one of SuperScalar's key advantages — **most updates are local**:
+The tree structure ensures **most updates are local**:
 
 ```mermaid
 graph TD
-    R["Root Update<br/>ALL clients + LSP<br/>9 signers<br/>❌ Hardest"]
-    R --> M["Subtree Update<br/>Half the clients + LSP<br/>5 signers<br/>⚠️ Medium"]
-    M --> L["Leaf Update<br/>2 clients + LSP<br/>3 signers<br/>✅ Easiest"]
+    R["Root Update<br/>ALL clients + LSP<br/>9 signers"]
+    R --> M["Subtree Update<br/>Half the clients + LSP<br/>5 signers"]
+    M --> L["Leaf Update<br/>2 clients + LSP<br/>3 signers"]
 
     style R fill:#ff6b6b,color:#fff
     style M fill:#ff922b,color:#fff
@@ -32,11 +32,11 @@ graph TD
 
 | Update Level | Who Must Be Online | How Common |
 |-------------|-------------------|-----------|
-| Leaf state (Layer 1) | 2 local clients + LSP | **Very common** |
+| Leaf state (DW Layer 1) | 2 local clients + LSP | **Very common** |
 | One level up | 4 clients in half-tree + LSP | Occasional |
 | Root state (Layer 0) | All clients + LSP | Rare |
 
-**Most updates are leaf updates.** The whole point of the tree structure is to keep updates local.
+**Most updates are leaf updates.**
 
 ## How a Leaf Update Works
 
@@ -53,10 +53,10 @@ sequenceDiagram
     L->>L: Computes new leaf outputs
 
     Note over A,L: Step 2: MuSig2 Round 1 (Nonces)
-    A->>L: Alice's nonce
-    B->>L: Bob's nonce
-    L->>A: LSP nonce + Bob's nonce
-    L->>B: LSP nonce + Alice's nonce
+    A->>L: Alice's public nonce
+    B->>L: Bob's public nonce
+    L->>A: All public nonces (Alice, Bob, LSP)
+    L->>B: All public nonces (Alice, Bob, LSP)
 
     Note over A,L: Step 3: MuSig2 Round 2 (Partial Sigs)
     A->>L: Alice's partial signature
@@ -67,14 +67,14 @@ sequenceDiagram
     Note over A,L: Step 4: Advance DW counter
     Note over A,L: Old state: nSeq=288<br/>New state: nSeq=144
 
-    Note over A,L: Step 5: Share old shachain secret
-    L->>A: Secret for old epoch
-    L->>B: Secret for old epoch
+    Note over A,L: Step 5: LSP reveals old shachain secret
+    L->>A: Shachain secret for old epoch
+    L->>B: Shachain secret for old epoch
 ```
 
 ### What Changed?
 
-**Before (epoch 4):**
+**Before (epoch 1):**
 ```
 state_left (nSeq = 288):
   - Alice & LSP channel: 100k sats
@@ -82,7 +82,7 @@ state_left (nSeq = 288):
   - LSP liquidity stock: 200k sats
 ```
 
-**After (epoch 5):**
+**After (epoch 2):**
 ```
 state_left (nSeq = 144):
   - Alice & LSP channel: 150k sats (50k more inbound)
@@ -90,15 +90,15 @@ state_left (nSeq = 144):
   - LSP liquidity stock: 150k sats (50k less — sold to Alice)
 ```
 
-The [[the-odometer-counter|odometer]] ticked from epoch 4 to epoch 5. The new state transaction has a **lower nSequence** (144 vs 288), so it will always beat the old state on-chain.
+The [[the-odometer-counter|odometer]] ticked from epoch 1 to epoch 2. The new state transaction has a **lower nSequence** (144 vs 288), so it will always beat the old state on-chain.
 
 ## The Odometer Tick
 
-Each leaf update ticks the **inner layer** of the odometer. When the inner layer exhausts all states:
+Each leaf update ticks the **inner layer** of the odometer. When the inner layer reaches its terminal value:
 
 ```
-Epoch 3:  Layer0=432, Layer1=0     (inner layer exhausted — all states used)
-Epoch 4:  Layer0=288, Layer1=432   (CARRY! Outer ticks, inner resets)
+Epoch 3:  Layer0=432, Layer1=0     (inner layer at terminal value)
+Epoch 4:  Layer0=288, Layer1=432   (CARRY: outer ticks, inner resets)
 ```
 
 A carry requires a **higher-level update** — more signers must be online to sign the new root-level state transaction. This is rare (happens every K leaf updates, where K is states per layer).

@@ -18,59 +18,11 @@ graph TD
 
 The LSP role isn't restricted to corporations — anyone with a Lightning node, liquidity, and a server can operate as an LSP. But within any given factory, there is exactly one.
 
-## Who Can Run an LSP?
+## LSP in a Factory vs. Traditional Channels
 
-Any of these could serve as the single LSP for a factory full of clients:
+In the traditional model, an LSP needs one on-chain UTXO per client channel (see [[why-superscalar-exists]]). In SuperScalar, one UTXO funds a factory containing channels for many clients. The LSP coordinates construction and provides initial liquidity, but N-of-N multisig prevents it from moving funds unilaterally.
 
-| Operator | Example | Serves |
-|----------|---------|--------|
-| **A company** | Phoenix (ACINQ), Breez | Thousands of mobile wallet users |
-| **A community node** | A Bitcoin meetup group | Local community members |
-| **An individual node runner** | Someone with a server and liquidity | Anyone who connects |
-
-The protocol doesn't care who runs the LSP node — it only cares that the cryptographic guarantees hold. But in every case, the LSP is **one node serving many clients**.
-
-## The Current Model (Without Factories)
-
-```mermaid
-graph TD
-    LSP["LSP Node<br/>(always online)"]
-    LSP -->|"1 UTXO each"| A["Alice's Channel"]
-    LSP -->|"1 UTXO each"| B["Bob's Channel"]
-    LSP -->|"1 UTXO each"| C["Carol's Channel"]
-    LSP -->|"1 UTXO each"| D["Dave's Channel"]
-
-    style LSP fill:#4c6ef5,color:#fff
-```
-
-**The bottleneck**: Each user requires their own on-chain UTXO. If a node operator wants to serve 1,000 users, that's 1,000 on-chain transactions just to get started.
-
-## The SuperScalar Model (With Factories)
-
-```mermaid
-graph TD
-    LSP["LSP Node<br/>(always online)"]
-    LSP -->|"1 shared UTXO"| F["Factory<br/>(off-chain tree)"]
-    F --> A["Alice's Channel"]
-    F --> B["Bob's Channel"]
-    F --> C["Carol's Channel"]
-    F --> D["Dave's Channel"]
-
-    style LSP fill:#4c6ef5,color:#fff
-    style F fill:#fab005,color:#000
-```
-
-**The improvement**: Many users share one UTXO through a factory. The LSP node coordinates factory construction, provides initial liquidity, and manages the lifecycle — but **cannot steal or censor** because every transaction requires N-of-N multisig.
-
-## How Users Find an LSP
-
-Users don't run their own LSPs — they **connect to** one. For this to work, users need a way to discover LSPs and LSPs need a way to gather clients into factories:
-
-- **LSP discovery**: An LSP advertises that it runs SuperScalar factories and has liquidity available
-- **Client onboarding**: Users browse available LSPs, compare terms (fees, capacity, liveness requirements), and join one
-- **Multiple LSPs competing**: If one LSP has bad terms or goes offline, users can migrate to another during factory transitions
-
-The protocol doesn't mandate a specific discovery mechanism. It could be a directory, a decentralized bulletin board, or peer-to-peer gossip. What matters is that users have **choice** among LSPs.
+LSP discovery and client onboarding are out of scope for the SuperScalar protocol itself; existing standards like the LSP Specification (LSPS) could serve this role.
 
 ## The LSP's Role in SuperScalar
 
@@ -87,7 +39,7 @@ The protocol doesn't mandate a specific discovery mechanism. It could be a direc
 | Guarantee | Why |
 |-----------|-----|
 | **Cannot steal funds** | Every transaction uses N-of-N multisig — the LSP is just one signer among many |
-| **Cannot censor unilaterally** | State updates require all participants in the affected subtree to sign |
+| **Cannot block exit** | State updates require cooperation, but the LSP refusing to cooperate cannot prevent unilateral exit |
 | **Cannot prevent exit** | Exit transactions are pre-signed during construction; clients can always broadcast them |
 | **Cannot refuse refund** | If the LSP stops cooperating, clients force-close and get their funds on-chain |
 
@@ -109,7 +61,7 @@ SuperScalar shifts risk to the LSP operator rather than clients:
 
 > *"I have been refining SuperScalar to shift much of the risk to the LSP, precisely to prevent risks on clients."* — ZmnSCPxj
 
-The worst case for a client: the LSP node goes offline permanently. In this case, clients perform a [[force-close|unilateral exit]], which puts their funds on-chain. It's inconvenient and costs fees, but **funds are never lost**.
+The worst case for a client: the LSP node goes offline permanently. In this case, clients perform a [[force-close|unilateral exit]], which puts their funds on-chain. This requires on-chain fees and delays, but **funds are never lost**.
 
 ## The Liveness Requirement
 
@@ -120,28 +72,21 @@ The worst case for a client: the LSP node goes offline permanently. In this case
 
 If a client misses the dying period, they must [[force-close]] — but their funds are safe.
 
-## The Bigger Picture
+## Zero-UTXO Onboarding
 
-SuperScalar isn't just a scaling optimization. ZmnSCPxj designed it with a specific mission: enabling financial self-sovereignty for people who have **nothing** to start with.
+A factory-hosted channel allows clients to receive their first sats without owning an on-chain UTXO:
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
 
-Consider someone in a developing nation with a mobile phone and zero Bitcoin. Today, they can't use Lightning because they need an on-chain UTXO to open a channel. SuperScalar lets them receive their first sats through a factory-hosted channel — no on-chain transaction needed.
+If an LSP misbehaves, a client without funds to pay exit fees can take their pre-signed exit transactions to a competing LSP, which can broadcast them and earn a bounty for the shachain punishment.
 
-> *"One may consider this scheme as ways for a client to build up their Bitcoin holdings without having an onchain UTXO, but with an assurance that the service provider has no incentive to rug their funds until they have accumulated enough to own their own unique UTXO."* — ZmnSCPxj
+## Multiple LSPs
 
-The design even accounts for clients who have no funds at all to pay for exit fees. If an LSP misbehaves, a truly destitute client can take their pre-signed exit transactions to a **competing LSP**, who can broadcast them and earn a bounty for punishing the bad actor. You don't need money to have recourse — the cryptographic guarantees work regardless.
+The protocol assumes a competitive market of LSPs:
 
-## The Decentralization Goal
-
-The vision isn't one LSP serving everyone. It's **many LSPs** — big and small — competing on terms, with users free to move between them. SuperScalar makes this practical:
-
-- **Low barrier to entry**: Anyone with a node and liquidity can coordinate a factory
-- **Client migration**: Users can move from one LSP to another during factory transitions
-- **No lock-in**: Pre-signed exit transactions mean you can always leave
-- **Competitive market**: Multiple LSPs competing drives down fees and improves service
-
-The more operators there are, the more resilient and decentralized the network becomes.
+- **Low barrier to entry**: Any node with liquidity can coordinate a factory
+- **Client migration**: Users move between LSPs during factory transitions ([[client-migration]])
+- **No lock-in**: Pre-signed exit transactions guarantee the ability to leave
 
 ## Related Concepts
 

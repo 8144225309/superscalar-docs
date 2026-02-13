@@ -1,33 +1,33 @@
 # The Odometer Counter
 
-> **Summary**: By stacking multiple Decker-Wattenhofer layers, you get exponentially more states. 2 layers × 4 states each = 16 total states. 3 layers × 4 states = 64. It works like a car odometer — the inner digit ticks fastest and carries over.
+> **Summary**: By stacking multiple Decker-Wattenhofer layers, you get exponentially more states. 2 layers with 4 states each = 4^2 = 16 total states. 3 layers with 4 states each = 4^3 = 64. The inner layer ticks fastest and carries over to the next outer layer.
 
 ## The Problem
 
-A single [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] layer with 4 states only gives you 4 updates. That's nowhere near enough — a factory running for 30 days might need 64 state changes (for channel opens, closes, and rebalances).
+A single [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] layer with 4 states only gives you 4 updates. This is insufficient — a factory running for 30 days may need 64 state changes for channel opens, closes, and rebalances.
 
-You could have a single layer with 64 states, but the starting delay would be `63 × 144 = 9,072 blocks` ≈ **63 days**. That's impractical.
+You could have a single layer with 64 states, but the starting delay would be `63 × 144 = 9,072 blocks` ≈ **63 days**. This exceeds the factory's own lifetime.
 
 ## The Solution: Stack Layers
 
-Think of it like a **car odometer**. A single digit goes from 0 to 9 (10 values). But TWO digits go from 00 to 99 (100 values) — exponentially more, without needing a 100-position dial.
+The approach is analogous to an odometer: a single digit gives K values, but N digits give K^N values — exponentially more, without increasing the range of any single digit.
 
 ```mermaid
 graph LR
     subgraph "Single Layer: 4 states"
-        SL["0 → 1 → 2 → 3<br/>That's it. 4 updates total."]
+        SL["0 → 1 → 2 → 3<br/>4 updates total"]
     end
 
     subgraph "Two Layers: 4 × 4 = 16 states"
-        TL["00 → 01 → 02 → 03<br/>→ 10 → 11 → 12 → 13<br/>→ 20 → 21 → 22 → 23<br/>→ 30 → 31 → 32 → 33<br/>16 updates total!"]
+        TL["00 → 01 → 02 → 03<br/>→ 10 → 11 → 12 → 13<br/>→ 20 → 21 → 22 → 23<br/>→ 30 → 31 → 32 → 33<br/>16 updates total"]
     end
 ```
 
-**With 3 layers × 4 states each = 64 total states** — enough for a 30-day factory lifetime, and the maximum delay per layer is still only 432 blocks (~3 days).
+**With 3 layers × 4 states each = 64 total states** — enough for a 30-day factory lifetime, and the maximum delay per layer remains 432 blocks (~3 days).
 
 ## How the Odometer Ticks
 
-Each layer is like a digit on the odometer. The **innermost layer** (closest to the leaves) ticks fastest. When it maxes out, it resets and carries over to the next layer:
+The **innermost layer** (closest to the leaves) ticks fastest. When it exhausts its states, it resets and carries over to the next outer layer:
 
 ```
 Epoch  0: Layer0=432, Layer1=432  (both at max delay)
@@ -70,7 +70,7 @@ graph TD
 | 3 layers × 4 states | **64** | 432 blocks (~3 days) | 9 days |
 | 1 layer × 64 states | 64 | 9,072 blocks (~63 days) | **63 days** |
 
-The odometer gives you 64 states with a worst-case delay of 9 days. A flat counter would need 63 days. That's a **7× improvement** in worst-case force-close time.
+The odometer gives 64 states with a worst-case delay of 9 days. A flat counter with 64 states would require 63 days — the layered approach reduces worst-case force-close time by a factor of 7.
 
 ## In the Factory Tree
 
@@ -78,20 +78,18 @@ In the [[factory-tree-topology|SuperScalar factory tree]], each DW layer corresp
 
 ```
 Root kickoff  ─── (no delay)
-Root state    ─── DW Layer 0 (outer, ticks slowly)
-  ├─ Left kickoff  ─── (no delay)
-  ├─ Left state    ─── DW Layer 1 (inner, ticks fast)
-  ├─ Right kickoff ─── (no delay)
-  └─ Right state   ─── DW Layer 1 (inner, ticks fast)
+└─ Root state ─── DW Layer 0 (outer, ticks slowly)
+   ├─ Left kickoff  ─── (no delay)
+   │  └─ Left state  ─── DW Layer 1 (inner, ticks fast)
+   └─ Right kickoff ─── (no delay)
+      └─ Right state ─── DW Layer 1 (inner, ticks fast)
 ```
 
-A deeper tree with an additional level of branching would add a 3rd DW layer, giving 64 states — enough for busier factories.
+A deeper tree with an additional level of branching would add a 3rd DW layer, giving 64 states — suitable for factories requiring more frequent structural updates.
 
 When a leaf state update happens:
-1. The inner layer ticks — its nSequence decrements
-2. When the inner layer exhausts all 4 states, it resets
-3. The next outer layer ticks — ITS nSequence decrements
-4. This "carry" is like the odometer rolling from 039 to 040
+1. The inner layer ticks — its nSequence decrements by one step
+2. If the inner layer has exhausted all states, it resets and the outer layer ticks (a carry)
 
 ## What Happens When It Runs Out?
 

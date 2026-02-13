@@ -1,8 +1,8 @@
 # History and Origins
 
-> **Summary**: SuperScalar was designed by ZmnSCPxj, funded by Spiral (Block), and published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining three previously-separate ideas into something buildable today.
+> **Summary**: SuperScalar was designed by ZmnSCPxj, funded by Spiral (Block), and published on Delving Bitcoin in September 2024. It builds on a decade of research into payment channel factories, combining Decker-Wattenhofer invalidation, timeout trees, and Poon-Dryja channels into a construction that requires no soft fork.
 
-## The Intellectual Lineage
+## Research Timeline
 
 ```mermaid
 graph TD
@@ -10,7 +10,7 @@ graph TD
     Y2017["2017<br/>Burchert, Decker, Wattenhofer<br/>Scalable Funding of Bitcoin<br/>Micropayment Channel Networks<br/>First channel factory concept"]
     Y2018["2018<br/>Decker, Russell, Osuntokun<br/>eltoo / LN-Symmetry<br/>Requires SIGHASH_ANYPREVOUT"]
     Y2021["2021<br/>Taproot activates<br/>Enables MuSig2 on Bitcoin"]
-    Y2024a["2024 Jun<br/>P2A merged into Bitcoin Core<br/>Solves fee-bumping<br/>for multi-party txs"]
+    Y2024a["2024 Aug<br/>P2A merged into Bitcoin Core<br/>(PR #30352)"]
     Y2024b["2024 Sep<br/>ZmnSCPxj publishes SuperScalar<br/>on Delving Bitcoin"]
     Y2024c["2024 Oct<br/>Bitcoin Core 28 released<br/>(includes P2A, TRUC/v3)"]
     Y2025["2024-25<br/>Implementation work begins"]
@@ -27,53 +27,46 @@ graph TD
     style Y2025 fill:#3fb950,color:#000
 ```
 
-## The Key Papers
+## Foundational Papers
 
 ### Decker & Wattenhofer (2015)
 **"A Fast and Scalable Payment Network with Bitcoin Duplex Micropayment Channels"**
 
-Introduced the idea of using **decreasing nSequence values** to invalidate old channel states. Their original construction was for two-party channels, not multi-party factories. The key insight: newer states have shorter time delays, so they always confirm before older states.
+Introduced the use of **decreasing nSequence values** to invalidate old channel states — newer states have shorter time delays, so they always confirm before older states.
 
 ### Burchert, Decker & Wattenhofer (2017)
 **"Scalable Funding of Bitcoin Micropayment Channel Networks"**
 
-First formal description of **channel factories** — a multi-party structure where many users share a single funding UTXO. Each user gets their own Lightning channel at the "leaves" of the factory. The paper assumed a future state-replacement mechanism would be available (eltoo, which requires SIGHASH_ANYPREVOUT, was proposed separately the following year).
+First formal description of **channel factories** — a multi-party structure where many users share a single funding UTXO. Each user gets their own Lightning channel at the "leaves" of the factory. The paper assumed a future state-replacement mechanism would be available (eltoo, which requires SIGHASH_ANYPREVOUT, was proposed separately in early 2018).
 
 ### eltoo / LN-Symmetry (2018)
 **Decker, Russell, Osuntokun**
 
-Proposed a simpler state machine where any newer state simply replaces any older state. Requires the SIGHASH_ANYPREVOUT (APO) soft fork, which has not been activated. If APO activates, it would make the Decker-Wattenhofer component of SuperScalar unnecessary.
+Proposed a simpler state machine where any newer state simply replaces any older state. Requires the SIGHASH_ANYPREVOUT (APO) soft fork, which has not been activated. If APO activates, the Decker-Wattenhofer layers in the SuperScalar tree could be replaced with LN-Symmetry, simplifying the construction.
 
 ## The Designer: ZmnSCPxj
 
-ZmnSCPxj is a pseudonymous Bitcoin and Lightning Network researcher funded by **Spiral** (Block's open-source arm, formerly Square Crypto). Known for prolific contributions to:
-
-- Lightning Network protocol design
-- Bitcoin covenant proposals
-- Payment channel research
-- The bitcoin-dev and lightning-dev mailing lists
-
-ZmnSCPxj developed SuperScalar while funded by Spiral but has publicly stated:
+ZmnSCPxj is a pseudonymous Bitcoin and Lightning Network researcher, a prolific contributor to the bitcoin-dev and lightning-dev mailing lists, funded by **Spiral** (Block's open-source arm, formerly Square Crypto). ZmnSCPxj developed SuperScalar while funded by Spiral but has publicly stated:
 
 > *"Block has no intention of patenting SuperScalar or otherwise limiting the use of SuperScalar."*
 
 ## The Delving Bitcoin Thread
 
-SuperScalar was published as a design proposal on [Delving Bitcoin](https://delvingbitcoin.org) on September 16, 2024, shortly before the Lightning Developer Summit. The thread contains 31 posts with significant technical discussion.
+SuperScalar was published as a design proposal on [Delving Bitcoin](https://delvingbitcoin.org) on September 16, 2024, shortly before the Lightning Developer Summit. The thread contains extensive technical discussion (30+ posts as of late 2024).
 
 ### Key Participants
 
 | Person | Affiliation | Role in Discussion |
 |--------|------------|-------------------|
-| **ZmnSCPxj** | Block Inc | Designer, responded to all critiques |
+| **ZmnSCPxj** | Spiral (Block) grantee | Designer, responded to all critiques |
 | **t-bast** | ACINQ (Phoenix) | Asked about liquidity mechanics, on-chain funding |
-| **ariard** | Independent | Most extensive critic — raised forced expiration spam, fair exchange, governance concerns |
-| **instagibbs** | (Gregory Sanders) | Highlighted P2A connection, v3 tx policy |
+| **ariard** | Independent | Raised forced expiration spam, fair exchange, and governance concerns |
+| **instagibbs** | (Gregory Sanders) | Highlighted P2A connection, TRUC (v3) tx policy |
 | **cryptoquick** | — | Implementation questions |
 
 ### The Major Debates
 
-**1. Forced Expiration Spam** (ariard vs ZmnSCPxj)
+**1. Forced Expiration Spam** (raised by ariard)
 ariard argued that SuperScalar worsens the forced expiration spam problem (from the original Lightning whitepaper, section 9.2) because each user requires O(log N) tree transactions to exit, not just one commitment transaction. ZmnSCPxj's response:
 
 > *"Timeout trees suck because of the large numbers of transactions in the worst case, Decker-Wattenhofer sucks because of the large numbers of transactions in the worst case, but when you mash them together they gain more power while not increasing their suckiness — their suckiness combines to a common suckiness instead of adding their suckiness together."*
@@ -88,12 +81,12 @@ ariard raised concerns about the Lightning Developer Summit being selective in i
 
 ### Design Evolution During the Thread
 
-The thread wasn't just critique — the design improved through discussion:
+Several design changes emerged from the thread discussion:
 
 1. **Inverted timelock default** (Post #26): Changed from LSP-favored timeout to client-favored timeout, shifting economic risk to the LSP
 2. **Wide leaf variant** (Post #16): Alternative topology with fewer DW layers
 3. **P2A integration** (instagibbs): Confirmed that P2A from Bitcoin Core 28 solves the fee-bumping problem that previously made DW impractical
-4. **Shachain for liquidity stock**: Added punishment mechanism for old-state LSP liquidity
+4. **Shachain for liquidity stock**: Added a compact [[shachain-revocation|revocation mechanism]] to punish an LSP that broadcasts stale liquidity allocations
 
 ## The Implementation
 
@@ -115,10 +108,10 @@ The ideas existed for nearly a decade. What was missing:
 |-----------|---------------|----------------|
 | Taproot | November 2021 | MuSig2 key aggregation, efficient multisig |
 | MuSig2 spec (BIP-327) | 2023 | Standardized N-of-N signing |
-| P2A / v3 transactions | Bitcoin Core 28 (2024) | Practical fee-bumping for multi-party trees |
+| P2A / TRUC transactions | Bitcoin Core 28 (2024) | Practical fee-bumping for multi-party trees |
 | secp256k1-zkp MuSig2 module | 2023-2024 | Production-ready implementation |
 
-All four pieces needed to be in place before SuperScalar could be built. The P2A breakthrough in 2024 was the final piece.
+All four pieces needed to be in place before SuperScalar could be built. P2A's availability in 2024 was the final piece.
 
 ## Related Concepts
 

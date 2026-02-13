@@ -1,10 +1,10 @@
 # Soft Fork Landscape
 
-> **Summary**: SuperScalar works today with no consensus changes. But several proposed Bitcoin soft forks would improve it — or make it obsolete. Here's how each one relates.
+> **Summary**: SuperScalar requires no consensus changes. Several proposed Bitcoin soft forks would affect the design — some would improve it, others would enable alternative constructions. This page maps the relationships.
 
 ## Current Status: No Soft Fork Required
 
-SuperScalar's key advantage: it runs on Bitcoin **today**. No waiting for activation, no political risk from soft fork debates. But that doesn't mean soft forks are irrelevant — several would change the landscape significantly.
+SuperScalar runs on Bitcoin as it exists today — no activation dependency, no soft fork prerequisite. Several proposed changes would affect the design space.
 
 ## The Proposals
 
@@ -26,11 +26,11 @@ graph TD
 ```
 
 **Specific improvements:**
-- LSP could construct new factories during [[laddering|dying periods]] without waiting for clients to come online
+- LSP could construct new factories during the [[laddering|dying period]] without waiting for clients to come online
 - Clients could "claim their spot" in a new factory at any time during the dying period
 - Removes the biggest coordination bottleneck in factory construction
 
-**Does NOT make SuperScalar obsolete** — it's a quality-of-life improvement, not a replacement.
+CTV would be a construction improvement for SuperScalar, not a replacement.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|
@@ -58,7 +58,7 @@ graph TD
 - Simpler tree structure (no need for multi-layer DW)
 - Shorter force-close times (fewer layers = fewer delays)
 
-**Would make the DW component obsolete** — but the rest of SuperScalar (timeout-sig-trees, laddering, tree topology) would still be needed.
+APO would supersede the Decker-Wattenhofer component, but the rest of SuperScalar (timeout-sig-trees, laddering, tree topology) would remain.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|
@@ -66,27 +66,27 @@ graph TD
 
 ### OP_CAT — BIP-347
 
-**What it does**: Concatenates two stack elements. Sounds simple, but enables complex covenant constructions when combined with other opcodes.
+**What it does**: Concatenates two stack elements. When combined with Schnorr signature verification and other opcodes, this enables covenant constructions that can constrain how outputs are spent.
 
 **Impact on SuperScalar**: Enables competition
 
-OP_CAT would allow new designs to compete with SuperScalar — particularly constructions that use covenants to enforce transaction trees at the consensus level rather than through pre-signing.
+OP_CAT would enable covenant constructions that enforce transaction tree structures at the consensus level rather than through pre-signing. For example, Ark-style protocols could use OP_CAT-based covenants to enforce VTXO trees without requiring interactivity. See [[comparison-to-ark]] for how this shifts the competitive landscape.
 
-**Doesn't directly improve SuperScalar**, but creates a richer ecosystem of channel factory designs.
+**Does not directly improve SuperScalar**, but expands the design space for alternative channel factory constructions.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|
 | Activation | 12-25% | 55-75% |
 
-### TXHASH + CSFS (OP_CHECKSIGFROMSTACK)
+### TXHASH (BIP-346) + CSFS (OP_CHECKSIGFROMSTACK)
 
-**What it does**: General-purpose transaction introspection. The most powerful proposed covenant mechanism — you can check signatures against arbitrary messages, including parts of the transaction itself.
+**What it does**: General-purpose transaction introspection. Allows checking signatures against arbitrary messages, including parts of the transaction itself.
 
 **Impact on SuperScalar**: Would make DW obsolete
 
-TXHASH+CSFS is strictly more powerful than both CTV and APO. It would enable fully general covenants, making pre-signed transaction trees unnecessary for many use cases.
+TXHASH+CSFS provides more general transaction introspection than either CTV or APO individually, and can emulate the functionality of both. It would enable fully general covenants, potentially replacing pre-signed transaction trees with consensus-enforced spending conditions.
 
-**Would likely obsolete the entire SuperScalar design** in favor of more elegant covenant-based factories.
+With general covenants available, fundamentally different factory designs would become viable. SuperScalar's higher-level mechanisms (laddering, tree topology, client migration) may still apply, but the underlying construction would likely change substantially.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|
@@ -109,24 +109,19 @@ quadrantChart
     TXHASH+CSFS: [0.15, 0.9]
 ```
 
-## SuperScalar's Position
+## Implications for SuperScalar
 
-SuperScalar is explicitly designed as a **"no soft fork needed" solution**:
+SuperScalar is designed to require no consensus changes:
 
-> *"Consensus changes required: None."*
-
-This means:
-1. If no soft forks activate → SuperScalar is the best available option
-2. If CTV activates → SuperScalar gets better (easier factory construction)
-3. If APO activates → DW component becomes unnecessary (but rest of design survives)
-4. If TXHASH+CSFS activates → Entire landscape changes; new designs likely emerge
-
-**The bet**: soft forks are slow and politically difficult. SuperScalar ships today.
+1. If no soft forks activate → SuperScalar remains the only self-custodial factory construction available today
+2. If CTV activates → Factory construction becomes easier (no client presence required)
+3. If APO activates → DW component can be replaced with eltoo (unlimited states)
+4. If TXHASH+CSFS activates → The design space for factory constructions expands significantly
 
 ## Related Concepts
 
 - [[decker-wattenhofer-invalidation]] — What APO would replace
-- [[timeout-sig-trees]] — What CTV would improve
+- [[laddering]] — What CTV would improve (factory construction during the dying period)
 - [[comparison-to-ark]] — Ark benefits more from CTV than SuperScalar does
 - [[why-superscalar-exists]] — The design philosophy
 - [[history-and-origins]] — The context for these decisions

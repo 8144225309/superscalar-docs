@@ -2,12 +2,6 @@
 
 > **Summary**: A Bitcoin address that requires multiple private keys to spend from. N-of-N means ALL parties must sign — nobody can steal unilaterally.
 
-## The Analogy
-
-Think of a **safe deposit box** that requires two keys to open. The bank holds one key, you hold the other. Neither of you can open the box alone. That's 2-of-2 multisig.
-
-Now scale it up: a vault that requires **5 keys** to open — one held by each of 5 people. That's 5-of-5 multisig. Everyone must agree before anyone can spend.
-
 ## Types of Multisig
 
 ```mermaid
@@ -40,24 +34,24 @@ graph LR
 
 ## Why N-of-N Matters
 
-**N-of-N multisig is the security foundation of SuperScalar.** Because every participant must sign every transaction in the factory tree:
+N-of-N multisig is the trust model underlying SuperScalar. Because every participant must sign every transaction in the factory tree:
 
-- The **LSP cannot steal** — it's just one signer among many
-- **No single party can censor** — everyone must cooperate
-- **Unilateral exit is always possible** — the exit transactions are pre-signed during factory construction
+- The LSP cannot move funds unilaterally — it is one signer among N
+- State updates require cooperation from all signers in the affected subtree
+- Unilateral exit is possible via pre-signed transactions created during factory construction
 
 The downside: if someone goes offline, you can't update the state without them. This is why the [[factory-tree-topology|factory tree]] uses subtrees — only the clients **in your subtree** need to be online for a local state update.
 
 ## Multisig on Bitcoin Today
 
-Traditional Bitcoin multisig (OP_CHECKMULTISIG) puts all public keys on-chain, making it expensive and privacy-leaking. SuperScalar uses [[what-is-musig2|MuSig2]] instead:
+Explicit multisig opcodes (OP_CHECKMULTISIG in legacy/SegWit, OP_CHECKSIGADD in Tapscript) put all public keys on-chain at spend time, increasing transaction weight and revealing the signing policy. SuperScalar uses [[what-is-musig2|MuSig2]] instead:
 
 | Approach | On-chain footprint | Privacy |
 |----------|-------------------|---------|
-| OP_CHECKMULTISIG | All N pubkeys visible | Everyone knows it's multisig |
-| **MuSig2** (used by SuperScalar) | Looks like a single pubkey | Indistinguishable from a regular spend |
+| Explicit multisig (OP_CHECKMULTISIG / OP_CHECKSIGADD) | All N pubkeys visible at spend time | Signing policy revealed on-chain |
+| **MuSig2** (used by SuperScalar) | Single aggregated pubkey | Indistinguishable from a single-signer spend |
 
-MuSig2 aggregates N public keys into **one** key and N partial signatures into **one** signature. On-chain, it looks like a normal single-signer [[what-is-taproot|Taproot]] transaction.
+MuSig2 aggregates N public keys into one key and N partial signatures into one signature. See [[what-is-musig2]] for details on the signing protocol.
 
 ## Related Concepts
 

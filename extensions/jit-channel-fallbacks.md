@@ -10,25 +10,18 @@ SuperScalar's factory updates require multiple participants to be online simulta
 flowchart TD
     R["Alice needs 200k sats<br/>inbound liquidity"]
     R --> T{"Can enough signers<br/>come online?"}
-    T -->|"Yes"| F["Factory state update<br/>✅ Off-chain, cheap"]
-    T -->|"No (Bob is offline)"| J["JIT channel fallback<br/>⚠️ On-chain, but works"]
+    T -->|"Yes"| F["Factory state update<br/>(off-chain, cheap)"]
+    T -->|"No (Bob is offline)"| J["JIT channel fallback<br/>(on-chain, but works)"]
 
     style F fill:#51cf66,color:#fff
     style J fill:#ff922b,color:#fff
 ```
 
-The off-chain path is always preferred — it's free. But when it fails, the LSP shouldn't just tell Alice "sorry, can't serve you." It opens a standard on-chain channel instead.
+The off-chain path is preferred — it costs nothing on-chain. When it fails, the LSP opens a standard on-chain channel instead.
 
 ## How JIT Channels Work
 
-JIT (Just-In-Time) channels are already used by LSPs today. When a payment is incoming for a client who doesn't have enough inbound capacity:
-
-1. LSP intercepts the incoming HTLC
-2. LSP opens a new channel on-chain to the client
-3. Payment is forwarded through the new channel
-4. Client receives the payment without any manual action
-
-In the SuperScalar context, the JIT channel is opened **alongside** the existing factory channel:
+JIT channels — where the LSP intercepts an incoming HTLC and opens an on-chain channel to forward it through — are standard LSP infrastructure. In the SuperScalar context, the JIT channel is opened **alongside** the existing factory channel:
 
 ```mermaid
 graph TD
@@ -42,15 +35,7 @@ graph TD
 
 ## The Multipath Routing Challenge
 
-With two channels to the same client, a new problem appears: what if a payment is **too large for either channel alone** but fits their combined capacity?
-
-```
-Factory channel: 100k sats capacity
-JIT channel:     200k sats capacity
-Incoming payment: 250k sats  ← too big for either alone!
-```
-
-**Solution: Local multipath splitting.** The LSP splits the HTLC across both channels:
+With two channels to the same client, a payment may exceed either channel's individual capacity but fit their combined capacity. The LSP handles this with **local multipath splitting**, splitting the HTLC across both channels:
 
 ```mermaid
 sequenceDiagram
@@ -65,7 +50,7 @@ sequenceDiagram
     LSP->>JC: Partial HTLC: 150k sats
     FC->>A: 100k sats
     JC->>A: 150k sats
-    Note over A: Alice receives 250k total ✅
+    Note over A: Alice receives 250k total
 ```
 
 ZmnSCPxj noted this requires protocol-level support:
@@ -79,35 +64,27 @@ ZmnSCPxj noted this requires protocol-level support:
 | Alice needs more inbound, Bob is online | Factory state update (off-chain) | — |
 | Alice needs more inbound, Bob is offline | — | JIT channel (on-chain) |
 | Large incoming payment, single channel insufficient | — | Multipath across factory + JIT |
-| Factory is in dying period | — | JIT or migration to new factory |
-| Factory DW counter exhausted | — | JIT until new factory is created |
+| Factory is in [[laddering|dying period]] | — | JIT or migration to new factory |
+| Factory Decker-Wattenhofer counter exhausted | — | JIT until new factory is created |
 
 ## The Economic Trade-off
 
 | Metric | Factory Update | JIT Channel |
 |--------|---------------|-------------|
-| On-chain cost | **Zero** | 1 on-chain tx |
-| Speed | Seconds (signing round) | 10+ minutes (confirmation) |
+| On-chain cost | None (per-update) | 1 on-chain tx |
+| Speed | Seconds (signing round) | Seconds (zero-conf) to 10+ min (confirmed) |
 | Capital efficiency | Shared UTXO | Dedicated UTXO |
 | Coordination required | Multiple signers | Just LSP + client |
 
-JIT channels are expensive but reliable. They're the safety net that ensures the LSP can **always** serve clients, even when the factory can't help.
+JIT channels cost an on-chain transaction but require only bilateral coordination. They provide a fallback path when factory state updates are blocked by offline co-signers.
 
 ## Impact on Scaling
 
-The whole point of SuperScalar is to **reduce** the number of on-chain UTXOs. JIT fallbacks work against this goal. The expected number of channels per client becomes:
-
-```
-Expected channels = 1 (factory) + FRACTION × 1 (JIT)
-```
-
-Where `FRACTION` is the probability that a JIT fallback is needed. If the factory works well (clients are online, state updates are smooth), `FRACTION` is low and the scaling benefit holds.
-
-If `FRACTION` approaches 100% (factories constantly failing), the system degrades to "just regular Lightning channels" — which is still functional, just not as scalable.
+SuperScalar's scaling advantage comes from sharing a single on-chain UTXO across many clients. Each JIT fallback adds a dedicated on-chain UTXO, partially negating this benefit. The aggregate impact depends on the fallback rate: if factory state updates succeed for most clients most of the time, the per-client UTXO footprint remains close to the shared-factory ideal. If fallbacks are frequent, the system converges toward conventional per-client Lightning channels.
 
 ## Implementation Priority
 
-**Addon for production robustness, not needed for PoC.** For initial testnet deployment:
+**Required for production; not needed for testnet proof-of-concept.** For initial testnet deployment:
 
 - Assume all participants are online and cooperative (happy path)
 - Factory state updates always succeed
@@ -120,8 +97,8 @@ For production LSP deployment:
 
 ## Related Concepts
 
-- [[updating-state]] — The off-chain path that JIT replaces when it fails
+- [[updating-state]] — The off-chain state update path; JIT channels serve as a fallback when this path is unavailable
 - [[pluggable-factories]] — How JIT channels coexist with factory channels in LN software
 - [[what-is-an-lsp]] — Who coordinates factories and channels
 - [[laddering]] — Factory lifecycle events that may trigger JIT fallbacks
-- [[dual-state-management]] — Needed when factory + JIT channels coexist
+- [[dual-state-management]] — Handling concurrent validity of old and new factory states, which becomes more operationally sensitive when JIT channels are also active

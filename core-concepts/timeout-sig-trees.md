@@ -6,7 +6,7 @@
 
 In an N-of-N [[what-is-multisig|multisig]], **every** signer must cooperate. If even one client disappears forever, the funds are stuck — nobody can spend them.
 
-For any [[what-is-an-lsp|LSP]] — whether a company or an individual running a node — this is unacceptable. The operator has capital locked in factories. If a client loses their phone and never comes back, that capital can't be trapped indefinitely.
+For any [[what-is-an-lsp|LSP]], this is unacceptable. If a client disappears permanently, the LSP's capital in that factory cannot be trapped indefinitely.
 
 ## The Solution: Two Paths
 
@@ -15,8 +15,8 @@ Every output in the factory tree is a [[what-is-taproot|Taproot]] output with tw
 ```mermaid
 graph TD
     O["Factory Output<br/>(Taproot)"]
-    O --> KP["🔑 Key Path<br/>N-of-N MuSig2<br/>(everyone cooperates)"]
-    O --> SP["⏰ Script Path<br/>LSP alone + CLTV timeout<br/>(fallback if clients vanish)"]
+    O --> KP["Key Path<br/>N-of-N MuSig2<br/>(everyone cooperates)"]
+    O --> SP["Script Path<br/>LSP alone + CLTV timeout<br/>(fallback if clients vanish)"]
 
     style KP fill:#51cf66,color:#fff
     style SP fill:#ff922b,color:#fff
@@ -24,7 +24,7 @@ graph TD
 
 | Path | Who Signs | When Available | Used For |
 |------|-----------|---------------|----------|
-| **Key Path** | All N participants (MuSig2) | Always | Normal operation — cheap, fast, private |
+| **Key Path** | All N participants (MuSig2) | Always | Normal operation — single-sig-sized witness, no script reveal |
 | **Script Path** | LSP alone | After CLTV timeout (e.g., block 890,000) | Emergency — LSP recovers stuck capital |
 
 ## How the Timeout Script Works
@@ -35,7 +35,7 @@ The script path contains:
 <absolute_block_height> OP_CHECKLOCKTIMEVERIFY OP_DROP <LSP_pubkey> OP_CHECKSIG
 ```
 
-In plain English: **"After block 890,000, the LSP can spend this with just its own signature."**
+Semantics: after block 890,000, the LSP can spend this output with only its own signature.
 
 ```mermaid
 sequenceDiagram
@@ -55,9 +55,7 @@ sequenceDiagram
 Only the N-of-N key path works. The LSP cannot unilaterally do anything. Clients are fully protected.
 
 ### After the timeout
-The LSP can spend via the script path. But by design, the factory should have been replaced long before this — via [[laddering]], the factory's "dying period" happens well before the CLTV timeout.
-
-**The timeout is a last resort, not normal operation.**
+The LSP can spend via the script path. But by design, the factory should have been replaced long before this — via [[laddering]], the factory's [[laddering|dying period]] happens well before the CLTV timeout.
 
 ## What This Emulates
 
@@ -80,12 +78,12 @@ In the original design, the timeout defaults **favored the LSP** — after timeo
 graph TD
     subgraph "Original (LSP-favored)"
         O1["Output"] --> K1["Key Path: N-of-N"]
-        O1 --> S1["Script Path: LSP after timeout<br/>⚠️ LSP gets everything"]
+        O1 --> S1["Script Path: LSP after timeout<br/>LSP recovers all funds"]
     end
 
     subgraph "Inverted (Client-favored)"
-        O2["Output"] --> K2["Key Path: N-of-N"]
-        O2 --> S2["Pre-signed nLockTime tx<br/>✅ Funds go to clients"]
+        O2["Output"] --> K2["Key Path: N-of-N<br/>(only spending condition)"]
+        K2 --> S2["Pre-signed nLockTime tx<br/>distributes funds to clients<br/>(spends via key path after timeout)"]
     end
 ```
 
@@ -106,7 +104,7 @@ funding UTXO → kickoff_root → state_root
 state_left → leaf outputs
               ├── A&LSP channel (no timeout — it's a standard LN channel)
               ├── B&LSP channel (no timeout)
-              └── LSP liquidity stock (uses shachain, not CLTV)
+              └── LSP liquidity stock (LSP-controlled, no channel partner)
 ```
 
 The CLTV timeout paths are on **internal tree nodes**, not on the final leaf channels. Leaf channels use standard Poon-Dryja mechanics.

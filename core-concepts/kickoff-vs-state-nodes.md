@@ -13,12 +13,12 @@
 
 ```mermaid
 graph TD
-    F["Funding UTXO"] --> K0["Kickoff Root<br/>nSeq: disabled<br/>🔌 Circuit breaker"]
-    K0 --> S0["State Root<br/>nSeq: DW Layer 0<br/>⚙️ State machine"]
-    S0 --> K1L["Kickoff Left<br/>nSeq: disabled<br/>🔌 Circuit breaker"]
-    S0 --> K1R["Kickoff Right<br/>nSeq: disabled<br/>🔌 Circuit breaker"]
-    K1L --> S1L["State Left<br/>nSeq: DW Layer 1<br/>⚙️ State machine"]
-    K1R --> S1R["State Right<br/>nSeq: DW Layer 1<br/>⚙️ State machine"]
+    F["Funding UTXO"] --> K0["Kickoff Root<br/>nSeq: disabled<br/>(circuit breaker)"]
+    K0 --> S0["State Root<br/>nSeq: DW Layer 0<br/>(state machine)"]
+    S0 --> K1L["Kickoff Left<br/>nSeq: disabled<br/>(circuit breaker)"]
+    S0 --> K1R["Kickoff Right<br/>nSeq: disabled<br/>(circuit breaker)"]
+    K1L --> S1L["State Left<br/>nSeq: DW Layer 1<br/>(state machine)"]
+    K1R --> S1R["State Right<br/>nSeq: DW Layer 1<br/>(state machine)"]
 
     style K0 fill:#4c6ef5,color:#fff
     style S0 fill:#fab005,color:#000
@@ -41,9 +41,9 @@ state_root (nSeq = 288)
   └── state_leaf (nSeq = 432)
 ```
 
-Now you update the leaf state. The new leaf transaction has `nSeq = 288`. But wait — **the leaf transaction's nSequence is relative to when its parent confirms**. If the parent (state_root) is also a DW transaction that might be replaced, which version of the parent does the leaf's delay start from?
+Now you update the leaf state. The new leaf transaction has `nSeq = 288`. However, **the leaf transaction's nSequence is relative to when its parent confirms**. If the parent (state_root) is also a DW transaction that might be replaced, which version of the parent does the leaf's delay start from?
 
-**The answer: all child transactions break.** If state_root gets replaced (because a newer version confirms first), ALL of its child transactions become invalid — they reference an output that no longer exists. You'd have to re-publish everything.
+If `state_root` gets replaced (a newer version confirms first), every child transaction that referenced the old `state_root` output becomes invalid — the output they spend no longer exists. The entire subtree below it must be re-signed and re-published against the new output.
 
 ### How Kickoff Nodes Fix This
 
@@ -58,26 +58,26 @@ sequenceDiagram
     participant SL as State Left
 
     KR->>Chain: Confirms immediately (no delay)
-    Note over Chain: Kickoff Root output is now stable ✅
+    Note over Chain: Kickoff Root output is now stable
 
     SR->>Chain: Waits for DW delay, then confirms
-    Note over Chain: State Root output is now stable ✅
+    Note over Chain: State Root output is now stable
     Note over Chain: (If old State Root was published,<br/>new one beats it via DW)
 
     KL->>Chain: Confirms immediately (no delay)
-    Note over Chain: Kickoff Left output is now stable ✅
+    Note over Chain: Kickoff Left output is now stable
 
     SL->>Chain: Waits for DW delay, then confirms
-    Note over Chain: Leaf channels are now on-chain ✅
+    Note over Chain: Leaf channels are now on-chain
 ```
 
-Each kickoff node is a **firewall** between DW layers. The DW race happens between competing state transactions at one level. The kickoff at the next level doesn't participate in that race — it just waits for whichever state transaction wins, then confirms immediately.
+Each kickoff node is a **circuit breaker** between DW layers. The DW race happens between competing state transactions at one level. The kickoff at the next level doesn't participate in that race — it just waits for whichever state transaction wins, then confirms immediately.
 
 ## The Cascade Prevention Rule
 
-> **When a kickoff transaction is published on-chain, ALL its outputs MUST have their corresponding latest state transactions confirmed.**
+**When a kickoff transaction confirms on-chain, the honest party should broadcast the latest state transaction for each of its outputs.** The DW mechanism ensures that the latest version, having the lowest nSequence delay, will confirm before any older competing version.
 
-This is the circuit breaker behavior. Publishing a kickoff means you're committing to resolving everything below it. But crucially, the kickoff itself isn't contested — only the state transactions above and below it are.
+This is the circuit breaker behavior. Publishing a kickoff commits the participants to resolving the subtree below it. The kickoff itself is uncontested — only the state transactions that spend its outputs are subject to the DW race.
 
 ## Practical Example
 
@@ -95,12 +95,12 @@ kickoff_left (disabled nSeq) ← Always the same transaction
 state_left (DW layer 1: 432→288→144→0) ← Multiple versions compete
     ├── A&L channel
     ├── B&L channel
-    └── L liquidity stock
+    └── L liquidity stock (LSP-only funds for selling inbound liquidity)
 ```
 
 **Scenario**: Alice wants to force-close.
 1. Publish `kickoff_root` → confirms next block (no delay)
-2. Cheater publishes old `state_root` (nSeq=432) → honest party publishes latest `state_root` (nSeq=144) → latest wins
+2. Adversarial party publishes old `state_root` (nSeq=432) → honest party publishes latest `state_root` (nSeq=144) → latest wins
 3. After state_root confirms, publish `kickoff_left` → confirms next block (no delay)
 4. Same DW race for `state_left` → latest version wins
 5. Alice's channel is now on-chain
@@ -109,11 +109,7 @@ state_left (DW layer 1: 432→288→144→0) ← Multiple versions compete
 
 ## Why Kickoff Nodes Don't Need DW
 
-Kickoff nodes represent the **structure** of the tree — which clients are grouped together. This doesn't change between state updates. What changes is the **state** — how much money each client has, how liquidity is allocated. State nodes handle that.
-
-Think of it this way:
-- **Kickoff**: "Alice and Bob are in the left subtree" (permanent)
-- **State**: "Alice has 0.3 BTC, Bob has 0.5 BTC, LSP liquidity stock is 0.2 BTC" (changes over time)
+Kickoff nodes encode the **structure** of the tree: which clients are grouped together. This grouping is fixed for the factory's lifetime and does not require a versioning mechanism. State nodes encode the **balances and liquidity allocation**, which change on every update and therefore require the DW mechanism.
 
 ## Related Concepts
 

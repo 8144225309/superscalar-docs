@@ -1,16 +1,16 @@
 # Pluggable Channel Factories
 
-> **Summary**: A proposed protocol extension that lets SuperScalar (and other factory designs) plug into existing Lightning Network software without forking the entire stack. New TLV fields during channel opening tell the LN node "this channel lives inside a factory" and a plugin handles the factory-specific logic.
+> **Summary**: A proposed protocol extension that lets SuperScalar (and other factory designs) integrate with existing Lightning Network implementations through new TLV fields and a plugin interface, rather than requiring deep modifications to channel-management code.
 
 ## The Problem
 
-Existing Lightning implementations (CLN, LND, Eclair, LDK) have years of battle-tested code for managing channels, forwarding HTLCs, handling fees, and enforcing timelocks. SuperScalar introduces a new **layer underneath** — the factory tree — but the channels at the leaves should work exactly like normal Lightning channels.
+Existing Lightning implementations (CLN, LND, Eclair) and toolkits (LDK) already handle channel management, HTLC forwarding, fee negotiation, and timelock enforcement. SuperScalar introduces a new **layer underneath** — the factory tree — but the channels at the leaves should work exactly like normal Lightning channels.
 
-Rewriting all that channel code from scratch would be impractical. Instead: **make factories pluggable**.
+The pluggable factory proposal keeps factory logic separate from channel logic, allowing implementations to add factory support through their existing extension mechanisms.
 
 ## The Proposal
 
-ZmnSCPxj proposed this in a November 2024 Delving Bitcoin thread and detailed it on the Bitcoin Optech podcast:
+ZmnSCPxj introduced the concept on Delving Bitcoin in October 2024 and elaborated on the Bitcoin Optech podcast:
 
 > *"What I'm planning to propose is that we have some kind of pluggable factory concept... add a Type-Length-Value (TLV) that says, 'Hey, this is the protocol that we are using and this is an identifier that specifies which instance of this protocol we are actually using'."* — ZmnSCPxj
 
@@ -24,7 +24,7 @@ sequenceDiagram
 
     LSP->>LN: open_channel + TLV:<br/>factory_protocol = "superscalar_v1"<br/>factory_instance = "factory_42"<br/>blocks_early = 144
 
-    LN->>Plugin: "New channel wants factory hosting"
+    LN->>Plugin: "Channel open request includes factory TLV"
     Plugin->>Plugin: Verify factory exists,<br/>check participant set,<br/>validate tree position
 
     Plugin->>LN: "Factory ready, funding outpoint = X"
@@ -65,11 +65,11 @@ graph TD
 
 **What the LN node handles**: Standard channel operations — commitment transactions, HTLC forwarding, fee negotiation, invoice generation, routing.
 
-**What the plugin handles**: Factory tree construction, MuSig2 signing ceremonies, DW state management, timeout-sig-tree scripts, laddering lifecycle.
+**What the plugin handles**: Factory tree construction, MuSig2 signing ceremonies, Decker-Wattenhofer state management, timeout-sig-tree scripts, laddering lifecycle.
 
 ## The `blocks_early` Parameter
 
-This is critical for safety. Factory-hosted channels have an extra constraint: all HTLCs must resolve **before the factory's CLTV timeout expires**. If an HTLC is still pending when the factory times out, the LSP's timeout path could claim funds that should go to the client.
+This is critical for safety. Factory-hosted channels have an extra constraint: all HTLCs must resolve **before the factory's CLTV timeout expires**. If an HTLC is still pending when the factory times out, the LSP can exercise the timeout path and sweep the factory output, forfeiting any in-flight HTLC value that should have resolved in the client's favor.
 
 ```mermaid
 graph LR
@@ -81,7 +81,7 @@ graph LR
     E -->|"blocks_early = 144<br/>(~1 day buffer)"| T
 ```
 
-The `blocks_early` count is added to the channel's `min_final_cltv_expiry_delta` in BOLT11 invoices, ensuring HTLCs always have enough time to resolve before the factory expires.
+The `blocks_early` value inflates both the `min_final_cltv_expiry` in BOLT 11 invoices (for the final hop) and the `cltv_expiry_delta` announced in `channel_update` messages (for routing), ensuring all HTLCs resolve before the factory's CLTV timeout.
 
 ## Implementation Priority for the PoC
 
@@ -95,15 +95,14 @@ For the PoC:
 For production:
 - Pluggable architecture lets LSPs run SuperScalar alongside standard channels
 - Multiple factory types could coexist (SuperScalar, future designs)
-- Battle-tested LN code handles the channel layer
+- Existing LN implementations handle the channel layer unchanged
 
 ## Current Status
 
-- **Proposed**: By ZmnSCPxj on Delving Bitcoin (Nov 2024)
+- **Proposed**: By ZmnSCPxj on Delving Bitcoin (Oct 2024)
 - **Implemented**: Nowhere — no public code exists
 - **Depends on**: A working factory implementation
 
-The pluggable factory protocol can't exist without a factory to plug in. A working factory implementation is the prerequisite.
 
 ## Related Concepts
 

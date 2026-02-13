@@ -1,10 +1,10 @@
 # Cooperative Close
 
-> **Summary**: When a factory's lifetime ends and all clients cooperate, everyone signs a single transaction that distributes funds cleanly. No tree transactions need to be published. This is the ideal outcome — cheap, fast, and private.
+> **Summary**: When a factory's lifetime ends and all clients cooperate, everyone signs a single transaction that distributes funds directly from the funding UTXO. No tree transactions are published on-chain.
 
 ## The Happy Path
 
-If everything goes right — all clients come online during the [[laddering|dying period]] and cooperate — the entire factory can be closed with a **single on-chain transaction**:
+If all clients come online during the [[laddering|dying period]] and cooperate, the entire factory can be closed with a **single on-chain transaction**:
 
 ```mermaid
 graph LR
@@ -16,16 +16,16 @@ graph LR
     F --> O6["New Factory<br/>Funding UTXO"]
 ```
 
-Because the funding UTXO is a [[what-is-taproot|Taproot]] output with an N-of-N [[what-is-musig2|MuSig2]] key path, a cooperative close looks like a **normal single-signature Bitcoin transaction** on-chain. Nobody can tell a factory was involved.
+Because the funding UTXO is a [[what-is-taproot|Taproot]] output with an N-of-N [[what-is-musig2|MuSig2]] key path, a cooperative close appears on-chain as a standard single-signature Taproot spend. The factory structure is not revealed.
 
-## Why This Is Optimal
+## Comparison to Force Close
 
 | Metric | Cooperative Close | [[force-close|Force Close]] |
 |--------|------------------|------------|
-| On-chain transactions | **1** | O(log N) tree txs + channel closes |
+| On-chain transactions | **1** | O(N) tree txs + channel closes |
 | Total fees paid | Minimal (one tx) | Substantial (many txs) |
-| Time to completion | 1 block | Days (DW delays + to_self_delay) |
-| Privacy | Perfect (looks like normal tx) | Leaks tree structure |
+| Time to completion | 1 block | Days (Decker-Wattenhofer delays + to_self_delay) |
+| Privacy | Input indistinguishable from single-sig spend | Reveals tree structure |
 | LSP capital recovery | Immediate | Delayed by timelocks |
 
 ## How It Works
@@ -66,12 +66,12 @@ If one or more clients don't come online during the dying period:
 flowchart TD
     D["Dying period starts"]
     D --> C{"All clients<br/>online?"}
-    C -->|"Yes"| CO["Cooperative close ✅<br/>1 transaction"]
-    C -->|"Some missing"| P["Partial cooperative close<br/>+ force-close for absent clients"]
-    C -->|"Nobody online"| FC["Full force close ⚠️<br/>Publish entire tree"]
+    C -->|"Yes"| CO["Cooperative close<br/>1 transaction"]
+    C -->|"Some missing"| P["Partial cooperation<br/>Tree published to branch point"]
+    C -->|"Nobody online"| FC["Full force close<br/>Publish entire tree"]
 ```
 
-**Partial cooperation**: The LSP and online clients can cooperatively handle their portions, while absent clients' subtrees are force-closed. The tree structure means absent clients only affect their own branch.
+**Partial cooperation**: Since the funding UTXO is an N-of-N MuSig2 key-path output, a cooperative close requires ALL signers. If some clients are absent, the tree must be published on-chain down to the branch point where absent clients diverge from online clients. Online clients' subtrees can then be closed cooperatively (key-path spend of their subtree output), while absent clients' subtrees are force-closed. The tree structure limits the blast radius — absent clients only affect their own branch.
 
 ## The Endogenous Fee Recovery
 

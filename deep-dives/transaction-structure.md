@@ -6,7 +6,7 @@
 
 | Transaction | nVersion | nSequence | nLockTime | Witness |
 |-------------|----------|-----------|-----------|---------|
-| **Funding tx** | 2 | irrelevant | 0 | LSP's regular spend |
+| **Funding tx** | 2 | wallet default | 0 | LSP's regular spend |
 | **Kickoff tx** | 3 (v3 policy) | 0xFFFFFFFF (disabled) | 0 | MuSig2 key-path sig |
 | **State tx** | 3 (v3 policy) | BIP-68 relative delay | 0 | MuSig2 key-path sig |
 | **Channel close** | 2 | varies (Poon-Dryja) | varies | Channel-specific |
@@ -14,7 +14,7 @@
 
 ### nVersion = 3 (v3 Transaction Policy)
 
-Tree transactions use `nVersion=3`, which enables **package relay** — Bitcoin Core 28's policy that allows parent+child transaction packages to be evaluated together for mempool acceptance. This is essential for the P2A fee-bumping strategy.
+Tree transactions use `nVersion=3`, which opts into Bitcoin Core 28's **TRUC (Topologically Restricted Until Confirmation)** policy. TRUC transactions are limited to one unconfirmed parent and one unconfirmed child, which enables ephemeral anchor outputs (0-sat P2A) and simplifies CPFP fee-bumping.
 
 ## Funding Transaction
 
@@ -33,7 +33,7 @@ Tree transactions use `nVersion=3`, which enables **package relay** — Bitcoin 
 └─────────────────────────────────────────────┘
 ```
 
-The output looks like any standard P2TR (Pay-to-Taproot) output. On-chain, it's indistinguishable from a single-signer Taproot spend.
+On-chain, this output is indistinguishable from any other P2TR output. A cooperative key-path spend is indistinguishable from a single-signer Taproot spend.
 
 ## Kickoff Transaction
 
@@ -60,7 +60,7 @@ The output looks like any standard P2TR (Pay-to-Taproot) output. On-chain, it's 
 ```
 
 Key properties:
-- `nSequence = 0xFFFFFFFF`: Relative timelock **disabled** — confirms immediately
+- `nSequence = 0xFFFFFFFF`: Relative timelock **disabled** — no delay after parent confirms
 - Single MuSig2 signature in witness (key-path spend)
 - P2A output for CPFP fee-bumping
 
@@ -89,15 +89,15 @@ Key properties:
 │                                             │
 │ Output 2: P2A (fee-bump anchor)             │
 │   amount: 0 sats (ephemeral dust)           │
+│   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘
 ```
 
 Key properties:
-- `nSequence = 144`: BIP-68 relative timelock — must wait 144 blocks after parent confirms
-- This value decreases with each epoch (DW mechanism)
-- Outputs include CLTV script trees for [[timeout-sig-trees|LSP timeout recovery]]
+- `nSequence = 144`: BIP-68 relative timelock requiring 144 blocks after the parent confirms. This delay decreases with each epoch per the [[decker-wattenhofer-invalidation|DW mechanism]].
+- Each P2TR output includes a CLTV script-path leaf for [[timeout-sig-trees|LSP timeout recovery]].
 
 ## Leaf State Transaction
 
@@ -127,21 +127,23 @@ Key properties:
 │                                             │
 │ Output 3: P2A (fee-bump anchor)             │
 │   amount: 0 sats (ephemeral dust)           │
+│   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘
 ```
 
-The leaf outputs are the actual Lightning channels and LSP liquidity stock. Channel outputs have no script tree (they use standard Poon-Dryja internally). The liquidity stock has a [[shachain-revocation|shachain secret]] script path.
+The leaf outputs are the actual Lightning channels and LSP liquidity stock. Channel outputs have no script tree (they use standard Poon-Dryja internally). The liquidity stock output includes a script-path leaf that can be spent by revealing a shachain-derived secret, enabling [[shachain-revocation|revocation of outdated states]].
 
 ## BIP-68 nSequence Encoding
 
 The nSequence field encodes relative timelocks per BIP-68:
 
 ```
-Bit 31 (disable flag):  0 = enabled, 1 = disabled
+Bit 31 (disable flag):  0 = relative timelock enforced, 1 = no relative timelock
 Bit 22 (type flag):     0 = blocks, 1 = 512-second intervals
-Bits 0-15 (value):      number of blocks (or time intervals)
+Bits 16-21, 23-30:      reserved (no consensus meaning)
+Bits 0-15 (value):      relative lock-time in blocks or 512-second intervals
 ```
 
 Examples used in SuperScalar:
@@ -161,7 +163,7 @@ witness:
   <64-byte Schnorr signature>
 ```
 
-Just one signature. Clean, private, minimal.
+A single 64-byte Schnorr signature — indistinguishable from any other Taproot key-path spend.
 
 ### Script-Path Spend (LSP Timeout Recovery)
 ```
@@ -171,7 +173,7 @@ witness:
   <control block>                ← leaf_version | internal_key | merkle_path
 ```
 
-Larger witness, but only used when cooperation fails.
+The script-path witness is larger than a key-path spend. It is only required when the cooperative (key-path) signing path is unavailable.
 
 ## Related Concepts
 

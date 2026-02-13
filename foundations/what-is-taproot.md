@@ -2,22 +2,14 @@
 
 > **Summary**: A Bitcoin upgrade (activated 2021) that lets a UTXO be spent either by a single aggregated key (fast, private) or by revealing a hidden script (fallback). SuperScalar uses both paths.
 
-## The Analogy
-
-Imagine a locked door with **two ways to open it**:
-
-1. **The front door key** — Everyone agrees, they combine their keys into one master key, and the door opens cleanly. Nobody watching can tell how many people were involved. This is the **key path**.
-
-2. **The emergency override** — Hidden behind a panel is a combination lock with specific rules (like "only works after a certain date"). You only use this if the key path fails. This is the **script path**.
-
-Taproot lets every Bitcoin output work exactly like this: a fast, private cooperative path, and a fallback script path for when cooperation breaks down.
-
 ## How Taproot Works
+
+A Taproot output encodes two spending paths in a single public key: a **key path** for cooperative spends, and a **script path** for unilateral fallback.
 
 ```mermaid
 graph TD
-    O["Taproot Output<br/>(looks like a normal public key)"] --> KP["Key Path<br/>MuSig2 aggregate signature<br/>✅ Fast, cheap, private"]
-    O --> SP["Script Path<br/>Reveal hidden script + proof<br/>⚠️ Fallback only"]
+    O["Taproot Output<br/>(looks like a normal public key)"] --> KP["Key Path<br/>MuSig2 aggregate signature<br/>(cooperative: fast, cheap, private)"]
+    O --> SP["Script Path<br/>Reveal hidden script + proof<br/>(non-cooperative fallback)"]
 
     SP --> S1["Script 1:<br/>CLTV timeout + LSP key"]
     SP --> S2["Script 2:<br/>Hashlock + client key"]
@@ -26,7 +18,7 @@ graph TD
 ### Key Path (the happy path)
 - All participants combine keys using [[what-is-musig2|MuSig2]]
 - Produces a single signature that looks like any other Bitcoin transaction
-- **Cheapest** (smallest witness), **fastest**, and **most private**
+- Smallest witness size, lowest cost, highest privacy
 - Used when everyone cooperates
 
 ### Script Path (the fallback)
@@ -56,28 +48,30 @@ This is the critical safety mechanism in [[timeout-sig-trees|timeout-sig-trees]]
 
 Translation: **"After block height X, the LSP alone can spend this."**
 
-This prevents the LSP's capital from being locked forever if clients disappear. If a client never comes back online, the LSP can recover its funds after the timeout — but ONLY after the timeout. Before then, the N-of-N key path is the only way to spend.
+This prevents the LSP's capital from being locked forever if clients disappear. Before the timeout, the N-of-N key path is the only spending path; after it, the LSP can unilaterally recover funds.
 
-## The Taproot Trick: Tweaking
+## Key Tweaking
 
-The public key on-chain isn't the raw aggregate key — it's **tweaked** with the Merkle root of the script tree:
+The public key on-chain is not the raw aggregate key — it is **tweaked** with the Merkle root of the script tree:
 
 ```
-output_key = internal_key + hash(internal_key || merkle_root) × G
+output_key = internal_key + H_TapTweak(internal_key || merkle_root) × G
 ```
+
+Where `H_TapTweak` is SHA-256 with the tagged hash prefix `"TapTweak"` (BIP-341).
 
 This means:
 - If you know the internal key and want to use the **key path**, you adjust your signature by the tweak
 - If you want to use the **script path**, you reveal the internal key, the script, and a control block (Merkle proof)
 - Anyone looking at the blockchain just sees a normal-looking public key — they can't tell scripts are hidden inside
 
-## Why This Matters
+## Implications for SuperScalar
 
-Before Taproot, doing N-of-N multisig on Bitcoin required putting all N public keys on-chain. With Taproot + MuSig2:
+Before Taproot, N-of-N multisig required revealing all N public keys and N signatures in the spending witness. With Taproot + MuSig2:
 
-- **Privacy**: Factory transactions look identical to regular single-sig payments
-- **Efficiency**: One key, one signature, regardless of how many participants
-- **Flexibility**: Hidden script paths enable timeout recovery, punishment mechanisms, and more — without bloating the common case
+- **Privacy**: Cooperative factory spends are indistinguishable from single-sig transactions
+- **Efficiency**: One 32-byte key and one 64-byte signature regardless of participant count
+- **Flexibility**: Script paths (timeout recovery, punishment) are committed but not revealed unless used
 
 ## Related Concepts
 

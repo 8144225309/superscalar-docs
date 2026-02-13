@@ -1,14 +1,14 @@
 # Research Horizon
 
-> **Summary**: Technologies that don't exist in production yet but could meaningfully improve SuperScalar if and when they land. None of these are dependencies — SuperScalar works today without any of them.
+> **Summary**: Technologies not yet in production that could improve SuperScalar if they land. None are current dependencies.
 
 ## Nested MuSig2
 
-**Paper**: "Nested MuSig: Secure Hierarchical Multi-Signatures" by Nadav Kohen (Chaincode Labs), February 2026. [ePrint 2026/223](https://eprint.iacr.org/2026/223)
+**Paper**: "Nested MuSig2" by Nadav Kohen (Chaincode Labs), February 2026. [ePrint 2026/223](https://eprint.iacr.org/2026/223)
 
 ### The Interactivity Problem
 
-SuperScalar's biggest UX cost is **interactivity**. Every factory state update requires all N participants (clients + LSP) to be online simultaneously for a MuSig2 signing round. If one client's phone is off, that entire subtree is stuck.
+A significant UX cost of SuperScalar is **interactivity**. Every factory state update requires all N participants (clients + LSP) to be online simultaneously for a MuSig2 signing round. If one client's phone is off, that entire subtree is stuck.
 
 ```mermaid
 graph TD
@@ -36,11 +36,9 @@ graph TD
     style S1 fill:#f85149,color:#fff
 ```
 
-All 9 participants must be online at the same time. One offline user blocks the entire signing round.
-
 ### What Nested MuSig2 Would Change
 
-The paper proves that **composing MuSig2 sessions hierarchically** (MuSig2-of-MuSig2) is cryptographically secure. This means subtrees of a factory could sign independently and their signatures could be composed.
+The paper shows that **composing MuSig2 sessions hierarchically** (MuSig2-of-MuSig2) is secure under the AOMDL assumption in the random oracle model. This means subtrees of a factory could sign independently and their signatures could be composed.
 
 ```mermaid
 graph TD
@@ -76,11 +74,7 @@ graph TD
     style SUB2 fill:#58a6ff,color:#000
 ```
 
-Only the participants in an affected subtree need to be online. If Alice wants to update her channel, only Alice, Bob, Carol, Dave, and the LSP sign (5 participants) — Eve through Heidi don't need to be awake.
-
-### Why This Matters for Mobile Users
-
-SuperScalar targets people in developing nations using mobile phones. These devices are intermittently connected — battery saving, spotty data, etc. Reducing the number of people who must be simultaneously online for any given update is a direct UX improvement.
+Only the participants in an affected subtree need to be online. If Alice wants to update her channel, only Alice, Bob, Carol, Dave, and the LSP sign (5 participants) — Eve through Heidi are not required to participate.
 
 | | Flat N-of-N (today) | Nested (future) |
 |---|---|---|
@@ -93,7 +87,7 @@ SuperScalar targets people in developing nations using mobile phones. These devi
 - **Paper**: Published, peer review ongoing
 - **Library support**: None — secp256k1-zkp's MuSig2 module would need to be extended
 - **Estimated timeline**: Unknown. Could be 6-12+ months before any library ships this
-- **For SuperScalar**: Watch and wait. Don't build on it yet.
+- **For SuperScalar**: Not a dependency. Monitor for library support before considering integration.
 
 ---
 
@@ -103,7 +97,7 @@ SuperScalar targets people in developing nations using mobile phones. These devi
 
 Nested MuSig2 helps with **signing** while some participants are offline. Async payments solve the other side: **receiving payments** while offline.
 
-SuperScalar's target user has a phone that goes to sleep, loses signal, or runs out of battery. If someone sends them sats while they're unreachable, what happens?
+If a payment arrives while the recipient's device is offline, the LSP must buffer it.
 
 ```mermaid
 sequenceDiagram
@@ -120,7 +114,7 @@ sequenceDiagram
     LSP->>S: Payment complete
 ```
 
-The LSP acts as a buffer, holding incoming payments until the recipient comes online. Since the HTLC has a timeout, the sender gets their money back if the recipient never wakes up.
+The LSP holds incoming payments until the recipient comes online. The HTLC timeout ensures the sender reclaims locked funds if the recipient does not come online before expiry.
 
 ### Active Spec Work
 
@@ -130,7 +124,7 @@ The LSP acts as a buffer, holding incoming payments until the recipient comes on
 
 ### For SuperScalar
 
-Factory-hosted channels are a natural fit for async payments. The LSP already manages the factory and has a persistent relationship with each client. It knows which clients are in which factory and can hold payments for offline participants without additional infrastructure.
+Factory-hosted channels are a natural fit for async payments. The LSP already manages the factory and has a persistent relationship with each client. It knows which clients are in which factory and can hold payments for offline participants with minimal additional infrastructure beyond existing factory management logic.
 
 ### Current Status
 
@@ -144,9 +138,7 @@ Factory-hosted channels are a natural fit for async payments. The LSP already ma
 
 ### Why Factories Are Harder to Watch
 
-Standard Lightning watchtowers have a simple job: watch for a single revoked commitment transaction and broadcast a penalty transaction if it appears.
-
-Factory watchtowers are harder because there's a **tree** of transactions to monitor, not just one.
+Factory watchtowers must monitor revoked states across multiple Decker-Wattenhofer layers, not just a single revoked commitment transaction.
 
 ```mermaid
 graph TD
@@ -188,9 +180,7 @@ For a factory with 3 DW layers and 4 states per layer (64 epochs), the watchtowe
 
 ### Beyond HTLCs
 
-Current Lightning uses **HTLCs** (Hash Time-Locked Contracts) for routing payments: the sender locks funds with a hash, and the recipient unlocks them with the preimage. Every hop in the route uses the **same hash**, which is a privacy leak — any two colluding nodes can tell they're on the same payment route.
-
-**PTLCs** replace the hash/preimage with **adaptor signatures** on elliptic curve points. Each hop uses a different point, breaking the correlation.
+HTLC-based routing uses the same payment hash at every hop, enabling correlation by colluding intermediaries. **PTLCs** replace the hash/preimage with **adaptor signatures** on elliptic curve points. Each hop uses a different point, breaking the correlation.
 
 ```mermaid
 graph LR
@@ -212,13 +202,11 @@ graph LR
     style D2 fill:#3fb950,color:#000
 ```
 
-**Red (top)**: HTLC — same hash H at every hop, linkable. **Green (bottom)**: PTLC — different point at every hop, unlinkable.
+Top row: correlated hashes. Bottom row: independent points.
 
 ### Why This Matters for SuperScalar
 
-SuperScalar already needs adaptor signatures for **PTLC key turnover** — the assisted exit mechanism where the client hands their factory signing key to the LSP in exchange for channel state in a new factory. The adaptor sig parameter exists in the codebase (`musig.c`) but is always passed as NULL.
-
-PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic primitive. Building one helps build the other.
+SuperScalar already needs adaptor signatures for **PTLC key turnover** — the assisted exit mechanism where the client hands their factory signing key to the LSP in exchange for channel state in a new factory. PTLCs at the routing layer and PTLCs for key turnover use the same cryptographic primitive.
 
 ### Current Status
 
@@ -239,7 +227,7 @@ FROST is **architecturally incompatible** with SuperScalar's factory signing. Th
 
 ### But Useful for the LSP's Own Keys
 
-The LSP is one signer in the n-of-n. What happens inside the LSP's own infrastructure is up to the operator. If the LSP distributes its private key across multiple servers using FROST (e.g., 2-of-3), the factory stays n-of-n from everyone else's perspective — the LSP just produces one valid signature, assembled from threshold shares internally.
+The LSP is one signer in the n-of-n. What happens inside the LSP's own infrastructure is up to the operator. If the LSP distributes its private key across multiple servers using FROST (e.g., 2-of-3), the factory stays n-of-n from everyone else's perspective — the LSP produces a single valid signature, assembled internally from threshold shares.
 
 ```mermaid
 graph TD
@@ -262,7 +250,7 @@ This gives the LSP:
 
 ### The Missing Piece: VLS
 
-**FROST alone is not enough.** FROST prevents key *theft* but doesn't validate *what* is being signed. If an attacker compromises the LSP's Lightning node (not the key), they can request signatures on malicious-but-protocol-valid state transitions — and the FROST signers will happily oblige.
+FROST prevents key theft but does not validate what is being signed. If an attacker compromises the LSP's Lightning node (not the key), they can request signatures on malicious-but-protocol-valid state transitions, and the FROST signers will produce valid signatures for those requests.
 
 **VLS (Validating Lightning Signer)** solves this. VLS separates the signing function from the node and adds a policy engine that validates every signing request: is this a valid channel state? Does this HTLC make sense? Is this a revoked commitment? VLS refuses to sign anything that violates its rules.
 
@@ -278,9 +266,9 @@ The strongest configuration is **VLS + FROST**: policy-validated signing with di
 
 | Component | Status |
 |-----------|--------|
-| **ZCash Foundation `frost-secp256k1-tr`** | Stable (latest 2.2.0). Most mature FROST library. The broader FROST crates were audited by NCC Group, but frost-secp256k1-tr was not in audit scope. |
-| **Frostsnap / `schnorr_fun`** | Alpha. By serious cryptographers (Lloyd Fournier). No formal audit. |
-| **VLS** | Beta (since June 2023), working toward production. Supports LDK and CLN. Funded by Spiral/Blockstream. |
+| **ZCash Foundation `frost-secp256k1-tr`** | Stable (latest 2.2.0). NCC Group audited the core FROST crates at v0.6.0; frost-secp256k1-tr was out of scope, and substantial code has shipped since. |
+| **Frostsnap / `schnorr_fun`** | Alpha. Developed by Lloyd Fournier et al. No formal audit. |
+| **VLS** | Beta (since June 2023), working toward production. Supports LDK and CLN. Funded by Spiral, OpenSats, HRF; integrated with Blockstream Greenlight. |
 | **FROST + LDK** | Nobody has built this yet. Feasible in theory. |
 | **VLS + FROST** | On the VLS roadmap. Does not exist today. |
 | **FROST inside MuSig2** | No formal security proof for this composition. |
@@ -291,13 +279,16 @@ The strongest configuration is **VLS + FROST**: policy-validated signing with di
 2. **Medium-term**: HSM for the VLS signer's key storage.
 3. **Future**: FROST to distribute the VLS signer's key across multiple machines.
 
-**Important caveat for solo operators**: FROST only helps if you run genuinely separate servers in different locations. Distributing key shares across processes on the same machine gains almost nothing — an attacker who compromises the host gets all shares.
+**Important caveat for solo operators**: FROST only helps if you run genuinely separate servers in different locations. Distributing key shares across processes on the same machine provides negligible additional security — an attacker who compromises the host gets all shares.
+
+---
 
 ## Related Concepts
 
 - [[what-is-musig2]] — The signing protocol that nested MuSig2 extends
 - [[musig2-signing-rounds]] — Current signing implementation details
 - [[factory-tree-topology]] — The tree structure that nested signing would optimize
+- [[shachain-revocation]] — Revocation mechanism that factory watchtowers must enforce
 - [[soft-fork-landscape]] — Detailed analysis of each soft fork proposal
 - [[security-model]] — Why n-of-n matters for the trust model
-- [[ephemeral-anchors]] — The planned upgrade that's actually ready to implement now
+- [[ephemeral-anchors]] — The upgrade that is ready to implement now

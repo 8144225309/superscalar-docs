@@ -1,6 +1,6 @@
 # Laddering
 
-> **Summary**: Instead of one giant factory, the LSP runs ~33 factories at once with staggered lifetimes. Each day, one factory dies and a new one is born. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
+> **Summary**: Instead of one giant factory, the LSP runs ~33 factories at once with staggered lifetimes. Each day, one factory expires and a new one is created. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
 
 ## The Problem
 
@@ -40,8 +40,9 @@ In reality, the parameters are:
 | Parameter | Value |
 |-----------|-------|
 | Active period | ~30 days |
-| Dying period | 3 days |
-| Concurrent factories | ~33 |
+| Dying period | 3 days (after active period ends) |
+| New-factory cadence | 1 per day |
+| Concurrent factories | ~33 (= 30 active + up to 3 dying) |
 | On-chain transactions per day (ideal) | 1 |
 
 ## How It Works
@@ -50,9 +51,9 @@ In reality, the parameters are:
 
 ```mermaid
 graph LR
-    B["🔨 Born<br/>Day 1"] --> A["⚡ Active<br/>Days 1-30"]
-    A --> D["💀 Dying<br/>Days 31-33"]
-    D --> G["⚰️ Gone<br/>Day 34+"]
+    B["Born<br/>Day 1"] --> A["Active<br/>Days 1-30"]
+    A --> D["Dying<br/>Days 31-33"]
+    D --> G["Gone<br/>Day 34+"]
 
     style B fill:#51cf66,color:#fff
     style A fill:#4c6ef5,color:#fff
@@ -66,7 +67,7 @@ graph LR
 
 **Dying** (3 days): The factory is winding down. Clients receive push notifications and should come online to migrate their funds to a new factory. The LSP creates a new factory using funds from the dying one.
 
-**Gone**: The factory's CLTV timeout approaches. Any client that didn't migrate must [[force-close]].
+**Gone** (Day 34+): The factory no longer accepts cooperative migrations. The CLTV timeout has not yet expired (that occurs around Day ~40), so clients still have time for a unilateral [[force-close]] before the LSP's timeout path activates.
 
 ### The Daily Rhythm
 
@@ -89,10 +90,10 @@ When a factory enters its dying period, clients need to move their funds:
 
 ```mermaid
 flowchart TD
-    N["📱 Push notification:<br/>Your factory is dying!"]
+    N["Notification:<br/>Factory entering dying period"]
     N --> O{"Client comes<br/>online?"}
     O -->|"Yes (within 3 days)"| M["Migrate funds"]
-    O -->|"No"| F["Must force-close ⚠️"]
+    O -->|"No"| F["Must force-close"]
 
     M --> LN["Option 1:<br/>Normal LN payment<br/>to new factory channel"]
     M --> SWAP["Option 2:<br/>Offchain-to-onchain swap"]
@@ -106,7 +107,7 @@ The simplest path. The client's old channel pays the client's new channel via a 
 The client receives their funds on-chain. More expensive (on-chain transaction) but gives the client a real UTXO they fully own.
 
 ### Option 3: PTLC Assisted Exit
-The most elegant option. The client hands over their private key for the old factory (via a PTLC) and receives funds on-chain or in a new factory. The LSP can then sign as the departed client for the rest of the old factory's lifetime — simplifying cleanup.
+The client hands over their private key for the old factory (via a PTLC) and receives funds on-chain. The LSP can then sign as the departed client for the rest of the old factory's lifetime, reducing coordination overhead.
 
 ## The On-Chain Footprint
 
@@ -114,32 +115,37 @@ The most elegant option. The client hands over their private key for the old fac
 graph TD
     subgraph "Without Laddering"
         W1["Day 30: ALL clients exit at once"]
-        W1 --> W2["💥 Massive on-chain spike<br/>Hundreds of transactions"]
+        W1 --> W2["On-chain spike<br/>Hundreds of transactions"]
     end
 
     subgraph "With Laddering"
         L1["Day 1: ~3% of clients migrate"]
         L2["Day 2: ~3% of clients migrate"]
         L3["Day 3: ~3% of clients migrate"]
-        L1 --> LS["📊 Smooth, predictable<br/>~1 tx/day ideal"]
+        L1 --> LS["Predictable load<br/>~1 tx/day ideal"]
         L2 --> LS
         L3 --> LS
     end
 ```
 
-Laddering transforms a **catastrophic spike** into a **smooth daily drumbeat**. The LSP's on-chain footprint becomes predictable and minimal.
+Laddering converts a concentrated on-chain load into a steady ~1 tx/day schedule. The LSP's on-chain footprint becomes predictable.
 
 ## The CLTV Timeout Formula
 
 Each factory's absolute CLTV timeout must account for:
 
 ```
-CLTV timeout = active_period + dying_period + max_DW_delay + safety_margin
-             = 30 days      + 3 days       + ~6 days      + buffer
-             ≈ 40 days
+CLTV timeout = active_period + dying_period + worst_case_unilateral_exit + safety_margin
 ```
 
-The `max_DW_delay` comes from the worst-case [[decker-wattenhofer-invalidation|DW]] force-close path. If two DW layers each have a max 432-block delay, that's ~6 days. The CLTV timeout must be far enough in the future that even a worst-case unilateral exit completes before the LSP's timeout path activates.
+For a 2-layer DW factory (per the [[force-close]] worst-case analysis):
+
+```
+             = 30 days + 3 days + ~7 days + buffer
+             ≈ 42 days
+```
+
+The worst-case unilateral exit includes DW delays at each layer (up to 432 blocks each), kickoff confirmations, and the Poon-Dryja `to_self_delay`. See [[force-close]] for the full breakdown. The CLTV timeout must be far enough in the future that even a worst-case exit completes before the LSP's timeout path activates.
 
 ## What If a Client Never Comes Online?
 

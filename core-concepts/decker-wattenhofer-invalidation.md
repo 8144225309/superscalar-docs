@@ -4,11 +4,11 @@
 
 ## The Core Idea
 
-In a [[what-is-a-payment-channel|payment channel]], you need a way to make old states useless. Lightning (Poon-Dryja) does this with **punishment** — broadcast an old state and you lose everything. Decker-Wattenhofer takes a completely different approach: **time delays**.
+In a [[what-is-a-payment-channel|payment channel]], you need a way to make old states useless. Lightning (Poon-Dryja) does this with **punishment** — broadcast an old state and you lose everything. Decker-Wattenhofer uses a different approach: **relative time delays**.
 
 Every state transaction spends the same output. Each new state gets a lower [[what-is-nsequence|nSequence]] value than the previous one. Since only one transaction can spend a given output, and the one with the shortest delay confirms first, **the newest state always wins**.
 
-## A Simple Example (Single Layer)
+## Single-Layer Example
 
 Say we have 4 possible states and a step size of 144 blocks:
 
@@ -22,7 +22,7 @@ graph TD
     S0["State 0 (oldest)<br/>nSequence = 432 blocks<br/>⏱️ Must wait ~3 days"]
     S1["State 1<br/>nSequence = 288 blocks<br/>⏱️ Must wait ~2 days"]
     S2["State 2<br/>nSequence = 144 blocks<br/>⏱️ Must wait ~1 day"]
-    S3["State 3 (newest)<br/>nSequence = 0 blocks<br/>⚡ Confirms immediately"]
+    S3["State 3 (newest)<br/>nSequence = 0 blocks<br/>Eligible immediately"]
 
     style S0 fill:#ff6b6b,color:#fff
     style S1 fill:#ff922b,color:#fff
@@ -46,15 +46,15 @@ sequenceDiagram
     Honest->>Chain: Broadcasts State 3 (nSequence=0)
     Note over Chain: State 3 enters mempool,<br/>can confirm immediately
 
-    Chain->>Chain: Next block: State 3 confirms ✅
+    Chain->>Chain: Next block: State 3 confirms
     Note over Chain: State 0 is now invalid<br/>(UTXO already spent)
 ```
 
-No punishment mechanism needed. No watchtowers. The math handles it.
+No punishment mechanism is needed at the DW layer — the time-delay structure ensures the newest state is always eligible first.
 
 ## The Problem: Limited States
 
-A single layer with step size 144 and starting delay 432 only gives you **4 states** (432/144 + 1). That's not enough for a factory that needs to update dozens of times over a 30-day lifetime.
+A single layer with step size 144 and starting delay 432 only gives you **4 states** (432/144 + 1). This is insufficient for a factory that needs dozens of updates over a 30-day lifetime.
 
 You could increase the starting delay, but that makes worst-case force-close times unacceptably long. The solution: **multiple layers** — see [[the-odometer-counter]].
 
@@ -63,11 +63,11 @@ You could increase the starting delay, but that makes worst-case force-close tim
 | Approach | Cheating Prevention | States | Requires |
 |----------|-------------------|--------|----------|
 | **Poon-Dryja** (Lightning) | Punishment: cheater loses ALL funds | Unlimited | Watchtower or being online |
-| **Decker-Wattenhofer** | Time delay: new state always confirms first | Limited (K^N with layers) | Nothing — automatic |
+| **Decker-Wattenhofer** | Time delay: new state eligible first | Limited (K^N with layers) | No punishment needed at this layer |
 | **eltoo / LN-Symmetry** | Any newer state replaces older | Unlimited | APO soft fork (not yet activated) |
 
 ### Decker-Wattenhofer Advantages
-- **No watchtower needed** for the factory layer — newer states win automatically
+- **No watchtower needed at the factory layer** — newer states are eligible first (note: watchtowers may still be relevant for the Poon-Dryja channel layer at the leaves)
 - **No punishment** — less catastrophic if someone makes a mistake
 - **Works today** — no consensus changes required
 
@@ -80,7 +80,7 @@ You could increase the starting delay, but that makes worst-case force-close tim
 
 Decker-Wattenhofer is used at the **state nodes** of the [[factory-tree-topology|factory tree]], NOT at every node. The tree alternates between:
 
-- **Kickoff nodes**: No nSequence delay — just circuit breakers
+- **Kickoff nodes**: No nSequence delay — serve as isolation barriers between layers
 - **State nodes**: Decker-Wattenhofer delay — the actual state machine
 
 See [[kickoff-vs-state-nodes]] for why this alternation is mandatory.
@@ -95,9 +95,9 @@ Each state layer runs its own independent DW counter. The [[the-odometer-counter
 
 ## Historical Context
 
-Christian Decker and Roger Wattenhofer published "A Fast and Scalable Payment Network with Bitcoin Duplex Micropayment Channels" in 2015. Their construction used the same nSequence trick, but applied it to two-party channels. SuperScalar generalizes it to multi-party factory trees by combining it with [[timeout-sig-trees]] and [[what-is-musig2|MuSig2]].
+Christian Decker and Roger Wattenhofer published "A Fast and Scalable Payment Network with Bitcoin Duplex Micropayment Channels" in 2015. Their construction used decrementing timelocks to invalidate old states, originally via nLockTime. SuperScalar adapts this principle using BIP-68 relative timelocks (nSequence), and generalizes it to multi-party factory trees by combining it with [[timeout-sig-trees]] and [[what-is-musig2|MuSig2]].
 
-A later paper by some of the same researchers proposed eltoo/LN-Symmetry (2018), which would make DW obsolete by allowing unlimited state updates. The required soft fork (SIGHASH_ANYPREVOUT, BIP-118) has not been activated — which is exactly why SuperScalar builds on the original DW construction instead.
+A later paper by some of the same researchers proposed eltoo/LN-Symmetry (2018), which would supersede DW by allowing unlimited state updates. The required soft fork (SIGHASH_ANYPREVOUT, BIP-118) has not been activated — which is exactly why SuperScalar builds on the original DW construction instead.
 
 ## Related Concepts
 

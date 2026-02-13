@@ -22,14 +22,14 @@ OP_CHECKSIG
 **Byte-by-byte breakdown:**
 
 ```
-04 [4 bytes: CLTV timeout as little-endian int]    ← e.g., block 890000
+03 [3 bytes: CLTV timeout as little-endian int]    ← e.g., block 890000 (0x0D9530)
 b1                                                  ← OP_CHECKLOCKTIMEVERIFY
 75                                                  ← OP_DROP
 20 [32 bytes: LSP x-only pubkey]                    ← BIP-340 format
 ac                                                  ← OP_CHECKSIG
 ```
 
-Total script size: **41 bytes** (1 push opcode + 4 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG).
+Total script size: **40 bytes** (1 push opcode + 3 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG). The CLTV value size varies by block height; 3 bytes covers heights up to 16,777,215 (~320 years at current pace).
 
 ## TapLeaf Hashing
 
@@ -135,7 +135,7 @@ The sighash for script-path spending (spend_type = 0x02) differs from key-path:
 ```
 sighash = H_TapSighash(
     0x00                          // sighash epoch
-    || sighash_type               // SIGHASH_DEFAULT (0x00) for all outputs
+    || hash_type                  // 0x00 = SIGHASH_DEFAULT (equivalent to SIGHASH_ALL)
     || nVersion                   // tx version
     || nLocktime                  // tx locktime
     || sha_prevouts               // hash of all input outpoints
@@ -143,7 +143,7 @@ sighash = H_TapSighash(
     || sha_scriptpubkeys          // hash of all input scriptPubKeys
     || sha_sequences              // hash of all input nSequences
     || sha_outputs                // hash of all outputs
-    || spend_type                 // 0x02 (script path) + ext_flag
+    || spend_type                 // 0x02 = ext_flag × 2 + 0 (script path, no annex)
     || input_index                // which input we're signing
     || tapleaf_hash               // hash of the specific TapLeaf being spent
     || 0x00                       // key version

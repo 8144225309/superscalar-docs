@@ -1,6 +1,6 @@
 # Factory Tree Topology
 
-> **Summary**: The factory is a tree of pre-signed transactions rooted in a single shared UTXO. Internal nodes split participants into smaller groups. At the leaves, the shared UTXO resolves into standard Lightning channels. The tree alternates between kickoff nodes (circuit breakers) and state nodes (DW state machine).
+> **Summary**: The factory is a tree of pre-signed transactions rooted in a single shared UTXO. Internal nodes split participants into smaller groups. Leaf state nodes produce standard Lightning channel outputs. The tree alternates between kickoff nodes (circuit breakers) and state nodes (Decker-Wattenhofer state machines).
 
 ## Why a Tree?
 
@@ -13,20 +13,20 @@ If you have 8 clients and the LSP (9 signers), getting everyone online simultane
 
 ```mermaid
 graph TD
-    R["Root: 9-of-9<br/>All 8 clients + LSP<br/>❌ Hard to coordinate"]
-    R --> L["Left: 5-of-5<br/>Clients A,B,C,D + LSP<br/>⚠️ Easier"]
-    R --> Ri["Right: 5-of-5<br/>Clients E,F,G,H + LSP<br/>⚠️ Easier"]
-    L --> LL["Leaf Left: 3-of-3<br/>Clients A,B + LSP<br/>✅ Easy"]
-    L --> LR["Leaf Right: 3-of-3<br/>Clients C,D + LSP<br/>✅ Easy"]
-    Ri --> RL["Leaf Left: 3-of-3<br/>Clients E,F + LSP<br/>✅ Easy"]
-    Ri --> RR["Leaf Right: 3-of-3<br/>Clients G,H + LSP<br/>✅ Easy"]
+    R["Root: 9-of-9<br/>All 8 clients + LSP"]
+    R --> L["Left: 5-of-5<br/>Clients A,B,C,D + LSP"]
+    R --> Ri["Right: 5-of-5<br/>Clients E,F,G,H + LSP"]
+    L --> LL["Left-Left: 3-of-3<br/>Clients A,B + LSP"]
+    L --> LR["Left-Right: 3-of-3<br/>Clients C,D + LSP"]
+    Ri --> RL["Right-Left: 3-of-3<br/>Clients E,F + LSP"]
+    Ri --> RR["Right-Right: 3-of-3<br/>Clients G,H + LSP"]
 ```
 
-**Leaf updates (most common) only need 3 signers** — 2 clients + the LSP. This is dramatically easier to coordinate than getting all 9 online.
+Leaf updates (the most common case) only need 3 signers — 2 clients + the LSP — rather than coordinating all 9.
 
 ## The Full Tree (8 Clients)
 
-Here's the complete factory tree for an LSP with 8 clients (A through H):
+The complete factory tree for an LSP with 8 clients (A through H):
 
 ```
                                                           nSequence
@@ -114,14 +114,13 @@ Funds the LSP has set aside to sell inbound liquidity to clients. Protected by [
 
 ## Why the LSP Is in Every Subtree
 
-Notice that the **LSP participates in every single node** of the tree. This is by design:
+The LSP participates in every node of the tree:
 
-- The LSP node is always online (it's the coordinator)
-- The LSP is one party in every Lightning channel at the leaves
-- The LSP coordinates signing rounds for state updates
-- The LSP provides liquidity at every level
+- It is one party in every leaf channel
+- It coordinates signing rounds for state updates
+- It provides liquidity at every level
 
-This makes the LSP a **coordinator** — but the N-of-N multisig means it has no special power. It can't move funds without every other participant signing. Coordinator, not custodian.
+The N-of-N multisig means the LSP has no unilateral spending power — it cannot move funds without every other participant signing.
 
 ## Arity: How Many Branches Per Node?
 
@@ -144,9 +143,9 @@ When one client force-closes, **sibling subtrees are affected but the other half
 ```mermaid
 graph TD
     R["Root"] --> L["Left Half"]
-    R --> Ri["Right Half<br/>✅ Completely unaffected"]
-    L --> LL["Alice & Bob<br/>⚠️ Both channels published on-chain"]
-    L --> LR["Carol & Dave<br/>⚠️ Both channels published on-chain"]
+    R --> Ri["Right Half<br/>(unaffected)"]
+    L --> LL["Alice & Bob<br/>(channels published on-chain)"]
+    L --> LR["Carol & Dave<br/>(channels published on-chain)"]
 
     style Ri fill:#51cf66,color:#fff
     style LL fill:#ff922b,color:#fff
@@ -156,7 +155,7 @@ graph TD
 If Alice force-closes:
 - **Alice**: Fully exits to on-chain
 - **Bob** (same leaf): Channel goes on-chain, still works, but loses cheap off-chain liquidity management
-- **Carol, Dave** (same half): Same impact as Bob
+- **Carol, Dave** (sibling leaf, same half): Their subtree must also resolve on-chain because the shared kickoff node was published
 - **Eve, Frank, Grace, Heidi** (other half): **Zero impact** — their subtree was never published
 
 ## Related Concepts

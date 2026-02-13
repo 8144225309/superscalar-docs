@@ -1,12 +1,12 @@
 # Ephemeral Anchors & v3 Transactions
 
-> **Summary**: Pay-to-Anchor (P2A) is the breakthrough that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fundamental problem of multi-party off-chain protocols: you sign now, but you don't know what fees will cost later. All three components are deployed on Bitcoin mainnet today.
+> **Summary**: Pay-to-Anchor (P2A) is the mechanism that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fee-commitment problem inherent in multi-party off-chain protocols.
 
 ## Why This Matters
 
 Multi-party off-chain protocols have a fundamental tension: transactions are signed **cooperatively** during factory construction, but they might not be **broadcast** until months later during a force-close. Before ephemeral anchors, every participant needed their own anchor output for fee-bumping, which bloated transactions and didn't scale. The alternative — baking fees in at signing time — meant guessing the future fee market.
 
-P2A solves this cleanly: a single anyone-can-spend anchor output that lets **any party** attach a fee-bumping child transaction at broadcast time. ZmnSCPxj called this the breakthrough that made Decker-Wattenhofer practical:
+P2A addresses this with a single anyone-can-spend anchor output that lets any party attach a fee-bumping child transaction at broadcast time:
 
 > *"P2A handled the issues I had with Decker-Wattenhofer — in particular, the difficulty of having either exogenous fees (without P2A, you need every participant to have its own anchor output) or mutable endogenous fees."*
 
@@ -19,21 +19,17 @@ All three are **live on Bitcoin mainnet**:
 A new transaction version (`nVersion=3`) with mempool relay policy rules:
 - Max 1 unconfirmed parent allowed
 - Max 1 unconfirmed child allowed
-- Size limits on the child transaction
+- Child limited to 1,000 vB; parent limited to 10,000 vB
 
-These constraints prevent pinning attacks — where an adversary attaches a large, low-fee child to block your CPFP attempt.
+These constraints prevent transaction pinning attacks.
 
 ### 2. Pay-to-Anchor (P2A) Outputs (Bitcoin Core 28.0, October 2024)
 
-A standard **anyone-can-spend** anchor output: `OP_1 <0x4e73>`. Any party — the LSP, the client, or even a third-party fee-bumping service — can spend this output to attach a CPFP child transaction.
-
-No more needing separate anchor outputs per participant. One P2A output, anyone can bump.
+A standard **anyone-can-spend** anchor output: `OP_1 <0x4e73>`. Any party can spend this output to attach a CPFP child transaction, replacing the per-participant anchor pattern with a single shared output.
 
 ### 3. Ephemeral Dust Exemption (Bitcoin Core 29.0, April 2025)
 
-Normally, outputs below the dust limit (~546 sats) are rejected by the mempool. The ephemeral dust rule exempts P2A outputs in v3 transactions — the anchor can carry **zero sats**.
-
-This means the factory tree transaction itself pays zero fees. All fees come from the CPFP child at broadcast time, when the fee market is known.
+Normally, outputs below the dust limit (~546 sats) are rejected by the mempool. The ephemeral dust rule exempts dust outputs in zero-fee v3 transactions, provided the dust output is spent by a child in the same package. This allows the P2A anchor to carry **zero sats**, deferring fee payment entirely to the CPFP child at broadcast time.
 
 ## How It Works Together
 
@@ -53,9 +49,9 @@ graph TD
     style CONFIRM fill:#3fb950,color:#000
 ```
 
-## Why This Was the Breakthrough
+## Why P2A Was the Missing Piece
 
-Before P2A, multi-party fee-bumping was a major obstacle. Each participant needed their own anchor output (bloating the transaction), or fees had to be baked in at signing time (the guessing problem). P2A eliminated both issues — one shared anchor, anyone can bump, no fee guessing. This made Decker-Wattenhofer practical for the first time.
+P2A eliminated both failure modes described above — per-participant anchors and fee estimation at signing time — with a single anyone-can-spend output. This is what made Decker-Wattenhofer viable as a building block for SuperScalar.
 
 ## Package Relay
 
@@ -63,7 +59,7 @@ Related to v3/TRUC: **package relay** lets you submit a parent and child transac
 
 Deployed in Bitcoin Core 28.0 alongside TRUC.
 
-## What Needs to Change in the Code
+## What Needs to Change in the Code (Illustrative)
 
 | Current | Target |
 |---------|--------|

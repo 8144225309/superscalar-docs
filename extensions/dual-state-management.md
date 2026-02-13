@@ -1,10 +1,10 @@
 # Dual State Management
 
-> **Summary**: When a factory updates state, the leaf channels must seamlessly transition from the old funding outpoint to the new one. During the transition, BOTH states are valid simultaneously. This is the same problem splicing solves — and it's critical infrastructure for SuperScalar, not optional.
+> **Summary**: When a factory updates state, the leaf channels must transition from the old funding outpoint to the new one. During the transition, both states are valid simultaneously — the same problem splicing solves, applied to off-chain factory state.
 
 ## The Problem
 
-When the [[the-odometer-counter|DW odometer]] ticks (a factory state update), the leaf state transactions change. This means the **funding outpoint** for each Lightning channel at the leaves changes too:
+When the [[the-odometer-counter|DW odometer]] advances (a factory state update), the leaf state transactions change. This means the **funding outpoint** for each Lightning channel at the leaves changes too:
 
 ```mermaid
 graph TD
@@ -21,11 +21,11 @@ graph TD
     S1 -.->|"Same channel,<br/>different outpoint"| S2
 ```
 
-The channel balance is the same. Alice still has 150k sats. But the **transaction it's anchored to** has changed. The channel needs to work with BOTH outpoints during the transition — because either the old or new factory state could end up on-chain.
+The channel balance is unchanged, but the funding outpoint it spends from has changed. The channel must maintain valid commitment transactions for both outpoints during the transition, since either the old or new factory state could end up on-chain.
 
-## Why This Is Critical
+## Failure Mode Without Dual State
 
-If the channel only knows about the new funding outpoint, but the OLD factory state ends up on-chain (e.g., during a force-close race), the channel's commitment transactions become **invalid** — they reference a txid that doesn't exist. Alice could lose her funds.
+If the channel only tracks the new funding outpoint but the old factory state ends up on-chain (e.g., during a force-close race), the channel's commitment transactions become **invalid** — they reference an outpoint that was never published on-chain. Alice could lose her funds.
 
 **Both states must be maintained until the transition is finalized.**
 
@@ -44,10 +44,10 @@ sequenceDiagram
     Note over A,L: Channel paused — no new HTLCs
 
     Note over A,L: 2. Exchange new funding info
-    L->>A: "New factory state: outpoint = def456:0"
-    A->>L: "Acknowledged"
+    L->>A: factory_state_update (new outpoint = def456:0)
+    A->>L: factory_state_update_ack
 
-    Note over A,L: 3. Sign commitments for BOTH states
+    Note over A,L: 3. Sign commitments for both states
     A->>L: commitment_signed (for old outpoint abc123:0)
     A->>L: commitment_signed (for new outpoint def456:0)
     L->>A: commitment_signed (for old outpoint abc123:0)
@@ -60,7 +60,7 @@ sequenceDiagram
 
 ### Step 1: Quiesce
 
-The channel is paused using the `stfu` message (a quiescence protocol from the Lightning spec). No new HTLCs can be added while the transition is happening. This prevents race conditions where an HTLC is created on the old state but not the new one.
+The channel is paused using the `stfu` message (BOLT #2, `option_quiesce`). No new HTLCs can be added while the transition is happening. This prevents race conditions where an HTLC is created on the old state but not the new one.
 
 ### Step 2: Exchange New Funding Info
 
@@ -68,7 +68,7 @@ The LSP (which coordinates the factory update) tells the channel participants wh
 
 ### Step 3: Sign Both States
 
-This is the key insight: **commitment transactions are signed for BOTH the old and new funding outpoints.** The channel maintains two parallel commitment transaction sets:
+Both parties sign commitment transactions for each funding outpoint. The channel maintains two parallel commitment transaction sets:
 
 ```
 Old state commitments:
@@ -80,26 +80,24 @@ New state commitments:
   - LSP's commitment tx (spends def456:0)
 ```
 
-If a force-close happens and the OLD factory state ends up on-chain → old commitments work.
-If the NEW factory state ends up on-chain → new commitments work.
+This ensures the channel remains valid regardless of which factory state is published on-chain.
 
 ### Step 4: Resume
 
-Once both sides have valid commitments for both states, the channel resumes normal operation. New HTLCs use the new state's commitments.
+Once both commitment sets are exchanged, the channel resumes normal operation. New HTLCs are routed against the new state's commitments; old state commitments are retained as fallback.
 
 ## When Can Old State Be Dropped?
 
 The old state commitments can be safely discarded when:
 
-1. The new factory state is **fully signed** by all participants
-2. The DW mechanism guarantees the new state will beat the old state on-chain
-3. Or the old state's [[shachain-revocation|shachain secret]] has been shared (making old state economically unviable)
+1. The new factory state is **fully signed** by all participants (the DW mechanism ensures it can outrace the old state on-chain, assuming an honest party broadcasts it)
+2. The old state's [[shachain-revocation|shachain secret]] has been shared (making it economically irrational for the LSP to broadcast the old factory state)
 
-In practice, old state commitments are kept as backup until the factory lifetime ends or the next state update replaces them.
+Both conditions are typically satisfied simultaneously during a state advance. In practice, old state commitment sets are retained until the next state update replaces them.
 
 ## Batched Commitment Signing
 
-For efficiency, the dual state commitments are batched — both old and new state commitment signatures are sent in a single `commitment_signed` message with multiple signature entries. This avoids doubling the round-trip count.
+For efficiency, the dual state commitments can be batched — old and new state commitment signatures are exchanged in the same round-trip, as shown in step 3 above. Each side sends a `commitment_signed` for each outpoint, but these messages can be pipelined to avoid additional round-trips.
 
 ## Relation to Splicing
 
@@ -109,13 +107,13 @@ For efficiency, the dual state commitments are batched — both old and new stat
 | **Dual state needed** | Yes — old/new splice | Yes — old/new factory state |
 | **Quiesce required** | Yes | Yes |
 | **Commitment signing** | Both outpoints | Both outpoints |
-| **Resolution** | Splice tx confirms on-chain | DW mechanism resolves state |
+| **Resolution** | Splice tx confirms on-chain | DW nSequence race (unilateral) or shachain revocation (cooperative) |
 
-The machinery is nearly identical. Existing splicing code in CLN, Eclair, and LDK can be **reused** for factory transitions with minimal modification.
+The machinery is conceptually similar. Existing splicing implementations in CLN, Eclair, and LDK demonstrate the dual-state pattern, though factory transitions differ in that the funding outpoint changes off-chain rather than via an on-chain transaction.
 
 ## Implementation Priority
 
-**Critical** — this is not an addon. Without dual state management, factory state updates would break leaf channels. Any SuperScalar implementation that supports state updates (Phase 1+) needs this.
+**Required for state updates.** Without dual state management, factory state updates invalidate leaf channel commitment transactions. Any SuperScalar implementation that supports state updates (Phase 1+) must include this.
 
 For the current PoC, this is handled implicitly — the test framework signs all states in sequence and verifies the correct one ends up on-chain. For production, the full quiesce + dual-signing protocol is needed.
 

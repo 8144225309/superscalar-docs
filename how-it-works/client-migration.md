@@ -1,6 +1,6 @@
 # Client Migration
 
-> **Summary**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. The best option is a PTLC-based "assisted exit" where the client hands over their old factory key and receives funds in the new factory — no on-chain transaction needed.
+> **Summary**: When a factory enters its dying period, clients have 3 days to move their funds to a new factory. Options include a standard Lightning payment, an offchain-to-onchain swap, or a PTLC-based "assisted exit" where the client hands over their old factory key in exchange for funds via an on-chain PTLC.
 
 ## When Migration Happens
 
@@ -8,10 +8,10 @@ Every factory has a [[laddering|fixed lifetime]]. When the active period ends:
 
 ```mermaid
 graph LR
-    A["⚡ Active<br/>(30 days)"] --> D["💀 Dying<br/>(3 days)"]
-    D --> G["⚰️ Gone"]
+    A["Active<br/>(30 days)"] --> D["Dying<br/>(3 days)"]
+    D --> G["Gone"]
 
-    D --> N["📱 Push notification<br/>to all clients"]
+    D --> N["Notification<br/>to all clients"]
 ```
 
 The client receives a push notification: **"Your factory is entering its dying period. Come online to migrate."**
@@ -20,10 +20,10 @@ The client receives a push notification: **"Your factory is entering its dying p
 
 ```mermaid
 flowchart TD
-    S["Factory dying!<br/>Client comes online"]
-    S --> O1["Option 1:<br/>Lightning Payment<br/>⭐ Simplest"]
+    S["Factory dying<br/>Client comes online"]
+    S --> O1["Option 1:<br/>Lightning Payment<br/>(simplest)"]
     S --> O2["Option 2:<br/>On-chain Swap"]
-    S --> O3["Option 3:<br/>PTLC Assisted Exit<br/>⭐ Most efficient"]
+    S --> O3["Option 3:<br/>PTLC Assisted Exit<br/>(most capital-efficient)"]
 
     O1 --> R1["Funds move to new<br/>factory channel via LN"]
     O2 --> R2["Client gets a<br/>real on-chain UTXO"]
@@ -43,9 +43,8 @@ The simplest approach:
 ### Option 2: Offchain-to-Onchain Swap
 
 The client cashes out to an on-chain UTXO:
-1. Client receives Bitcoin on-chain
-2. Client now owns a real UTXO
-3. Client can join a new factory later (or just hold on-chain)
+1. Client receives funds as an on-chain UTXO
+2. Client can join a new factory later or hold on-chain
 
 **Pros**: Client gets full sovereignty — their own UTXO
 **Cons**: On-chain transaction required; client needs to pay fees to join new factory
@@ -63,7 +62,7 @@ sequenceDiagram
     Note over A,L: Alice wants to leave old factory
 
     A->>L: In-factory PTLC<br/>Payment point = Alice's factory public key
-    L->>Chain: On-chain PTLC<br/>Same payment point, funds Alice's new position
+    L->>Chain: On-chain PTLC<br/>Same payment point, funds sent to Alice
 
     A->>Chain: Alice claims on-chain PTLC<br/>(reveals scalar = Alice's old private key)
 
@@ -77,11 +76,11 @@ sequenceDiagram
 3. Alice claims the on-chain PTLC, which **reveals the scalar** (her private key)
 4. The LSP now possesses Alice's private key for the old factory
 
-**Why this is powerful:**
+**Why this matters:**
 
 > *"If A and B are on the same leaf, A has performed this assisted exit and never comes online again, the LSP can, with B and its private key copy of A, sign a new leaf state, without A ever talking to the LSP ever again. The LSP can even use the funds of the A-L channel to provide additional liquidity to the remaining client B!"* — ZmnSCPxj
 
-The LSP can now act as Alice for any remaining operations in the old factory. This dramatically simplifies the old factory's remaining lifetime — fewer real participants to coordinate.
+The LSP can now act as Alice for any remaining operations in the old factory. This reduces the number of real participants that must be coordinated for the old factory's remaining lifetime.
 
 **Safety**: The PTLC is **atomic** — Alice only reveals her key when she successfully receives funds. If the LSP doesn't provide the on-chain PTLC, Alice keeps her key and can force-close instead.
 
@@ -90,11 +89,11 @@ The LSP can now act as Alice for any remaining operations in the old factory. Th
 ```mermaid
 flowchart TD
     D["Dying period<br/>(3 days)"]
-    D -->|"Client comes online"| M["Migration ✅"]
+    D -->|"Client comes online"| M["Migration"]
     D -->|"Client stays offline"| W["Waiting period"]
     W --> T{"CLTV timeout<br/>approaching?"}
-    T -->|"Yes"| FC["Force close ⚠️"]
-    T -->|"Inverted timelock"| IT["Pre-signed tx distributes<br/>funds to client automatically"]
+    T -->|"Yes"| FC["Force close"]
+    T -->|"Inverted timelock"| IT["Pre-signed tx distributes<br/>funds to client"]
 ```
 
 If a client misses all 3 days:
@@ -104,7 +103,7 @@ If a client misses all 3 days:
 3. With the **inverted timelock** design, a pre-signed nLockTime'd transaction automatically distributes funds to clients
 4. The client's funds eventually land on-chain — safe but inconvenient
 
-**The liveness requirement is forgiving**: clients only need to come online **once per month** (during any of their ~33 factories' dying periods).
+**The liveness requirement is forgiving**: clients only need to come online **once per month** (during their factory's 3-day dying period).
 
 ## The Full Picture: A Day in the Life
 
