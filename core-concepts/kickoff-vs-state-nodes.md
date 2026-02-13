@@ -109,7 +109,7 @@ state_left (DW layer 1: 432→288→144→0) ← Multiple versions compete
 
 ## Why Kickoff Nodes Don't Need DW
 
-Kickoff nodes encode the **structure** of the tree: which clients are grouped together. This grouping is fixed for the factory's lifetime and does not require a versioning mechanism. State nodes encode the **balances and liquidity allocation**, which change on every update and therefore require the DW mechanism.
+Kickoff nodes encode the **structure** of the tree — which clients are grouped together (e.g., "Alice and Bob are in the left subtree"). This grouping is fixed for the factory's lifetime and does not require a versioning mechanism. State nodes encode the **balances and liquidity allocation** (e.g., "Alice has 0.3 BTC, Bob has 0.5 BTC, LSP liquidity stock is 0.2 BTC"), which change on every update and therefore require the DW mechanism.
 
 ## Related Concepts
 

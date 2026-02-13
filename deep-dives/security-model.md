@@ -43,9 +43,9 @@ graph TD
 
 **Attack**: LSP broadcasts an old state to reclaim liquidity it had already sold to clients.
 
-**Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay and confirms first. The old state cannot win the race, regardless of whether the honest party is online.
+**Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay. If any honest party broadcasts the newer state, it confirms before the old one. The DW mechanism guarantees the newer state wins the race, but only if someone holding it is online to broadcast it.
 
-**Defense (secondary)**: [[shachain-revocation]] — even if the LSP attempts to broadcast an old state, clients hold the revealed shachain secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational.
+**Defense (secondary)**: [[shachain-revocation]] — if the honest party is offline and an old state confirms, clients hold the revealed shachain secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational even in this case.
 
 **Verdict**: LSP cannot profitably steal.
 

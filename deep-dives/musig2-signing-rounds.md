@@ -61,6 +61,9 @@ e = H("BIP0340/challenge", R.x || P.x || message)
 
 Signer i computes:
   sᵢ = r₁ᵢ + b × r₂ᵢ + e × aᵢ × xᵢ  mod n
+
+where aᵢ is the key aggregation coefficient for signer i (from Step 0)
+and xᵢ is signer i's private key
 ```
 
 ### Step 4: Signature Aggregation
