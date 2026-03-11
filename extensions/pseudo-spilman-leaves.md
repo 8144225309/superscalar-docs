@@ -6,7 +6,7 @@
 
 The current SuperScalar prototype uses **pure Decker-Wattenhofer all the way down** — every level of the [[factory-tree-topology|factory tree]] is a DW layer, and the leaves are standard 2-of-2 Poon-Dryja channels. This is simpler to implement and is what the prototype builds.
 
-Pseudo-Spilman leaves are an **optional optimization** proposed two months after the original design. The prototype does not use them. They become relevant if CLTV budget constraints prove to be a real bottleneck in production.
+Pseudo-Spilman leaves are an **optional optimization** that appeared in ZmnSCPxj's refined design ([Delving Bitcoin, November 2024](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)). The prototype does not use them. They become relevant if CLTV budget constraints prove to be a real bottleneck in production.
 
 ## The Problem with Deep DW Trees
 
@@ -62,7 +62,7 @@ graph LR
 
 ### Why "Pseudo"?
 
-Unlike a true Spilman channel, the pseudo-Spilman doesn't rely on `nLockTime` for ordering. Instead, transactions are simply chained — state 1 spends state 0's output, state 2 spends state 1's output. Publishing state 0 forces state 1 to also be published (since state 1's input is state 0's output), and so on. The chain is self-ordering without requiring timelocks.
+A true Spilman channel is a two-party construct. The pseudo-Spilman variant is multi-party (2 clients + LSP) and uses **chaining** instead of replacement to prevent a sockpuppet attack: if old states could simply be replaced (as in DW), the LSP could create fake clients and broadcast old states to reclaim liquidity already sold to honest clients. Chaining prevents this because each state transaction spends the previous state's output — state 1 spends state 0's output, state 2 spends state 1's output. Publishing state 0 forces state 1 to also be published, and so on. The chain is self-ordering without requiring timelocks.
 
 The trade-off: every state update adds another transaction to the unilateral-exit chain. If there have been K updates, force-close requires publishing K transactions for that leaf.
 
@@ -91,9 +91,9 @@ The trade-off is direct:
 
 In practice, the number of leaf updates is bounded by the factory's lifetime — a 30-day factory with infrequent liquidity purchases may only accumulate a handful of pseudo-Spilman states, keeping the force-close chain short.
 
-## Old State Poisoning Protection
+## Old State Protection
 
-When the LSP signs a new pseudo-Spilman state, the old state's liquidity stock output must be protected against replay. The same [[shachain-revocation|shachain-based punishment]] used elsewhere in the factory applies here: clients hold a revealed secret for the old state and can burn the LSP's liquidity stock to miner fees if the LSP attempts to settle at an outdated state.
+Pseudo-Spilman's chaining structure provides inherent ordering — old states cannot be published without triggering the entire chain. Additionally, ZmnSCPxj describes a **poisoning mechanism** specific to pseudo-Spilman leaves: if the LSP broadcasts an old DW state above the leaves, a pre-signed "poisoning" transaction splits the LSP's liquidity stock among all clients in the affected subtree. Any client can CPFP this transaction to get it confirmed. This is distinct from the [[shachain-revocation|revocation secret]] mechanism used at the DW layers above — pseudo-Spilman leaves rely on structural chaining and poisoning rather than secret-based burn.
 
 ## When to Use Which Design
 
@@ -108,7 +108,7 @@ ZmnSCPxj presented pseudo-Spilman leaves as a refinement for mobile-first deploy
 
 ## Current Status
 
-- **Proposed**: By ZmnSCPxj on Delving Bitcoin (November 4, 2024)
+- **Proposed**: By ZmnSCPxj on [Delving Bitcoin](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242) (November 4, 2024)
 - **Prototype**: Uses pure DW leaves (no pseudo-Spilman)
 - **When relevant**: If CLTV budget becomes a constraint in production deployments with multi-hop routing
 
@@ -116,6 +116,6 @@ ZmnSCPxj presented pseudo-Spilman leaves as a refinement for mobile-first deploy
 
 - [[factory-tree-topology]] — The tree structure that pseudo-Spilman leaves modify
 - [[decker-wattenhofer-invalidation]] — The mechanism pseudo-Spilman replaces at leaves
-- [[shachain-revocation]] — Old state protection for pseudo-Spilman states
+- [[shachain-revocation|Revocation Secrets]] — DW-layer old state protection (pseudo-Spilman uses poisoning instead)
 - [[the-odometer-counter]] — DW state counting that pseudo-Spilman leaves bypass
 - [[force-close]] — How unilateral exit changes with chained pseudo-Spilman transactions
