@@ -117,38 +117,6 @@ Beyond cryptographic guarantees, SuperScalar relies on **economic incentives**:
 
 Cheating is unprofitable under normal conditions because the revocation punishment destroys more value than the LSP could gain from an old state.
 
-### Edge Case: Client Balance Exceeds L-Stock Protection
-
-The revocation burn destroys the LSP's liquidity stock — but only the L-stock that exists in the old state. If a client's balance has grown (through routed payments and liquidity purchases) far beyond what L-stock can cover, the burn may be insufficient to make cheating unprofitable.
-
-**Example where cheating is irrational (normal):**
-```
-Old state:  L-stock = 500k,  Alice = 100k
-New state:  L-stock = 300k,  Alice = 300k
-
-LSP broadcasts old state → gains 200k (Alice's purchased liquidity)
-Alice burns L-stock      → LSP loses 500k
-Net for LSP: -300k. Cheating is irrational.
-```
-
-**Example where the defense weakens (edge case):**
-```
-Old state:  L-stock = 20k,   Alice = 480k
-New state:  L-stock = 5k,    Alice = 495k
-
-LSP broadcasts old state → gains 15k
-Alice burns L-stock      → LSP loses 20k
-Net for LSP: -5k. Still unprofitable, but barely.
-```
-
-The revocation burn is always the **secondary** defense. The primary defense is the DW nSequence race — newer states confirm first if any honest party is online. For the edge case to result in theft, three things must fail simultaneously:
-
-1. The client's balance far exceeds their share of L-stock protection
-2. The client is offline (can't broadcast newer state to win the DW race)
-3. The client's watchtower is also offline
-
-**Mitigation**: Clients whose balances grow large relative to L-stock should gradually migrate toward on-chain sovereignty — taking an on-chain UTXO via assisted exit or offchain-to-onchain swap. This "graduation" path is the intended user journey: start with zero funds in a factory, grow through payments and routing, and eventually graduate to a self-sovereign UTXO. The factory is an on-ramp, not a permanent home for large balances.
-
 ## Open Problems
 
 ### 1. Forced Expiration Spam
@@ -162,6 +130,9 @@ If a client's channel balance is very small, the on-chain force-close transactio
 
 ### 4. Are 64 States Enough?
 With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. This remains an open question.
+
+### 5. Revocation Burn Proportionality
+The revocation burn destroys the LSP's liquidity stock from the old state. If a client's balance has grown far beyond the available L-stock (e.g., through heavy routing), the burn amount shrinks relative to the potential gain from broadcasting old state. This is the same class of risk as standard Lightning: if you are offline and your watchtower is offline, your counterparty can broadcast a revoked state. SuperScalar is no worse than a standard Lightning channel here — the DW nSequence race (primary defense) and revocation burn (secondary defense) provide equivalent or stronger protection. A well-capitalized LSP maintains sufficient L-stock reserves as a matter of operational practice.
 
 ## Comparison to Other Trust Models
 
