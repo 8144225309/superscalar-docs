@@ -31,12 +31,14 @@ A standard **anyone-can-spend** anchor output: `OP_1 <0x4e73>`. Any party can sp
 
 Normally, outputs below the dust limit (~546 sats) are rejected by the mempool. The ephemeral dust rule exempts dust outputs in zero-fee v3 transactions, provided the dust output is spent by a child in the same package. This allows the P2A anchor to carry **zero sats**, deferring fee payment entirely to the CPFP child at broadcast time.
 
-## How It Works Together
+## Current Implementation
+
+The implementation uses **P2A outputs with 240-sat anchors** and `nVersion=2` transactions:
 
 ```mermaid
 graph TD
     subgraph "At Factory Construction (months before broadcast)"
-        SIGN["Sign tree transactions<br/>nVersion=3, fee=0<br/>+ zero-value P2A anchor"]
+        SIGN["Sign tree transactions<br/>nVersion=2, endogenous fee<br/>+ 240-sat P2A anchor"]
     end
 
     subgraph "At Force-Close (fee market is known)"
@@ -49,6 +51,8 @@ graph TD
     style CONFIRM fill:#3fb950,color:#000
 ```
 
+At sub-1-sat/vB fee rates, anchors are automatically omitted since the 240-sat anchor would cost more than the entire transaction fee, making CPFP uneconomical. The `fee_should_use_anchor()` function controls this behavior.
+
 ## Why P2A Was the Missing Piece
 
 P2A eliminated both failure modes described above — per-participant anchors and fee estimation at signing time — with a single anyone-can-spend output. This is what made Decker-Wattenhofer viable as a building block for SuperScalar.
@@ -59,18 +63,21 @@ Related to v3/TRUC: **package relay** lets you submit a parent and child transac
 
 Deployed in Bitcoin Core 28.0 alongside TRUC.
 
-## What Needs to Change in the Code (Illustrative)
+## Future: v3/TRUC Migration
 
-| Current | Target |
+Migrating tree transactions from `nVersion=2` to `nVersion=3` (TRUC policy) would unlock:
+
+| Current (v2) | Future (v3/TRUC) |
 |---------|--------|
-| `nVersion=2` in tx_builder.c | `nVersion=3` |
-| `fee_per_tx = 500` in factory.c | `fee = 0` |
-| No anchor outputs | Add P2A output to each tree transaction |
-| No CPFP logic | Add child transaction builder for fee bumping |
+| 240-sat P2A anchors | 0-sat ephemeral P2A anchors |
+| Endogenous fees baked in at signing time | Zero-fee parents with CPFP-only fee payment |
+| Standard relay rules | Anti-pinning constraints (1-parent-1-child) |
+
+This migration is a planned optimization, not a correctness requirement — the current v2 implementation is fully functional.
 
 ## Related Concepts
 
-- [[transaction-structure]] — Transaction format (design specification)
+- [[transaction-structure]] — Transaction format details
 - [[force-close]] — When tree transactions actually get broadcast
 - [[building-a-factory]] — When tree transactions get signed
 - [[research-horizon]] — Other future improvements

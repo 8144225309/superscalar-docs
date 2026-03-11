@@ -296,11 +296,11 @@ The protocol handles disputes through exit: if a member is unhappy, they leave a
 
 ## What the Prototype Supports Today
 
-The [existing implementation](https://github.com/8144225309/Decker-Wattenhofer-prototype) supports the full cooperative model at the protocol layer:
+The [existing implementation](https://github.com/8144225309/SuperScalar) supports the full cooperative model at the protocol layer:
 
 | Capability | Status |
 |-----------|--------|
-| N-of-N factory construction | Working (181 tests) |
+| N-of-N factory construction | Working (461 tests: 418 unit + 43 regtest) |
 | Self-custodial leaf channels | Working |
 | HTLC routing through coordinator | Working |
 | Force-close / unilateral exit | Working (watchtower included) |
@@ -316,7 +316,7 @@ What needs to be built on top:
 | Coordination platform (pool registry) | Not started |
 | HODL invoice contribution flow | Not started |
 | Fee tracking and distribution accounting | Not started |
-| Continuous ladder daemon (auto-rotation) | Partial (exists, not automated) |
+| Continuous ladder daemon (auto-rotation) | Working (auto-rotation in daemon loop) |
 | Member dashboard (view balance, earned fees) | Web dashboard exists, needs cooperative extensions |
 
 The protocol layer is ready. The coordination and accounting layers are what make it a cooperative.
