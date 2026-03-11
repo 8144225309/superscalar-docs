@@ -160,7 +160,7 @@ The key difference from key-path: script-path includes the `tapleaf_hash` and `k
 tapscript_build_cltv_timeout(&script, cltv_height, &lsp_pubkey);
 
 // Hash it as a TapLeaf
-tapscript_leaf_hash(&leaf_hash, TAPSCRIPT_LEAF_VERSION, &script);
+tapscript_compute_leaf_hash(&leaf);
 
 // Compute Merkle root (for single leaf, root = leaf hash)
 tapscript_merkle_root(&root, leaves, n_leaves);

@@ -7,14 +7,16 @@
 | Transaction | nVersion | nSequence | nLockTime | Witness |
 |-------------|----------|-----------|-----------|---------|
 | **Funding tx** | 2 | wallet default | 0 | LSP's regular spend |
-| **Kickoff tx** | 3 (v3 policy) | 0xFFFFFFFF (disabled) | 0 | MuSig2 key-path sig |
-| **State tx** | 3 (v3 policy) | BIP-68 relative delay | 0 | MuSig2 key-path sig |
+| **Kickoff tx** | 2 | 0xFFFFFFFF (disabled) | 0 | MuSig2 key-path sig |
+| **State tx** | 2 | BIP-68 relative delay | 0 | MuSig2 key-path sig |
 | **Channel close** | 2 | varies (Poon-Dryja) | varies | Channel-specific |
-| **Fee-bump child** | 3 (v3 policy) | any | 0 | Spends P2A output |
+| **Fee-bump child** | 2 | any | 0 | Spends P2A output |
 
-### nVersion = 3 (v3 Transaction Policy)
+### P2A Anchors and Fee-Bumping
 
-Tree transactions use `nVersion=3`, which opts into Bitcoin Core 28's **TRUC (Topologically Restricted Until Confirmation)** policy. TRUC transactions are limited to one unconfirmed parent and one unconfirmed child, which enables ephemeral anchor outputs (0-sat P2A) and simplifies CPFP fee-bumping.
+Tree transactions include a 240-sat **P2A (Pay-to-Anchor)** output for CPFP fee-bumping. At sub-1-sat/vB fee rates, anchors are omitted since the 240-sat cost exceeds the transaction fee itself.
+
+> **Future upgrade**: When the implementation migrates to `nVersion=3` (v3/TRUC policy, available since Bitcoin Core 28), P2A anchors can be reduced to 0 sats via the ephemeral dust exemption (Bitcoin Core 29). This is tracked as a future optimization.
 
 ## Funding Transaction
 
@@ -41,7 +43,7 @@ On-chain, this output is indistinguishable from any other P2TR output. A coopera
 ┌─────────────────────────────────────────────┐
 │ Kickoff TX (e.g., kickoff_root)             │
 ├─────────────────────────────────────────────┤
-│ nVersion: 3                                 │
+│ nVersion: 2                                 │
 │ Input 0:                                    │
 │   prev_txid: funding tx                     │
 │   prev_vout: 0                              │
@@ -52,7 +54,7 @@ On-chain, this output is indistinguishable from any other P2TR output. A coopera
 │   scriptPubKey: OP_1 <tweaked_key>          │
 │                                             │
 │ Output 1: P2A (fee-bump anchor)             │
-│   amount: 0 sats (ephemeral dust)           │
+│   amount: 240 sats                          │
 │   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │
@@ -70,7 +72,7 @@ Key properties:
 ┌─────────────────────────────────────────────┐
 │ State TX (e.g., state_root, epoch 2)        │
 ├─────────────────────────────────────────────┤
-│ nVersion: 3                                 │
+│ nVersion: 2                                 │
 │ Input 0:                                    │
 │   prev_txid: kickoff_root                   │
 │   prev_vout: 0                              │
@@ -88,7 +90,7 @@ Key properties:
 │     script tree: CLTV timeout               │
 │                                             │
 │ Output 2: P2A (fee-bump anchor)             │
-│   amount: 0 sats (ephemeral dust)           │
+│   amount: 240 sats                          │
 │   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │
@@ -105,7 +107,7 @@ Key properties:
 ┌─────────────────────────────────────────────┐
 │ Leaf State TX (e.g., state_left)            │
 ├─────────────────────────────────────────────┤
-│ nVersion: 3                                 │
+│ nVersion: 2                                 │
 │ Input 0:                                    │
 │   prev_txid: kickoff_left                   │
 │   prev_vout: 0                              │
@@ -126,7 +128,7 @@ Key properties:
 │     script tree: shachain secret path       │
 │                                             │
 │ Output 3: P2A (fee-bump anchor)             │
-│   amount: 0 sats (ephemeral dust)           │
+│   amount: 240 sats                          │
 │   scriptPubKey: OP_1 <0x4e73>               │
 │                                             │
 │ nLockTime: 0                                │

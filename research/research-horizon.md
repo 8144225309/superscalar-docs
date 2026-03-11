@@ -212,7 +212,7 @@ SuperScalar already needs adaptor signatures for **PTLC key turnover** — the a
 
 - **Cryptography**: Well understood. Adaptor signatures on Schnorr are straightforward.
 - **LN spec**: No timeline for PTLC adoption across the network
-- **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API (`musig.c`) but currently unused
+- **In SuperScalar code**: Adaptor sig parameter exists in MuSig2 API (`musig.c`) and is wired through to `secp256k1_musig_session_finalize` for PTLC key turnover
 - **For SuperScalar**: Key turnover during assisted exit needs this. General PTLC routing is a broader LN upgrade.
 
 ---

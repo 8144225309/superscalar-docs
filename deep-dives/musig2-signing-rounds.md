@@ -125,7 +125,7 @@ musig_aggregate_partial_sigs(&session, partial_sigs, n_sigs, &final_sig);
 For a factory with N tree nodes (see [[factory-tree-topology]]), each signer needs at least N nonces — one per transaction to sign. Pools are over-provisioned to cover state updates, re-signing after partial failures, and concurrent signing sessions:
 
 ```c
-#define NONCE_POOL_SIZE 64  // ~10x headroom over a typical 6-node tree
+#define MUSIG_NONCE_POOL_MAX 256  // generous headroom for state updates + re-signing
 ```
 
 **Critical**: Nonces are **single-use**. The pool tracks which nonces have been consumed. Reusing a nonce across two different signing sessions would leak the signer's private key.
