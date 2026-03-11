@@ -47,9 +47,9 @@ SuperScalar combines three mechanisms:
 | Audience | Start Here |
 |----------|-----------|
 | **General overview** | Continue reading below |
-| **Lightning developers unfamiliar with factories** | [[why-superscalar-exists]] → [[decker-wattenhofer-invalidation]] → [[factory-tree-topology]] |
+| **Lightning developers** | [[decker-wattenhofer-invalidation]] → [[factory-tree-topology]] → [[building-a-factory]] |
 | **Full technical specification** | [[building-a-factory]] → [[updating-state]] → [[force-close]] |
-| **Comparison with alternative designs** | [[comparison-to-ark]] → [[security-model]] → [[soft-fork-landscape]] |
+| **Security analysis** | [[security-model]] → [[shachain-revocation]] → [[force-close]] |
 
 ## Reading Order
 
@@ -61,7 +61,7 @@ SuperScalar combines three mechanisms:
 5. [[what-is-nsequence]] — Relative timelocks used by Decker-Wattenhofer
 6. [[what-is-an-lsp]] — The node that coordinates a factory
 
-### Core Concepts
+### Protocol Design
 1. [[decker-wattenhofer-invalidation]] — The time-delay state machine
 2. [[the-odometer-counter]] — How layers multiply state capacity
 3. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
@@ -70,44 +70,51 @@ SuperScalar combines three mechanisms:
 6. [[shachain-revocation]] — Secret-based penalty for stale LSP state broadcasts
 7. [[laddering]] — Factory rotation and lifecycle
 
-### How It Works
+### Protocol Operations
 1. [[building-a-factory]] — Step-by-step construction
 2. [[updating-state]] — What happens when factory state changes
 3. [[cooperative-close]] — The happy path
 4. [[force-close]] — When someone disappears
 5. [[client-migration]] — Moving between factories
 
-### Deep Dives
+### Technical Reference
 - [[musig2-signing-rounds]] — The 2-round signing protocol
 - [[tapscript-construction]] — Building Taproot script trees
 - [[transaction-structure]] — Actual Bitcoin transaction format
 - [[security-model]] — Trust assumptions and threat model
 
-### Context
-- [[why-superscalar-exists]] — The scaling problem in depth
-- [[comparison-to-ark]] — Different trust models compared
-- [[soft-fork-landscape]] — CTV, APO, OP_CAT and what they'd change
-- [[history-and-origins]] — ZmnSCPxj, Spiral (Block), and the Delving Bitcoin thread
-
-### Extensions (Future Roadmap)
-- [[cooperative-factories]] — Pooled capital, shared fees, self-custodial cooperative model
+### Extensions
 - [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
-- [[feerate-futures]] — LSP fee hedging via miner contracts
 - [[splicing-integration]] — Resizing channels inside factories
 - [[pluggable-factories]] — Plugging into existing LN software
 - [[dual-state-management]] — Handling factory transitions safely
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
-- [[ephemeral-anchors]] — v3 transactions, P2A outputs, and fee management
+- [[ephemeral-anchors]] — P2A outputs and fee management
 
 ### Research
 - [[research-horizon]] — Nested MuSig2, async payments, factory watchtowers, PTLCs, FROST/VLS, and other technologies worth watching
 
 ---
 
+## Implementation
+
+A working prototype is available at [github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar).
+
+| Component | Status |
+|-----------|--------|
+| Factory construction (N-of-N MuSig2 tree signing) | Working |
+| Leaf Lightning channels (Poon-Dryja) with HTLC routing | Working |
+| Force close / unilateral exit | Working |
+| Shachain revocation (punishment for stale state) | Working |
+| PTLC assisted exit (key turnover) | Working |
+| Factory laddering with auto-rotation | Working |
+| Watchtower (old-state monitoring + penalty broadcast) | Working |
+| Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
+
+The implementation is written in C, with 461 tests (418 unit + 43 regtest) and CI on Linux, macOS, and ARM64. It links against `secp256k1-zkp` for MuSig2/Schnorr and `libsqlite3` for state persistence.
+
 ## Origin
 
 SuperScalar was designed by **ZmnSCPxj** (funded by Spiral, Block's open-source arm) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
-
-ZmnSCPxj's original post described the design without an accompanying implementation. This documentation accompanies an implementation in progress.
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
