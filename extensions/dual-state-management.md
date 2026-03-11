@@ -111,11 +111,9 @@ For efficiency, the dual state commitments can be batched — old and new state 
 
 The machinery is conceptually similar. Existing splicing implementations in CLN, Eclair, and LDK demonstrate the dual-state pattern, though factory transitions differ in that the funding outpoint changes off-chain rather than via an on-chain transaction.
 
-## Implementation Priority
+## Implementation Note
 
-**Required for state updates.** Without dual state management, factory state updates invalidate leaf channel commitment transactions. Any SuperScalar implementation that supports state updates (Phase 1+) must include this.
-
-For the current PoC, this is handled implicitly — the test framework signs all states in sequence and verifies the correct one ends up on-chain. For production, the full quiesce + dual-signing protocol is needed.
+Dual state management is required for factory state updates — without it, advancing the DW odometer would invalidate leaf channel commitment transactions. The implementation signs commitment transactions for both the old and new funding outpoints during every state advance, and the test suite verifies that the correct state resolves on-chain regardless of which factory epoch is published.
 
 ## Related Concepts
 

@@ -1,4 +1,4 @@
-# Ephemeral Anchors & v3 Transactions
+# P2A & Fee Bumping
 
 > **Summary**: Pay-to-Anchor (P2A) is the mechanism that made SuperScalar practical. It lets anyone fee-bump a pre-signed factory transaction at broadcast time, solving the fee-commitment problem inherent in multi-party off-chain protocols.
 

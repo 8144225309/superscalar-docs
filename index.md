@@ -73,18 +73,18 @@ SuperScalar combines three mechanisms:
 5. [[client-migration]] — Moving between factories
 
 ### Technical Reference
-- [[musig2-signing-rounds]] — The 2-round signing protocol
-- [[tapscript-construction]] — Building Taproot script trees
 - [[transaction-structure]] — Actual Bitcoin transaction format
+- [[tapscript-construction]] — Building Taproot script trees
+- [[musig2-signing-rounds]] — The 2-round signing protocol
+- [[dual-state-management]] — How leaf channels survive factory state transitions
+- [[ephemeral-anchors]] — P2A fee bumping for pre-signed transactions
 - [[security-model]] — Trust assumptions and threat model
 
 ### Extensions
-- [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
 - [[splicing-integration]] — Resizing channels inside factories
 - [[pluggable-factories]] — Plugging into existing LN software
-- [[dual-state-management]] — Handling factory transitions safely
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
-- [[ephemeral-anchors]] — P2A outputs and fee management
+- [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
 
 ### Research
 - [[research-horizon]] — Nested MuSig2, async payments, factory watchtowers, PTLCs, FROST/VLS, and other technologies worth watching
