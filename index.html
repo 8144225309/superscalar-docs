@@ -330,6 +330,40 @@
 
   /* Strong/em in context */
   #content strong { color: #fff; }
+
+  /* Collapsible nav sections */
+  .nav-section-toggle {
+    padding: 14px 16px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-section-toggle:hover { color: var(--text); }
+  .nav-section-toggle::before {
+    content: '\25B6';
+    font-size: 8px;
+    transition: transform 0.15s;
+  }
+  .nav-section-toggle.open::before {
+    transform: rotate(90deg);
+  }
+  .nav-section-toggle:not(:first-of-type) {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+  }
+  .nav-collapsible {
+    display: none;
+  }
+  .nav-collapsible.open {
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -345,15 +379,17 @@
   <div class="nav-section">Home</div>
   <a class="nav-link" data-page="index">SuperScalar Overview</a>
 
-  <div class="nav-section">Foundations</div>
-  <a class="nav-link" data-page="foundations/what-is-a-payment-channel">Payment Channels</a>
-  <a class="nav-link" data-page="foundations/what-is-multisig">Multisig</a>
-  <a class="nav-link" data-page="foundations/what-is-taproot">Taproot</a>
-  <a class="nav-link" data-page="foundations/what-is-musig2">MuSig2</a>
-  <a class="nav-link" data-page="foundations/what-is-nsequence">nSequence (Timelocks)</a>
-  <a class="nav-link" data-page="foundations/what-is-an-lsp">Lightning Service Providers</a>
+  <div class="nav-section-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Foundations</div>
+  <div class="nav-collapsible">
+    <a class="nav-link" data-page="foundations/what-is-a-payment-channel">Payment Channels</a>
+    <a class="nav-link" data-page="foundations/what-is-multisig">Multisig</a>
+    <a class="nav-link" data-page="foundations/what-is-taproot">Taproot</a>
+    <a class="nav-link" data-page="foundations/what-is-musig2">MuSig2</a>
+    <a class="nav-link" data-page="foundations/what-is-nsequence">nSequence (Timelocks)</a>
+    <a class="nav-link" data-page="foundations/what-is-an-lsp">Lightning Service Providers</a>
+  </div>
 
-  <div class="nav-section">Core Concepts</div>
+  <div class="nav-section">Protocol Design</div>
   <a class="nav-link" data-page="core-concepts/decker-wattenhofer-invalidation">DW Invalidation</a>
   <a class="nav-link" data-page="core-concepts/the-odometer-counter">The Odometer Counter</a>
   <a class="nav-link" data-page="core-concepts/timeout-sig-trees">Timeout-Sig-Trees</a>
@@ -362,14 +398,14 @@
   <a class="nav-link" data-page="core-concepts/shachain-revocation">Shachain Revocation</a>
   <a class="nav-link" data-page="core-concepts/laddering">Laddering</a>
 
-  <div class="nav-section">How It Works</div>
+  <div class="nav-section">Protocol Operations</div>
   <a class="nav-link" data-page="how-it-works/building-a-factory">Building a Factory</a>
   <a class="nav-link" data-page="how-it-works/updating-state">Updating State</a>
   <a class="nav-link" data-page="how-it-works/cooperative-close">Cooperative Close</a>
   <a class="nav-link" data-page="how-it-works/force-close">Force Close</a>
   <a class="nav-link" data-page="how-it-works/client-migration">Client Migration</a>
 
-  <div class="nav-section">Deep Dives</div>
+  <div class="nav-section">Technical Reference</div>
   <a class="nav-link" data-page="deep-dives/musig2-signing-rounds">MuSig2 Signing Rounds</a>
   <a class="nav-link" data-page="deep-dives/tapscript-construction">Tapscript Construction</a>
   <a class="nav-link" data-page="deep-dives/transaction-structure">Transaction Structure</a>
@@ -482,11 +518,20 @@ async function renderMermaid(blocks) {
 }
 
 // Section name from path
+const SECTION_NAMES = {
+  'foundations': 'Foundations',
+  'core-concepts': 'Protocol Design',
+  'how-it-works': 'Protocol Operations',
+  'deep-dives': 'Technical Reference',
+  'extensions': 'Extensions',
+  'context': 'Context',
+  'research': 'Research',
+};
 function sectionFromPath(path) {
   if (path === 'index') return 'Home';
   const parts = path.split('/');
   if (parts.length < 2) return '';
-  return parts[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return SECTION_NAMES[parts[0]] || parts[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 // Load and render a page
@@ -499,6 +544,15 @@ async function loadPage(pagePath) {
   // Update active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
     link.classList.toggle('active', link.dataset.page === pagePath);
+    // Auto-expand collapsible section if active link is inside one
+    if (link.dataset.page === pagePath) {
+      const collapsible = link.closest('.nav-collapsible');
+      if (collapsible) {
+        collapsible.classList.add('open');
+        const toggle = collapsible.previousElementSibling;
+        if (toggle) toggle.classList.add('open');
+      }
+    }
   });
 
   try {
