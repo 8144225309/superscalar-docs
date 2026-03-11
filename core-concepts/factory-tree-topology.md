@@ -110,7 +110,7 @@ graph TD
 Standard Lightning channels. Once the factory tree is set up, these work exactly like normal Lightning — Alice can send and receive payments through the LSP without touching the factory at all.
 
 ### LSP Liquidity Stock (L)
-Funds the LSP has set aside to sell inbound liquidity to clients. Protected by [[shachain-revocation|shachain secrets]] so the LSP can't cheat by broadcasting an old state where it had more liquidity stock.
+Funds the LSP has set aside to sell inbound liquidity to clients. Protected by [[shachain-revocation|revocation secrets]] so the LSP can't cheat by broadcasting an old state where it had more liquidity stock.
 
 ## Why the LSP Is in Every Subtree
 

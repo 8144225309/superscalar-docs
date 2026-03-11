@@ -67,9 +67,9 @@ sequenceDiagram
     Note over A,L: Step 4: Advance DW counter
     Note over A,L: Old state: nSeq=288<br/>New state: nSeq=144
 
-    Note over A,L: Step 5: LSP reveals old shachain secret
-    L->>A: Shachain secret for old epoch
-    L->>B: Shachain secret for old epoch
+    Note over A,L: Step 5: LSP reveals old revocation secret
+    L->>A: Revocation secret for old epoch
+    L->>B: Revocation secret for old epoch
 ```
 
 ### What Changed?
@@ -135,6 +135,6 @@ All of this uses standard Lightning commitment transactions within the Alice-LSP
 
 - [[the-odometer-counter]] — How state epochs are tracked
 - [[decker-wattenhofer-invalidation]] — Why lower nSequence beats higher
-- [[shachain-revocation]] — The secrets shared when invalidating old states
+- [[shachain-revocation|Revocation Secrets]] — The secrets shared when invalidating old states
 - [[building-a-factory]] — How the initial state was created
 - [[cooperative-close]] — What happens at the end of the factory's life

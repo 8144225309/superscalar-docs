@@ -45,7 +45,7 @@ graph TD
 
 **Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay. If any honest party broadcasts the newer state, it confirms before the old one. The DW mechanism guarantees the newer state wins the race, but only if someone holding it is online to broadcast it.
 
-**Defense (secondary)**: [[shachain-revocation]] — if the honest party is offline and an old state confirms, clients hold the revealed shachain secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational even in this case.
+**Defense (secondary)**: [[shachain-revocation|Revocation secrets]] — if the honest party is offline and an old state confirms, clients hold the revealed revocation secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational even in this case.
 
 **Verdict**: LSP cannot profitably steal.
 
@@ -111,11 +111,11 @@ Beyond cryptographic guarantees, SuperScalar relies on **economic incentives**:
 | LSP Action | Cost to LSP | Benefit to LSP |
 |-----------|-------------|---------------|
 | Cooperate honestly | Operational costs | Revenue from liquidity sales |
-| Broadcast old state | Liquidity stock burned (shachain) | Whatever was in the old state |
+| Broadcast old state | Liquidity stock burned (revocation) | Whatever was in the old state |
 | Refuse to cooperate | Loses all future revenue from client | Nothing |
 | Shut down entirely | Loses all business | N/A |
 
-Cheating is unprofitable under normal conditions because the shachain punishment destroys more value than the LSP could gain from an old state.
+Cheating is unprofitable under normal conditions because the revocation punishment destroys more value than the LSP could gain from an old state.
 
 ## Open Problems
 
@@ -145,7 +145,7 @@ SuperScalar's trust model matches on-chain multisig: no single party can move fu
 ## Related Concepts
 
 - [[decker-wattenhofer-invalidation]] — Defense against old state broadcasts
-- [[shachain-revocation]] — Economic punishment for cheating
+- [[shachain-revocation|Revocation Secrets]] — Economic punishment for cheating
 - [[timeout-sig-trees]] — Defense against permanent client disappearance
 - [[force-close]] — The mechanism that enforces all guarantees
 - [[comparison-to-ark]] — Different trust model comparison

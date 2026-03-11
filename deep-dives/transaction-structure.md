@@ -125,7 +125,7 @@ Key properties:
 │ Output 2: P2TR (LSP liquidity stock)        │
 │   amount: remaining liquidity               │
 │   scriptPubKey: OP_1 <L_tweaked>            │
-│     script tree: shachain secret path       │
+│     script tree: revocation secret path     │
 │                                             │
 │ Output 3: P2A (fee-bump anchor)             │
 │   amount: 240 sats                          │
@@ -135,7 +135,7 @@ Key properties:
 └─────────────────────────────────────────────┘
 ```
 
-The leaf outputs are the actual Lightning channels and LSP liquidity stock. Channel outputs have no script tree (they use standard Poon-Dryja internally). The liquidity stock output includes a script-path leaf that can be spent by revealing a shachain-derived secret, enabling [[shachain-revocation|revocation of outdated states]].
+The leaf outputs are the actual Lightning channels and LSP liquidity stock. Channel outputs have no script tree (they use standard Poon-Dryja internally). The liquidity stock output includes a script-path leaf that can be spent by revealing a [[shachain-revocation|revocation secret]], enabling punishment for outdated state broadcasts.
 
 ## BIP-68 nSequence Encoding
 

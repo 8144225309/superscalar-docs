@@ -108,23 +108,30 @@ If a client misses all 3 days:
 ## The Full Picture: A Day in the Life
 
 ```mermaid
-gantt
-    title Day 15: One Factory Dies, One Is Born
-    dateFormat HH:mm
+sequenceDiagram
+    participant A as Alice
+    participant B as Bob
+    participant C as Carol
+    participant D as Dave
+    participant L as LSP
+    participant Chain as Blockchain
 
-    section Old Factory (#15)
-    Dying period (day 2 of 3)    :active, 00:00, 24h
+    Note over A,Chain: Day 15: Old factory dying (day 2 of 3)
 
-    section Client Migration
-    Alice migrates (PTLC exit)   :done, 08:00, 1h
-    Bob migrates (LN payment)    :done, 14:00, 30m
-    Carol migrates (on-chain)    :done, 19:00, 1h
-    Dave: still offline          :crit, 00:00, 24h
+    A->>L: Comes online, chooses PTLC exit
+    L->>Chain: On-chain PTLC for Alice
+    A->>Chain: Claims PTLC (reveals old key to LSP)
 
-    section New Factory (#48)
-    Construction ceremony        :09:00, 2h
-    Funding tx broadcast         :11:00, 30m
-    Channels live                :11:30, 12h
+    Note over L: LSP builds new factory with Alice, Bob, Carol
+
+    B->>L: Comes online, pays via Lightning to new channel
+    L->>Chain: New factory funding tx broadcast
+
+    C->>L: Comes online, requests on-chain swap
+    L->>Chain: On-chain UTXO for Carol
+
+    Note over D: Dave stays offline all 3 days
+    Note over L: Inverted timelock will distribute Dave's funds on-chain at CLTV timeout
 ```
 
 ## Related Concepts
