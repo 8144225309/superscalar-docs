@@ -42,24 +42,19 @@ SuperScalar combines three mechanisms:
 2. **[[timeout-sig-trees]]** — N-of-N multisig with CLTV timeout fallback so the LSP can recover capital if clients disappear
 3. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ~1 tx/day
 
-## Who Is This For?
-
-| Audience | Start Here |
-|----------|-----------|
-| **General overview** | Continue reading below |
-| **Lightning developers** | [[decker-wattenhofer-invalidation]] → [[factory-tree-topology]] → [[building-a-factory]] |
-| **Full technical specification** | [[building-a-factory]] → [[updating-state]] → [[force-close]] |
-| **Security analysis** | [[security-model]] → [[shachain-revocation]] → [[force-close]] |
-
 ## Reading Order
 
-### Foundations (if you need them)
+<details>
+<summary><strong>Prerequisites</strong> — Primer on payment channels, Taproot, MuSig2, and timelocks</summary>
+
 1. [[what-is-a-payment-channel]] — How two people share a UTXO
 2. [[what-is-multisig]] — Requiring multiple keys to authorize a spend
 3. [[what-is-taproot]] — Key-path and script-path spending for compact on-chain footprint
 4. [[what-is-musig2]] — How N people produce one signature
 5. [[what-is-nsequence]] — Relative timelocks used by Decker-Wattenhofer
 6. [[what-is-an-lsp]] — The node that coordinates a factory
+
+</details>
 
 ### Protocol Design
 1. [[decker-wattenhofer-invalidation]] — The time-delay state machine
