@@ -8,34 +8,36 @@
 
 This property is enforced by the N-of-N multisig and pre-signed exit transactions. All other design decisions (efficiency, scalability, UX) are secondary.
 
-## Trust Assumptions
+## Trustless Model
+
+No participant — including the LSP — can unilaterally move anyone else's funds.
 
 ```mermaid
 graph TD
-    subgraph "What You Trust"
-        BTC["Bitcoin consensus<br/>(blocks are valid)"]
-        MATH["Cryptographic assumptions<br/>(discrete log is hard)"]
-        LIVE["Liveness<br/>(you come online once/month)"]
+    subgraph "Same as Bitcoin"
+        BTC["Bitcoin consensus"]
+        MATH["Schnorr / MuSig2 cryptography"]
+        LIVE["Client online once per month"]
     end
 
-    subgraph "What You DON'T Trust"
-        LSP["The LSP<br/>(cannot steal; can refuse to<br/>sign updates but cannot take funds)"]
-        OTHER["Other clients<br/>(cannot affect your funds)"]
-        MINER["Miners<br/>(normal Bitcoin assumptions)"]
+    subgraph "Trustless — No Counterparty Risk"
+        LSP["LSP cannot steal funds<br/>(N-of-N multisig: every party must sign)"]
+        OTHER["Other clients cannot affect your funds<br/>(subtree isolation)"]
+        MINER["Standard Bitcoin mining assumptions"]
     end
 
     style LSP fill:#51cf66,color:#fff
     style OTHER fill:#51cf66,color:#fff
+    style MINER fill:#51cf66,color:#fff
 ```
 
-| Assumption | Required? | What Happens If Violated |
-|-----------|-----------|------------------------|
-| Bitcoin works correctly | Yes | Everything breaks (same as all Bitcoin) |
-| Schnorr/MuSig2 is secure | Yes | Signatures could be forged |
-| Client comes online once/month | Yes | Client must force-close; funds safe but inconvenient |
-| LSP is honest | **No** | Client can always force-close |
-| Other clients cooperate | **No** | Subtree isolation limits blast radius |
-| Miners don't censor | Mostly | Standard Bitcoin assumption |
+| Property | Guarantee |
+|----------|-----------|
+| Bitcoin consensus + Schnorr/MuSig2 | Same cryptographic foundation as all Bitcoin |
+| Client comes online once/month | Funds are always safe; liveness needed only for convenience |
+| LSP honesty required? | **No** — client can always force-close without LSP cooperation |
+| Other clients must cooperate? | **No** — subtree isolation limits blast radius |
+| Miner censorship resistance | Standard Bitcoin assumption (same as Lightning) |
 
 ## Threat Analysis
 
