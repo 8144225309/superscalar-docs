@@ -16,23 +16,24 @@ Each LSP liquidity stock output has a hidden spending condition:
 graph TD
     LS["LSP Liquidity Stock Output"]
     LS --> N["Normal Path<br/>LSP's key<br/>(honest spend)"]
-    LS --> P["Punishment Path<br/>Revocation secret + burn key<br/>(funds sent to miners as fees)"]
+    LS --> P["Punishment Path<br/>Hashlock preimage reveal<br/>(funds sent to miners as fees)"]
 
     style N fill:#51cf66,color:#fff
     style P fill:#ff6b6b,color:#fff
 ```
 
-The script on the liquidity stock looks like:
+The L-stock output is a P2TR with two spending paths:
+
+- **Key-path**: MuSig2 aggregate key (normal cooperative spend by the LSP)
+- **Script-path**: A hashlock that anyone can spend by revealing the revocation secret preimage
+
+The hashlock script:
 
 ```
-OP_IF
-    <secret_hash> OP_EQUALVERIFY <burn_key> OP_CHECKSIG
-OP_ELSE
-    <LSP_key> OP_CHECKSIG
-OP_ENDIF
+OP_SIZE OP_PUSHBYTES_1 0x20 OP_EQUALVERIFY OP_SHA256 OP_PUSHBYTES_32 <hash> OP_EQUAL
 ```
 
-`<burn_key>` is a key whose private key is known to all factory clients, enabling them to construct the burn transaction.
+This verifies that the witness provides a 32-byte value whose SHA256 matches the committed hash. No signature is required — anyone who knows the preimage can spend the output. The burn transaction sends the full value to `OP_RETURN`, making it unspendable and directing all funds to miners as fees.
 
 ### How the Punishment Works
 
