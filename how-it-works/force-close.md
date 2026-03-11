@@ -116,11 +116,11 @@ Tree TX outputs:
 
 This solves the fee estimation problem: tree transactions are pre-signed with low endogenous fees. If the mempool is congested at force-close time, any participant can bump the fee by spending the P2A output.
 
-### Shachain Protection for P2A
+### Revocation Protection for P2A
 
-What prevents a griefing attack where someone fee-bumps an OLD state transaction? The [[shachain-revocation|shachain mechanism]]:
+What prevents a griefing attack where someone fee-bumps an OLD state transaction? The [[shachain-revocation|revocation mechanism]]:
 
-- Old state transactions have liquidity stock outputs locked to revealed shachain secrets
+- Old state transactions have liquidity stock outputs locked to revealed revocation secrets
 - If an old state confirms, clients can burn the LSP's liquidity stock to miner fees
 - This makes it economically irrational for the LSP to broadcast old states
 
@@ -149,6 +149,6 @@ With the [[timeout-sig-trees|inverted timelock]] design, even if a client cannot
 
 - [[decker-wattenhofer-invalidation]] — The race mechanism at each state level
 - [[kickoff-vs-state-nodes]] — Why the alternation prevents cascade failures
-- [[shachain-revocation]] — Punishment for broadcasting old states
+- [[shachain-revocation|Revocation Secrets]] — Punishment for broadcasting old states
 - [[cooperative-close]] — The much better alternative
 - [[security-model]] — Threat analysis and trust assumptions, including force-close guarantees

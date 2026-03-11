@@ -62,7 +62,7 @@ SuperScalar combines three mechanisms:
 3. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
 4. [[factory-tree-topology]] — The tree structure explained
 5. [[kickoff-vs-state-nodes]] — Why the tree alternates node types
-6. [[shachain-revocation]] — Secret-based penalty for stale LSP state broadcasts
+6. [[shachain-revocation]] — Secret-based penalty for stale LSP liquidity grabs
 7. [[laddering]] — Factory rotation and lifecycle
 
 ### Protocol Operations

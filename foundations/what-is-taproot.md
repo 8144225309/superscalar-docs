@@ -36,7 +36,7 @@ Every output in the SuperScalar factory tree is a Taproot output with both paths
 | **Funding UTXO** | All N clients + LSP (N-of-N MuSig2) | — |
 | **Tree node output** | Subset of clients + LSP (MuSig2) | `<timeout> OP_CLTV OP_DROP <LSP_key> OP_CHECKSIG` |
 | **Client channel** | Client + LSP (2-of-2 MuSig2) | Standard Poon-Dryja scripts |
-| **LSP liquidity stock** | LSP only | `<shachain_secret> OP_DROP <LSP_key> OP_CHECKSIG` |
+| **LSP liquidity stock** | LSP only | `<revocation_secret> OP_DROP <LSP_key> OP_CHECKSIG` |
 
 ### The Timeout Script Path
 
@@ -78,4 +78,4 @@ Before Taproot, N-of-N multisig required revealing all N public keys and N signa
 - [[what-is-musig2]] — How the key-path aggregate signature is created
 - [[timeout-sig-trees]] — The specific script trees used in SuperScalar
 - [[tapscript-construction]] — Technical deep dive on building Taproot scripts
-- [[shachain-revocation]] — How the LSP liquidity stock scripts prevent cheating
+- [[shachain-revocation|Revocation Secrets]] — How the LSP liquidity stock scripts prevent cheating
