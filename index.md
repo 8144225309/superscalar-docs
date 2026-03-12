@@ -62,7 +62,7 @@ SuperScalar combines three mechanisms:
 3. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
 4. [[factory-tree-topology]] — The tree structure explained
 5. [[kickoff-vs-state-nodes]] — Why the tree alternates node types
-6. [[shachain-revocation]] — Secret-based penalty for stale LSP liquidity grabs
+6. [[shachain-revocation|Revocation Secrets]] — Secret-based penalty for stale LSP liquidity grabs
 7. [[laddering]] — Factory rotation and lifecycle
 
 ### Protocol Operations
@@ -100,7 +100,7 @@ A working prototype is available at [github.com/8144225309/SuperScalar](https://
 | Factory construction (N-of-N MuSig2 tree signing) | Working |
 | Leaf Lightning channels (Poon-Dryja) with HTLC routing | Working |
 | Force close / unilateral exit | Working |
-| Shachain revocation (punishment for stale state) | Working |
+| Revocation (punishment for stale state) | Working |
 | PTLC assisted exit (key turnover) | Working |
 | Factory laddering with auto-rotation | Working |
 | Watchtower (old-state monitoring + penalty broadcast) | Working |

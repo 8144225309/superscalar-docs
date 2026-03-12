@@ -78,7 +78,7 @@ A factory-hosted channel allows clients to receive their first sats without owni
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
 
-If an LSP misbehaves, a client without funds to pay exit fees can take their pre-signed exit transactions to a competing LSP, which can broadcast them and earn a bounty for the shachain punishment.
+If an LSP misbehaves, a client without funds to pay exit fees can take their pre-signed exit transactions to a competing LSP, which can broadcast them and earn a bounty for the revocation punishment.
 
 ## Multiple LSPs
 
