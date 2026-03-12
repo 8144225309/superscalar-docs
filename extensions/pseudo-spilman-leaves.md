@@ -8,7 +8,7 @@ The base SuperScalar design uses **pure Decker-Wattenhofer all the way down** â€
 
 Pseudo-Spilman leaves are a **leaf-level design variant** introduced in ZmnSCPxj's refined design ([Delving Bitcoin, November 2024](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)). They trade one DW layer for a simpler unidirectional construct, reducing CLTV budget consumption â€” relevant when deep trees impose CLTV deltas that constrain multi-hop routing.
 
-## The Problem with Deep DW Trees
+## Tree Depth and CLTV Budget
 
 Every DW layer adds a relative timelock (via [[what-is-nsequence|nSequence]]) that accumulates from root to leaf. This total delay directly inflates the `min_final_cltv_expiry_delta` that clients must advertise on the public network.
 

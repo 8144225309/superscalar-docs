@@ -58,7 +58,7 @@ Close + Fund TX:
 
 This is why laddering can achieve ~1 on-chain transaction per day.
 
-## What If Not Everyone Cooperates?
+## Non-Cooperative Participants
 
 If one or more clients don't come online during the dying period:
 

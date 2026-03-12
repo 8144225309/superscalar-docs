@@ -2,7 +2,7 @@
 
 > **Summary**: When clients buy liquidity or channels need restructuring, the factory's state must advance. A leaf update only needs 3 signers (2 clients + LSP). Each update ticks the odometer and produces a new set of pre-signed transactions with lower nSequence values.
 
-## What Triggers a State Update?
+## State Update Triggers
 
 State updates happen at the **factory level**, not for regular Lightning payments. Regular payments flow through the leaf channels using standard Poon-Dryja mechanics and don't consume factory states.
 
@@ -103,7 +103,7 @@ Epoch 4:  Layer0=288, Layer1=432   (CARRY: outer ticks, inner resets)
 
 A carry requires a **higher-level update** — more signers must be online to sign the new root-level state transaction. This is rare (happens every K leaf updates, where K is states per layer).
 
-## Why Bob Has to Participate
+## Participation Requirements
 
 Even though Bob's channel didn't change, Bob must sign the new leaf state transaction. Why?
 
@@ -111,7 +111,7 @@ Even though Bob's channel didn't change, Bob must sign the new leaf state transa
 2. All three must sign ANY new version of the leaf state
 3. This ensures Bob consents to the new state — preventing the LSP from secretly moving Bob's funds
 
-### What If Bob Is Offline?
+### Offline Participants
 
 If Bob is offline, Alice can't do a leaf update. Options:
 

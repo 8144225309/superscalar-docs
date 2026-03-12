@@ -40,7 +40,7 @@ sequenceDiagram
 
 **Result**: Two on-chain transactions total, unlimited payments in between.
 
-## The Cheating Problem
+## Cheating and Revocation
 
 What if Alice broadcasts an **old** state where she had more money?
 
