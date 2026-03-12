@@ -107,7 +107,7 @@ For efficiency, the dual state commitments can be batched — old and new state 
 | **Dual state needed** | Yes — old/new splice | Yes — old/new factory state |
 | **Quiesce required** | Yes | Yes |
 | **Commitment signing** | Both outpoints | Both outpoints |
-| **Resolution** | Splice tx confirms on-chain | DW nSequence race (unilateral) or shachain revocation (cooperative) |
+| **Resolution** | Splice tx confirms on-chain | DW nSequence race (unilateral) or revocation (cooperative) |
 
 The machinery is conceptually similar. Existing splicing implementations in CLN, Eclair, and LDK demonstrate the dual-state pattern, though factory transitions differ in that the funding outpoint changes off-chain rather than via an on-chain transaction.
 

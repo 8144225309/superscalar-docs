@@ -17,7 +17,7 @@ A cooperative factory replaces the commercial LSP model with a pooled-capital mo
 | **Trust model** | N-of-N multisig (identical) | N-of-N multisig (identical) |
 | **Unilateral exit** | Always available | Always available (same guarantee) |
 
-The protocol's safety properties — unilateral exit, shachain punishment, inverted timelocks — protect members identically regardless of the organizational structure.
+The protocol's safety properties — unilateral exit, revocation punishment, inverted timelocks — protect members identically regardless of the organizational structure.
 
 ## End-to-End: How It Works
 
@@ -248,7 +248,7 @@ The worst a malicious coordinator can do is **disrupt service**, not steal funds
 - **Self-custody**: Every member holds their signing key. No one can spend their funds without their signature.
 - **Unilateral exit**: Pre-signed transactions guarantee on-chain recovery without anyone's cooperation.
 - **State verification**: Members verify their channel allocation before signing each factory tree.
-- **Old state punishment**: [[shachain-revocation|Shachain secrets]] allow members to burn the coordinator's funds if old states are broadcast.
+- **Old state punishment**: [[shachain-revocation|Revocation secrets]] allow members to burn the coordinator's funds if old states are broadcast.
 - **Inverted timelock**: If the coordinator disappears, a pre-signed [[timeout-sig-trees|nLockTime transaction]] distributes funds to members automatically at the factory timeout.
 
 ### What Requires Trust (Reduced but Not Eliminated)
@@ -262,7 +262,7 @@ The worst a malicious coordinator can do is **disrupt service**, not steal funds
 
 - A member who contributes 300,000 sats and sees 300,000 in their proposed channel during construction **will have** a self-custodial 300,000 sat channel after signing. The MuSig2 ceremony and pre-signed exit transactions make this irreversible once the funding transaction confirms.
 - A member can **always** recover their funds on-chain, even if the coordinator, all other members, and the coordination platform disappear simultaneously.
-- The coordinator earns nothing from cheating. The shachain punishment destroys more value than any old state could recover. Economic rationality reinforces the cryptographic guarantees.
+- The coordinator earns nothing from cheating. The revocation punishment destroys more value than any old state could recover. Economic rationality reinforces the cryptographic guarantees.
 
 ## Comparison to Alternatives
 
@@ -304,7 +304,7 @@ The [existing implementation](https://github.com/8144225309/SuperScalar) support
 | Self-custodial leaf channels | Working |
 | HTLC routing through coordinator | Working |
 | Force-close / unilateral exit | Working (watchtower included) |
-| Shachain punishment | Working |
+| Revocation punishment | Working |
 | PTLC assisted exit (key turnover) | Working |
 | Factory rotation (laddering) | Working (manual trigger) |
 | Inverted timelock (distribution tx) | Working |
