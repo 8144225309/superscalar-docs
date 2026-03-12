@@ -8,6 +8,8 @@ Both Ark and SuperScalar address the same constraint: **how to give many users L
 
 ## Side-by-Side Comparison
 
+Both protocols require a service provider: SuperScalar calls this the LSP (Lightning Service Provider); Ark calls it the ASP (Ark Service Provider). The roles are analogous — a well-capitalized node that coordinates the factory or round and provides liquidity — but the trust model differs significantly.
+
 | Feature | **SuperScalar** | **Ark** |
 |---------|----------------|---------|
 | **Provider role** | LSP (one signer among N) | ASP (Ark Service Provider, round coordinator) |

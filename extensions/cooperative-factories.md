@@ -26,7 +26,7 @@ The protocol's safety properties — unilateral exit, revocation punishment, inv
 A coordination platform (website, group chat, community board) connects people who want to pool funds:
 
 ```
-superscalar.win — Pool Registry
+Example Pool Registry Interface
 
   Pool #47: "East Africa Lightning Cooperative"
     Target capacity:  2,000,000 sats
