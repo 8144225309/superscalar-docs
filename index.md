@@ -70,7 +70,7 @@ See [[roadmap]] for the development plan and [[network-economics]] for cost and 
 ### Protocol Operations
 1. [[building-a-factory]] — Step-by-step construction
 2. [[updating-state]] — What happens when factory state changes
-3. [[cooperative-close]] — The happy path
+3. [[cooperative-close]] — The ideal factory shutdown
 4. [[force-close]] — When someone disappears
 5. [[client-migration]] — Moving between factories
 
@@ -95,7 +95,7 @@ See [[roadmap]] for the development plan and [[network-economics]] for cost and 
 
 ## Implementation
 
-A working prototype is available at [github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar).
+The reference implementation is available at [github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar).
 
 | Component | Status |
 |-----------|--------|

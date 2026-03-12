@@ -2,7 +2,7 @@
 
 > **Summary**: Two people lock Bitcoin into a shared address, then pass signed IOUs back and forth off-chain. Only the final balance ever hits the blockchain.
 
-## The Analogy
+## The Bar Tab
 
 Imagine you and a friend open a **joint bar tab**. You both put $50 into a jar behind the bar ($100 total). Throughout the night, instead of paying the bartender for each drink, you just update a notepad:
 

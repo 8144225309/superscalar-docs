@@ -422,6 +422,7 @@
   <div class="nav-section">Home</div>
   <a class="nav-link" data-page="index">SuperScalar Overview</a>
   <a class="nav-link" data-page="context/roadmap">Roadmap</a>
+  <a class="nav-link" href="https://github.com/8144225309/SuperScalar" target="_blank" rel="noopener">Reference Implementation ↗</a>
 
   <div class="nav-section-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">Foundations</div>
   <div class="nav-collapsible">
@@ -667,6 +668,7 @@ document.getElementById('content')?.addEventListener('click', (e) => {
 // Nav click handlers
 document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', (e) => {
+    if (!link.dataset.page) return; // external links: let browser handle normally
     e.preventDefault();
     location.hash = link.dataset.page;
   });

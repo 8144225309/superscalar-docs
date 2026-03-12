@@ -105,11 +105,7 @@ A carry requires a **higher-level update** — more signers must be online to si
 
 ## Participation Requirements
 
-Even though Bob's channel didn't change, Bob must sign the new leaf state transaction. Why?
-
-1. The leaf state transaction is a **3-of-3 MuSig2** (Alice, Bob, LSP)
-2. All three must sign ANY new version of the leaf state
-3. This ensures Bob consents to the new state — preventing the LSP from secretly moving Bob's funds
+Even though Bob's channel didn't change, Bob must sign the new leaf state transaction. The leaf state transaction is a **3-of-3 MuSig2** (Alice, Bob, LSP) — all three must sign every new version. This ensures Bob consents to the new state, preventing the LSP from secretly moving Bob's funds.
 
 ### Offline Participants
 

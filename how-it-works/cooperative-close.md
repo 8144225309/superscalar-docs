@@ -2,7 +2,7 @@
 
 > **Summary**: When a factory's lifetime ends and all clients cooperate, everyone signs a single transaction that distributes funds directly from the funding UTXO. No tree transactions are published on-chain.
 
-## The Happy Path
+## Cooperative Mechanics
 
 If all clients come online during the [[laddering|dying period]] and cooperate, the entire factory can be closed with a **single on-chain transaction**:
 
