@@ -115,7 +115,7 @@ Once the funding transaction confirms:
 - The LSP can begin selling inbound liquidity from its liquidity stock
 - Regular Lightning payments **do not touch the factory** — they use standard Poon-Dryja mechanics within the leaf channels
 
-## Who Pays for What?
+## Cost Attribution
 
 | Cost | Paid By | Why |
 |------|---------|-----|
@@ -128,7 +128,7 @@ Once the funding transaction confirms:
 
 Clients can enter the factory with **zero on-chain Bitcoin**. The LSP provides all initial capital, recovering costs through liquidity fees.
 
-## What Could Go Wrong During Construction?
+## Construction Failure Modes
 
 | Problem | Impact | Solution |
 |---------|--------|----------|

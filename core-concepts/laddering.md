@@ -147,7 +147,7 @@ For a 2-layer DW factory (per the [[force-close]] worst-case analysis):
 
 The worst-case unilateral exit includes DW delays at each layer (up to 432 blocks each), kickoff confirmations, and the Poon-Dryja `to_self_delay`. See [[force-close]] for the full breakdown. The CLTV timeout must be far enough in the future that even a worst-case exit completes before the LSP's timeout path activates.
 
-## What If a Client Never Comes Online?
+## Permanently Offline Clients
 
 If a client misses the 3-day dying period AND never comes back:
 

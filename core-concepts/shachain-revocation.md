@@ -92,7 +92,7 @@ The storage advantage (O(log N) vs O(N)) is negligible at SuperScalar's scale â€
 
 The implementation retains shachain support as a legacy path, controlled by the `use_flat_secrets` flag.
 
-## Why Burn to Fees Instead of Giving to Clients?
+## Rationale: Burn to Fees
 
 If clients received the LSP's funds when catching a cheat, there would be an incentive to provoke or frame the LSP. Burning to fees avoids this:
 

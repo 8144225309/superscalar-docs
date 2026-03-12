@@ -84,7 +84,7 @@ The LSP can now act as Alice for any remaining operations in the old factory. Th
 
 **Safety**: The PTLC is **atomic** — Alice only reveals her key when she successfully receives funds. If the LSP doesn't provide the on-chain PTLC, Alice keeps her key and can force-close instead.
 
-## What If the Client Doesn't Migrate?
+## Migration Failure Handling
 
 ```mermaid
 flowchart TD
