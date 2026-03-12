@@ -1,6 +1,6 @@
 # Research Horizon
 
-> **Summary**: Technologies not yet in production that could improve SuperScalar if they land. None are current dependencies.
+> **Summary**: Technologies not yet in production that could improve SuperScalar if adopted. None are current dependencies.
 
 ## Nested MuSig2
 

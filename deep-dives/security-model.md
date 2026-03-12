@@ -122,16 +122,16 @@ Cheating is unprofitable under normal conditions because the revocation punishme
 ## Open Problems
 
 ### 1. Forced Expiration Spam
-See [Threat 4](#threat-4-forced-expiration-spam) above. No protocol-level solution exists for any timelock-based protocol. Laddering and subtree isolation mitigate but do not eliminate the risk.
+See [Threat 4](#threat-4-forced-expiration-spam) above. No protocol-level solution exists for any timelock-based protocol. Laddering and subtree isolation mitigate but do not eliminate the risk. **Why unsolved**: requires either a global fee market mechanism or a coordination layer that doesn't exist at the Bitcoin protocol level. Active area of research in the Lightning community.
 
 ### 2. Fair Exchange of Private Keys
-The PTLC-based key handover is atomic, but there's no guarantee the LSP will initiate the on-chain PTLC before timelocks expire. In theory, this is an unsolved problem. In practice, the LSP is incentivized to cooperate.
+The PTLC-based key handover is atomic, but there's no guarantee the LSP will initiate the on-chain PTLC before timelocks expire. In theory, this is an unsolved problem. In practice, the LSP is incentivized to cooperate. **Why unsolved**: a fully trustless atomic key exchange requires either a soft fork (e.g., adaptor signatures over a covenant output) or accepting that the LSP has a brief window to abort. Economic incentives make abort irrational for an honest LSP.
 
 ### 3. Dust Economics
-If a client's channel balance is very small, the on-chain force-close transaction might cost more in fees than the channel is worth. The client's funds are effectively "dust" — they exist in theory but aren't economically recoverable.
+If a client's channel balance falls below the on-chain fee cost of a force-close transaction, the funds are not economically recoverable. **Why unsolved**: inherent to any UTXO-based system. Mitigation is a minimum balance requirement enforced by the LSP at onboarding; no protocol-level fix exists.
 
 ### 4. Are 64 States Enough?
-With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. This remains an open question.
+With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
 
 ### 5. Revocation Burn Proportionality
 The revocation burn destroys the LSP's liquidity stock from the old state. If a client's balance has grown far beyond the available L-stock (e.g., through heavy routing), the burn amount shrinks relative to the potential gain from broadcasting old state. This is the same class of risk as standard Lightning: if you are offline and your watchtower is offline, your counterparty can broadcast a revoked state. SuperScalar is no worse than a standard Lightning channel here — the DW nSequence race (primary defense) and revocation burn (secondary defense) provide equivalent or stronger protection. A well-capitalized LSP maintains sufficient L-stock reserves as a matter of operational practice.

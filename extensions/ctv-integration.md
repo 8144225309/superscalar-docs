@@ -8,7 +8,7 @@ BIP-119 introduces `OP_CHECKTEMPLATEVERIFY` (CTV) — an opcode that constrains 
 
 Building a SuperScalar factory today requires all participating clients to be online simultaneously (or nearly so) for the MuSig2 signing rounds. The LSP cannot broadcast the funding transaction until every client has signed every node in the tree. This creates a hard dependency: factory construction is gated on client availability.
 
-In the [laddering](../core-concepts/laddering.md) lifecycle, a new factory must be ready before the current one's dying period ends. If clients are slow or offline during this window, the LSP is blocked.
+In the [[laddering]] lifecycle, a new factory must be ready before the current one's dying period ends. If clients are slow or offline during this window, the LSP is blocked.
 
 ---
 
