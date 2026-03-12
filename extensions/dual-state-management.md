@@ -111,7 +111,7 @@ For efficiency, the dual state commitments can be batched — old and new state 
 
 The machinery is conceptually similar. Existing splicing implementations in CLN, Eclair, and LDK demonstrate the dual-state pattern, though factory transitions differ in that the funding outpoint changes off-chain rather than via an on-chain transaction.
 
-## Implementation Note
+## Implementation
 
 Dual state management is required for factory state updates — without it, advancing the DW odometer would invalidate leaf channel commitment transactions. The implementation signs commitment transactions for both the old and new funding outpoints during every state advance, and the test suite verifies that the correct state resolves on-chain regardless of which factory epoch is published.
 
@@ -119,6 +119,5 @@ Dual state management is required for factory state updates — without it, adva
 
 - [[splicing-integration]] — The analogous on-chain mechanism
 - [[updating-state]] — What triggers the need for dual state management
-- [[pluggable-factories]] — How this integrates with LN node software
 - [[force-close]] — Why both states must be valid simultaneously
 - [[the-odometer-counter]] — The state machine that drives transitions

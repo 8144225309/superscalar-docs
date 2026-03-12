@@ -328,5 +328,4 @@ The protocol layer is ready. The coordination and accounting layers are what mak
 - [[client-migration]] — How members move between factories (or exit)
 - [[security-model]] — Trust analysis that applies equally to cooperatives
 - [[force-close]] — The unilateral exit guarantee that protects every member
-- [[feerate-futures]] — Fee hedging that a large cooperative could eventually access
 - [[what-is-an-lsp]] — The coordinator role in a cooperative context

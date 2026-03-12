@@ -130,7 +130,7 @@ Factory-hosted channels are a natural fit for async payments. The LSP already ma
 
 - **Spec work**: Active discussion, no finalized standard
 - **Implementations**: Some LSPs (like Phoenix/ACINQ) already do limited async holding
-- **For SuperScalar**: Important for production UX, not needed for PoC
+- **For SuperScalar**: Important for production UX; on the [[roadmap]]
 
 ---
 
@@ -172,7 +172,7 @@ For a factory with 3 DW layers and 4 states per layer (64 epochs), the watchtowe
 
 - **Research**: No published protocol for factory-specific watchtowers
 - **Standard LN watchtowers**: Exist (The Eye of Satoshi, LND's built-in) but only handle simple channels
-- **For SuperScalar**: Important for production security, especially for mobile users who can't monitor the chain. Not needed for PoC (regtest can be monitored manually).
+- **For SuperScalar**: Required for production security, especially for mobile users who cannot continuously monitor the chain. Trustless watchtower protocol is on the [[roadmap]].
 
 ---
 
