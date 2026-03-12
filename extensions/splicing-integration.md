@@ -67,10 +67,6 @@ Splicing is already being implemented in Lightning:
 
 The difference for SuperScalar: standard splicing changes the funding outpoint via an on-chain transaction. Factory splicing would change the funding outpoint via a **factory state update** (off-chain), which is cheaper but requires the [[dual-state-management|dual state management]] machinery.
 
-## Implementation Priority
-
-For the current SuperScalar PoC: **optional, not critical**. The core factory mechanics (DW tree, timeout-sig-trees, MuSig2 signing) work without splicing. Splicing integration is a **post-MVP enhancement** that becomes relevant for production LSP deployments where users need flexible channel management.
-
 ## Related Concepts
 
 - [[dual-state-management]] — The shared technical foundation

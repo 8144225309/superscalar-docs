@@ -17,7 +17,7 @@
 
 P2A anchors appear on the **distribution transaction** and **channel commitment/penalty transactions** — not on tree node transactions (kickoff, state, leaf state). Tree transactions use endogenous fees baked in at signing time. The distribution tx's P2A anchor allows fee-bumping the final payout during force-close.
 
-> **Future upgrade**: When the implementation migrates to `nVersion=3` (v3/TRUC policy, available since Bitcoin Core 28), P2A anchors can be reduced to 0 sats via the ephemeral dust exemption (Bitcoin Core 29). This is tracked as a future optimization.
+> **Upgrade path**: Migrating to `nVersion=3` (v3/TRUC policy, available since Bitcoin Core 28) allows P2A anchors to carry 0 sats via the ephemeral dust exemption introduced in Bitcoin Core 29.
 
 ## Funding Transaction
 

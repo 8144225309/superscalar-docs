@@ -82,19 +82,6 @@ JIT channels cost an on-chain transaction but require only bilateral coordinatio
 
 SuperScalar's scaling advantage comes from sharing a single on-chain UTXO across many clients. Each JIT fallback adds a dedicated on-chain UTXO, partially negating this benefit. The aggregate impact depends on the fallback rate: if factory state updates succeed for most clients most of the time, the per-client UTXO footprint remains close to the shared-factory ideal. If fallbacks are frequent, the system converges toward conventional per-client Lightning channels.
 
-## Implementation Priority
-
-**Required for production; not needed for testnet proof-of-concept.** For initial testnet deployment:
-
-- Assume all participants are online and cooperative (happy path)
-- Factory state updates always succeed
-- No JIT fallback needed
-
-For production LSP deployment:
-- Essential safety net for real-world conditions
-- Prevents payment failures when factory operations stall
-- Can leverage existing JIT channel code from LSP implementations (e.g., LDK-node, CLN plugins)
-
 ## Related Concepts
 
 - [[updating-state]] — The off-chain state update path; JIT channels serve as a fallback when this path is unavailable

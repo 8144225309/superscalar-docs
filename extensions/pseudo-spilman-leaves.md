@@ -4,9 +4,9 @@
 
 ## The Base Design vs This Refinement
 
-The current SuperScalar prototype uses **pure Decker-Wattenhofer all the way down** — every level of the [[factory-tree-topology|factory tree]] is a DW layer, and the leaves are standard 2-of-2 Poon-Dryja channels. This is simpler to implement and is what the prototype builds.
+The base SuperScalar design uses **pure Decker-Wattenhofer all the way down** — every level of the [[factory-tree-topology|factory tree]] is a DW layer, and the leaves are standard 2-of-2 Poon-Dryja channels.
 
-Pseudo-Spilman leaves are an **optional optimization** that appeared in ZmnSCPxj's refined design ([Delving Bitcoin, November 2024](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)). The prototype does not use them. They become relevant if CLTV budget constraints prove to be a real bottleneck in production.
+Pseudo-Spilman leaves are a **leaf-level design variant** introduced in ZmnSCPxj's refined design ([Delving Bitcoin, November 2024](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)). They trade one DW layer for a simpler unidirectional construct, reducing CLTV budget consumption — relevant when deep trees impose CLTV deltas that constrain multi-hop routing.
 
 ## The Problem with Deep DW Trees
 
