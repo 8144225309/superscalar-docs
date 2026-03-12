@@ -4,7 +4,7 @@
 
 ## Motivation
 
-Each Lightning channel requires a dedicated on-chain UTXO, which is a bottleneck given Bitcoin's limited throughput (~7 tx/sec). Users with no on-chain Bitcoin cannot open channels independently.
+Each Lightning channel requires a dedicated on-chain UTXO, which is a bottleneck given Bitcoin's limited throughput (≈7 tx/sec). Users with no on-chain Bitcoin cannot open channels independently.
 
 ## Overview
 
@@ -40,7 +40,7 @@ SuperScalar combines three mechanisms:
 
 1. **[[decker-wattenhofer-invalidation]]** — Decrementing relative timelocks ensure newer state transactions confirm before older ones during unilateral close
 2. **[[timeout-sig-trees]]** — N-of-N multisig with CLTV timeout fallback so the LSP can recover capital if clients disappear
-3. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ~1 tx/day
+3. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ≈1 tx/day
 
 ## Reading Order
 

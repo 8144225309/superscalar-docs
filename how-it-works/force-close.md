@@ -130,14 +130,14 @@ Worst-case timing for a 2-layer DW factory:
 
 | Step | Duration |
 |------|----------|
-| Kickoff root confirms | 1 block (~10 min) |
-| State root DW delay | Up to 432 blocks (~3 days) |
-| Kickoff left confirms | 1 block (~10 min) |
-| State left DW delay | Up to 432 blocks (~3 days) |
-| Channel-level to_self_delay (Poon-Dryja) | ~144 blocks (~1 day) |
-| **Total worst case** | **~7 days** |
+| Kickoff root confirms | 1 block (≈10 min) |
+| State root DW delay | Up to 432 blocks (≈3 days) |
+| Kickoff left confirms | 1 block (≈10 min) |
+| State left DW delay | Up to 432 blocks (≈3 days) |
+| Channel-level to_self_delay (Poon-Dryja) | ≈144 blocks (≈1 day) |
+| **Total worst case** | **≈7 days** |
 
-This is significantly worse than a regular Lightning force-close (~1 day). The longer delay is the cost of sharing a UTXO among multiple participants.
+This is significantly worse than a regular Lightning force-close (≈1 day). The longer delay is the cost of sharing a UTXO among multiple participants.
 
 ## The Inverted Timelock Safety Net
 

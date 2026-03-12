@@ -1,6 +1,6 @@
 # Laddering
 
-> **Summary**: Instead of one giant factory, the LSP runs ~33 factories at once with staggered lifetimes. Each day, one factory expires and a new one is created. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
+> **Summary**: Instead of one giant factory, the LSP runs ≈33 factories at once with staggered lifetimes. Each day, one factory expires and a new one is created. Users migrate during a 3-day window. This spreads the on-chain footprint to roughly 1 transaction per day.
 
 ## The Problem
 
@@ -39,10 +39,10 @@ In reality, the parameters are:
 
 | Parameter | Value |
 |-----------|-------|
-| Active period | ~30 days |
+| Active period | ≈30 days |
 | Dying period | 3 days (after active period ends) |
 | New-factory cadence | 1 per day |
-| Concurrent factories | ~33 (= 30 active + up to 3 dying) |
+| Concurrent factories | ≈33 (= 30 active + up to 3 dying) |
 | On-chain transactions per day (ideal) | 1 |
 
 ## How It Works
@@ -67,7 +67,7 @@ graph LR
 
 **Dying** (3 days): The factory is winding down. Clients receive push notifications and should come online to migrate their funds to a new factory. The LSP creates a new factory using funds from the dying one.
 
-**Gone** (Day 34+): The factory no longer accepts cooperative migrations. The CLTV timeout has not yet expired (that occurs around Day ~40), so clients still have time for a unilateral [[force-close]] before the LSP's timeout path activates.
+**Gone** (Day 34+): The factory no longer accepts cooperative migrations. The CLTV timeout has not yet expired (that occurs around Day ≈40), so clients still have time for a unilateral [[force-close]] before the LSP's timeout path activates.
 
 ### The Daily Rhythm
 
@@ -128,7 +128,7 @@ graph TD
     end
 ```
 
-Laddering converts a concentrated on-chain load into a steady ~1 tx/day schedule. The LSP's on-chain footprint becomes predictable.
+Laddering converts a concentrated on-chain load into a steady ≈1 tx/day schedule. The LSP's on-chain footprint becomes predictable.
 
 ## The CLTV Timeout Formula
 

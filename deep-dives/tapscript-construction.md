@@ -29,7 +29,7 @@ b1                                                  ← OP_CHECKLOCKTIMEVERIFY
 ac                                                  ← OP_CHECKSIG
 ```
 
-Total script size: **40 bytes** (1 push opcode + 3 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG). The CLTV value size varies by block height; 3 bytes covers heights up to 16,777,215 (~320 years at current pace).
+Total script size: **40 bytes** (1 push opcode + 3 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG). The CLTV value size varies by block height; 3 bytes covers heights up to 16,777,215 (≈320 years at current pace).
 
 ## TapLeaf Hashing
 

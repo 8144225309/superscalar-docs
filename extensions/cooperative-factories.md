@@ -46,7 +46,7 @@ Members don't need to know or trust each other. The N-of-N multisig and pre-sign
 
 - A Lightning wallet with funds they want to contribute
 - The ability to come online for the construction ceremony (~minutes)
-- The ability to come online once per month during the [[laddering|dying period]] (~3 days)
+- The ability to come online once per month during the [[laddering|dying period]] (≈3 days)
 
 ### Phase 2: Capital Contribution
 
@@ -135,7 +135,7 @@ Members who contributed more capital enable more routing capacity, which is why 
 
 ### Phase 5: Fee Distribution
 
-At each factory rotation (every ~30 days), accumulated fees are distributed:
+At each factory rotation (every ≈30 days), accumulated fees are distributed:
 
 ```
 Monthly factory performance:
@@ -167,7 +167,7 @@ The coordinator handles the accounting. Members verify their new channel allocat
 
 ### Phase 6: Factory Rotation
 
-Every ~30 days, the factory enters its [[laddering|dying period]]. Members come online (push notification) and migrate to a new factory:
+Every ≈30 days, the factory enters its [[laddering|dying period]]. Members come online (push notification) and migrate to a new factory:
 
 ```mermaid
 graph LR
@@ -269,7 +269,7 @@ The worst a malicious coordinator can do is **disrupt service**, not steal funds
 | Model | Self-Custody? | Earn Fees? | Capital Required? | Trust? |
 |-------|--------------|-----------|-------------------|--------|
 | **Custodial wallet** | No | No | None | Full trust in provider |
-| **Standard Lightning channel** | Yes | Possible | Own UTXO (~$300+ in fees at high congestion) | Counterparty for routing |
+| **Standard Lightning channel** | Yes | Possible | Own UTXO (≈$300+ in fees at high congestion) | Counterparty for routing |
 | **Commercial SuperScalar** | Yes | No (you pay fees) | None | Coordinator can't steal |
 | **Cooperative SuperScalar** | Yes | Yes (proportional) | Lightning funds (no UTXO needed) | Coordinator can't steal |
 | **Running your own node** | Yes | Yes | Full node + UTXO + channels | Yourself |

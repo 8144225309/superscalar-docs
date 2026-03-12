@@ -88,7 +88,7 @@ A **compact secret derivation tree** from the Lightning Network spec (BOLT #3). 
 - **Compact storage**: The receiver only needs O(log N) values to reconstruct any previously-revealed secret
 - **Deterministic**: Given the seed and an index, anyone can compute the exact secret
 
-The storage advantage (O(log N) vs O(N)) is negligible at SuperScalar's scale — 8 KB for 256 flat secrets vs ~192 bytes for shachain. The multi-signer security advantage of flat secrets outweighs the storage savings.
+The storage advantage (O(log N) vs O(N)) is negligible at SuperScalar's scale — 8 KB for 256 flat secrets vs ≈192 bytes for shachain. The multi-signer security advantage of flat secrets outweighs the storage savings.
 
 The implementation retains shachain support as a legacy path, controlled by the `use_flat_secrets` flag.
 

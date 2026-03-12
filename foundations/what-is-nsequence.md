@@ -46,9 +46,9 @@ Each step costs you some delay. With a step size of 144 blocks:
 
 | States Available | Starting Delay | Step Size |
 |-----------------|---------------|-----------|
-| 4 states | 432 blocks (~3 days) | 144 blocks |
-| 8 states | 1008 blocks (~7 days) | 144 blocks |
-| 16 states | 2160 blocks (~15 days) | 144 blocks |
+| 4 states | 432 blocks (≈3 days) | 144 blocks |
+| 8 states | 1008 blocks (≈7 days) | 144 blocks |
+| 16 states | 2160 blocks (≈15 days) | 144 blocks |
 
 More states = longer initial delay = longer worst-case force-close time.
 

@@ -56,7 +56,7 @@ Close + Fund TX:
   Output 3: Change back to LSP
 ```
 
-This is why laddering can achieve ~1 on-chain transaction per day.
+This is why laddering can achieve ≈1 on-chain transaction per day.
 
 ## Non-Cooperative Participants
 

@@ -32,7 +32,7 @@ LSP discovery and client onboarding are out of scope for the SuperScalar protoco
 | **Coordinates factory construction** | Creates the funding transaction and tree structure with participating clients |
 | **Provides liquidity** | Locks up Bitcoin as "liquidity stock" that clients can receive into |
 | **Manages signing rounds** | Coordinates MuSig2 signing with online clients |
-| **Runs the lifecycle** | Manages [[laddering]] — ~33 concurrent factories with staggered lifetimes |
+| **Runs the lifecycle** | Manages [[laddering]] — ≈33 concurrent factories with staggered lifetimes |
 | **Facilitates exits** | Helps clients move between factories or exit to on-chain |
 
 ### What the LSP Node Cannot Do

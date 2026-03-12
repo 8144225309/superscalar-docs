@@ -4,9 +4,9 @@
 
 ## The Onboarding Challenge
 
-Bitcoin processes ~7 transactions per second. That's ~600,000 per day, ~220 million per year.
+Bitcoin processes ≈7 transactions per second. That's ≈600,000 per day, ≈220 million per year.
 
-There are ~8 billion people on Earth. If each person needs **one** on-chain transaction to open a Lightning channel, it would take **36 years** just to onboard everyone — assuming Bitcoin did nothing else.
+There are ≈8 billion people on Earth. If each person needs **one** on-chain transaction to open a Lightning channel, it would take **36 years** just to onboard everyone — assuming Bitcoin did nothing else.
 
 And that's just opening channels. Closing, rebalancing, and splicing each require more on-chain transactions.
 
@@ -48,7 +48,7 @@ graph TD
     end
 ```
 
-With 8 clients per factory and [[laddering]] across staggered expiry periods (see [[laddering]] for the derivation), one LSP can serve ~260 users from 33 UTXOs instead of 260 individual UTXOs.
+With 8 clients per factory and [[laddering]] across staggered expiry periods (see [[laddering]] for the derivation), one LSP can serve ≈260 users from 33 UTXOs instead of 260 individual UTXOs.
 
 ## What Existed Before SuperScalar
 
