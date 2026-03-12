@@ -16,7 +16,7 @@ Both protocols require a service provider: SuperScalar calls this the LSP (Light
 | **Trust model** | N-of-N — LSP cannot steal | ASP could double-spend during rounds |
 | **Provider can steal?** | No (N-of-N multisig) | Double-spend window during round transitions |
 | **Consensus changes needed** | None | None (but significantly better with CTV) |
-| **User liveness requirement** | Must come online before factory expiry (~30 days) | Must refresh VTXOs before expiry (~4 weeks typical) |
+| **User liveness requirement** | Must come online before factory expiry (≈30 days) | Must refresh VTXOs before expiry (≈4 weeks typical) |
 | **On-chain exit** | O(log N) transactions (tree publication) | O(1) transaction (VTXO redemption) |
 | **State updates** | Only affected subtree signers needed | All users participate in round |
 | **Interactivity** | High (MuSig2 signing ceremonies) | Lower (ASP constructs rounds) |

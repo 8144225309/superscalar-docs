@@ -29,7 +29,7 @@ A standard **anyone-can-spend** anchor output: `OP_1 <0x4e73>`. Any party can sp
 
 ### 3. Ephemeral Dust Exemption (Bitcoin Core 29.0, April 2025)
 
-Normally, outputs below the dust limit (~546 sats) are rejected by the mempool. The ephemeral dust rule exempts dust outputs in zero-fee v3 transactions, provided the dust output is spent by a child in the same package. This allows the P2A anchor to carry **zero sats**, deferring fee payment entirely to the CPFP child at broadcast time.
+Normally, outputs below the dust limit (≈546 sats) are rejected by the mempool. The ephemeral dust rule exempts dust outputs in zero-fee v3 transactions, provided the dust output is spent by a child in the same package. This allows the P2A anchor to carry **zero sats**, deferring fee payment entirely to the CPFP child at broadcast time.
 
 ## Current Implementation
 

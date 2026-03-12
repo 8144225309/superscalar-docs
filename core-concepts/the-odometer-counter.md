@@ -23,7 +23,7 @@ graph LR
     end
 ```
 
-**With 3 layers × 4 states each = 64 total states** — enough for a 30-day factory lifetime, and the maximum delay per layer remains 432 blocks (~3 days).
+**With 3 layers × 4 states each = 64 total states** — enough for a 30-day factory lifetime, and the maximum delay per layer remains 432 blocks (≈3 days).
 
 ## How the Odometer Ticks
 
@@ -65,10 +65,10 @@ graph TD
 
 | Configuration | Total States | Max Delay Per Layer | Total Worst-Case Delay |
 |---------------|-------------|--------------------|-----------------------|
-| 1 layer × 4 states | 4 | 432 blocks (~3 days) | 3 days |
-| 2 layers × 4 states | 16 | 432 blocks (~3 days) | 6 days |
-| 3 layers × 4 states | **64** | 432 blocks (~3 days) | 9 days |
-| 1 layer × 64 states | 64 | 9,072 blocks (~63 days) | **63 days** |
+| 1 layer × 4 states | 4 | 432 blocks (≈3 days) | 3 days |
+| 2 layers × 4 states | 16 | 432 blocks (≈3 days) | 6 days |
+| 3 layers × 4 states | **64** | 432 blocks (≈3 days) | 9 days |
+| 1 layer × 64 states | 64 | 9,072 blocks (≈63 days) | **63 days** |
 
 The odometer gives 64 states with a worst-case delay of 9 days. A flat counter with 64 states would require 63 days — the layered approach reduces worst-case force-close time by a factor of 7.
 

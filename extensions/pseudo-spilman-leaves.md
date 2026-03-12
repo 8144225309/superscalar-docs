@@ -12,11 +12,11 @@ Pseudo-Spilman leaves are a **leaf-level design variant** introduced in ZmnSCPxj
 
 Every DW layer adds a relative timelock (via [[what-is-nsequence|nSequence]]) that accumulates from root to leaf. This total delay directly inflates the `min_final_cltv_expiry_delta` that clients must advertise on the public network.
 
-For a 3-layer DW tree with ~3 days per layer, the total DW-imposed delay is ~9 days — consuming most of the typical 2-week CLTV budget and limiting the number of hops an HTLC can traverse before reaching the client.
+For a 3-layer DW tree with ≈3 days per layer, the total DW-imposed delay is ≈9 days — consuming most of the typical 2-week CLTV budget and limiting the number of hops an HTLC can traverse before reaching the client.
 
 ### Why this matters concretely
 
-Every HTLC routed through the Lightning Network needs a CLTV budget — time for each hop to claim or refund the payment. The BOLT spec allows roughly 2 weeks total. If the factory's internal DW layers eat 9 of those 14 days, only 5 days remain for the rest of the route. That means fewer hops, which means the client must be well-connected (typically 1-2 hops from the LSP to the destination). Removing one DW layer frees ~3 days of CLTV budget, allowing more routing flexibility.
+Every HTLC routed through the Lightning Network needs a CLTV budget — time for each hop to claim or refund the payment. The BOLT spec allows roughly 2 weeks total. If the factory's internal DW layers eat 9 of those 14 days, only 5 days remain for the rest of the route. That means fewer hops, which means the client must be well-connected (typically 1-2 hops from the LSP to the destination). Removing one DW layer frees ≈3 days of CLTV budget, allowing more routing flexibility.
 
 ## The Refinement: Wide Leaves
 
@@ -71,7 +71,7 @@ The trade-off: every state update adds another transaction to the unilateral-exi
 | Property | DW at Leaves | Pseudo-Spilman at Leaves |
 |----------|-------------|-------------------------|
 | **DW layers removed** | 0 | 1 |
-| **CLTV delta reduction** | — | ~3 days (one fewer nSequence layer) |
+| **CLTV delta reduction** | — | ≈3 days (one fewer nSequence layer) |
 | **Clients per leaf** | 2 | 4 |
 | **Signers for leaf update** | 3 (2 clients + LSP) | 3 (2 clients in one PS factory + LSP) |
 | **Unilateral exit cost** | Fixed (one tx per DW layer) | Grows with updates (K txs per PS leaf) |

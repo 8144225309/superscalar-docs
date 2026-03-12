@@ -176,9 +176,9 @@ The DW delay values are parameterized at factory construction. Example values fo
 | Value | nSequence (hex) | Meaning |
 |-------|----------------|---------|
 | Disabled | `0xFFFFFFFF` | No relative timelock (kickoff nodes) |
-| 432 blocks | `0x000001B0` | ~3 day delay (DW starting value) |
-| 288 blocks | `0x00000120` | ~2 day delay |
-| 144 blocks | `0x00000090` | ~1 day delay |
+| 432 blocks | `0x000001B0` | ≈3 day delay (DW starting value) |
+| 288 blocks | `0x00000120` | ≈2 day delay |
+| 144 blocks | `0x00000090` | ≈1 day delay |
 | 0 blocks | `0x00000000` | No delay (DW final value) |
 
 ## Witness Structure
