@@ -74,7 +74,6 @@ For the current SuperScalar PoC: **optional, not critical**. The core factory me
 ## Related Concepts
 
 - [[dual-state-management]] — The shared technical foundation
-- [[pluggable-factories]] — How factory channels integrate with LN software
 - [[updating-state]] — Current factory state update mechanics
 - [[client-migration]] — Moving funds between factories (splicing alternative)
 - [[laddering]] — Factory lifecycle that triggers migration/splicing needs

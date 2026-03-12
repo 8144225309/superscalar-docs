@@ -119,6 +119,5 @@ Dual state management is required for factory state updates — without it, adva
 
 - [[splicing-integration]] — The analogous on-chain mechanism
 - [[updating-state]] — What triggers the need for dual state management
-- [[pluggable-factories]] — How this integrates with LN node software
 - [[force-close]] — Why both states must be valid simultaneously
 - [[the-odometer-counter]] — The state machine that drives transitions

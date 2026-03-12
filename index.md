@@ -44,6 +44,8 @@ SuperScalar combines three mechanisms:
 
 ## Reading Order
 
+See [[roadmap]] for the development plan and [[network-economics]] for cost and capital model.
+
 <details>
 <summary><strong>Prerequisites</strong> — Primer on payment channels, Taproot, MuSig2, and timelocks</summary>
 
@@ -80,11 +82,11 @@ SuperScalar combines three mechanisms:
 - [[ephemeral-anchors]] — P2A fee bumping for pre-signed transactions
 - [[security-model]] — Trust assumptions and threat model
 
-### Extensions
+### Advanced
 - [[splicing-integration]] — Resizing channels inside factories
-- [[pluggable-factories]] — Plugging into existing LN software
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
 - [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
+- [[cooperative-factories]] — Multi-LSP and user-cooperative factory topologies
 
 ### Research
 - [[research-horizon]] — Nested MuSig2, async payments, factory watchtowers, PTLCs, FROST/VLS, and other technologies worth watching
