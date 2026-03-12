@@ -55,20 +55,20 @@ At ≈$85,000/BTC, 576 sat ≈ **$0.49/year** in on-chain costs per user. A stan
 
 Worst-case unilateral exit publishes the path from the factory root to the affected client's leaf. For a binary tree with 8 clients (depth 3):
 
-| Transaction | ~vbytes |
+| Transaction | vbytes |
 |---|---|
-| Kickoff root | 100 |
-| State root | 120 |
-| Kickoff subtree | 100 |
-| State subtree | 120 |
-| Kickoff leaf | 100 |
-| State leaf | 120 |
-| Channel commitment | 150 |
-| **Total path** | **≈810 vbytes** |
+| Kickoff root | 111 |
+| State root | 154 |
+| Kickoff subtree | 111 |
+| State subtree | 154 |
+| Kickoff leaf | 111 |
+| State leaf | 197 |
+| Channel commitment | 167 |
+| **Total path** | **≈1,005 vbytes** |
 
 Only clients in the affected subtree are impacted — not the entire factory. In a 32-client factory with binary tree depth 5, a force-close by one client affects at most 3 others sharing that leaf subtree.
 
-For comparison, a standard Lightning force-close is ≈300–600 vbytes. The higher worst-case force-close cost is the price of shared-UTXO efficiency — and it is a rare event. The cooperative path adds no on-chain cost beyond the rotation transaction.
+For comparison, a standard Lightning force-close is ≈300–600 vbytes. A SuperScalar force-close costs roughly 3× more on-chain — the price of sharing a UTXO across multiple participants — and it is a rare event. The cooperative path adds no on-chain cost beyond the rotation transaction.
 
 ---
 
