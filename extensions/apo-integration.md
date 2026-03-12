@@ -1,67 +1,79 @@
 # APO Integration (SIGHASH_ANYPREVOUT)
 
-BIP-118 introduces `SIGHASH_ANYPREVOUT` (APO) — a new signature hash type that omits the specific UTXO being spent from the signed digest. This unlocks a mechanism that doesn't exist in Bitcoin today: **invalidating a previously signed transaction by superseding it with a newer one, without touching the funding UTXO**.
+BIP-118 introduces `SIGHASH_ANYPREVOUT` (APO) — a new signature hash type that omits the specific UTXO being spent from the signed digest. This enables **eltoo/LN-Symmetry**: any newer state transaction can replace any older one without requiring punishment or revocation.
 
-For SuperScalar, APO's primary benefit is **cooperative factory refresh** — rotating the off-chain state tree without posting any on-chain transaction.
-
----
-
-## The Problem APO Solves
-
-Today, factory rotation requires an on-chain transaction because there is no way to invalidate a prior kickoff transaction. Two signed kickoff transactions spending the same funding UTXO are both valid indefinitely; Bitcoin has no ordering mechanism between them.
-
-With APO, this changes. An APO-signed transaction does not commit to the `txid` of its input — only to the script and amount. This enables an **eltoo-style update mechanism**: a newer kickoff can be constructed to spend *either* the funding UTXO *or* the output of any prior kickoff. Publishing old state creates a spendable output; the LSP immediately sweeps it with the newer kickoff.
+For SuperScalar, APO would **replace the Decker-Wattenhofer invalidation layer** with eltoo, eliminating the finite state counter. The rest of the design — timeout-sig-trees, laddering, tree topology, client migration — remains unchanged.
 
 ---
 
-## How Cooperative Refresh Works with APO
+## What APO Replaces
+
+SuperScalar today uses DW invalidation: a decrementing `nSequence` counter across multiple layers that limits how many state updates a factory can hold. Each layer consumes part of the budget. When the counter runs out, the factory must rotate.
+
+With APO, this entire mechanism is replaced by eltoo semantics: any newer state transaction can immediately supersede any older one, because its APO signature doesn't commit to which specific output it spends. The factory can hold **unlimited state updates**.
 
 ```
-Today (on-chain rotation required):
-  Funding UTXO → Kickoff v1 (nSequence fixed)
-  Funding UTXO → Kickoff v2 (same UTXO — no ordering possible)
+Without APO — Decker-Wattenhofer:
+  States are finite (K^N where K = states per layer, N = layers)
+  Older states are invalidated by the nSequence race
+  Factory must rotate when the counter is exhausted
 
-With APO (cooperative refresh):
-  Funding UTXO  ─────────────────────────────→ Kickoff v2 (APO)
-                         ↓ (if v1 published)
-                    Kickoff v1 output → Kickoff v2 (rebinds via APO)
+With APO — eltoo/LN-Symmetry:
+  States are unlimited
+  Any newer state directly supersedes any older state
+  Rotation is driven by timeout expiry, not state exhaustion
 ```
 
-**Rotation flow:**
+---
 
-1. All clients are online (asynchronously, via nonce pools — same as today)
-2. LSP builds factory v2 tree with updated balances and a new epoch timeout
-3. Kickoff v2 is signed with `SIGHASH_ANYPREVOUT` — it can spend any UTXO matching the funding script
-4. Factory v1 pre-signed transactions become economically irrational to publish: if the kickoff v1 is broadcast, kickoff v2 immediately consumes it before any DW timeout expires
-5. Funding UTXO remains on-chain, untouched, across multiple factory generations
+## Specific Improvements
 
-**Result:** unlimited off-chain factory lifetimes. The funding UTXO persists indefinitely; on-chain transactions only appear when a client actually exits the factory.
+**Unlimited state updates**
+The odometer counter constraint disappears. A factory can remain open indefinitely in principle, limited only by the timeout-sig-tree's CLTV budget — which is a separately tunable parameter.
+
+**Simpler tree structure**
+DW requires multiple layers to achieve a sufficient state count budget. With eltoo providing unlimited states, a single update layer is sufficient. The tree becomes shallower, reducing signing complexity and on-chain footprint during force-close.
+
+**Shorter force-close times**
+Fewer DW layers mean fewer stacked `nSequence` delays on the unilateral exit path. The worst-case time to recover funds decreases proportionally.
+
+**No revocation data**
+DW invalidation requires retaining revocation secrets for every prior epoch. With eltoo, the LSP simply publishes the newest state — no revocation mechanism needed.
 
 ---
 
 ## What Does Not Change
 
-APO is additive. The entire DW invalidation stack, tree topology, MuSig2 signing architecture, and L-stock protection are unaffected. The only change is in kickoff transaction signature construction:
+APO replaces the state invalidation mechanism. Everything above and around it is unaffected:
 
 | Component | Today | With APO |
 |---|---|---|
-| Kickoff sighash | `SIGHASH_ALL` | `SIGHASH_ANYPREVOUT` |
-| Factory rotation | New on-chain funding tx | Cooperative refresh (no on-chain tx) |
-| Unilateral exit | Unchanged | Unchanged |
-| DW invalidation | Unchanged | Unchanged |
-| MuSig2 rounds | Unchanged | Unchanged |
-| L-stock revocation | Unchanged | Unchanged |
+| State invalidation | DW nSequence race | eltoo supersession |
+| State count | Finite (K^N) | Unlimited |
+| Timeout-sig-trees | Unchanged | Unchanged |
+| Factory rotation (laddering) | On-chain tx required | **Still required** |
+| Unilateral exit | Unchanged | Shorter (fewer layers) |
+| MuSig2 signing | Unchanged | Unchanged |
+| Tree topology | Unchanged | Simplified (fewer layers) |
+| L-stock protection | Unchanged | Unchanged |
+
+**Factory rotation still requires an on-chain transaction.** APO does not enable cooperative refresh of the factory on the same funding UTXO — the funding UTXO is consumed when the factory closes regardless. The laddering lifecycle (one new funding tx per rotation cycle) remains.
 
 ---
 
-## Fee Efficiency
+## Relationship to LN-Symmetry
 
-Without APO, a laddered SuperScalar deployment posts roughly one on-chain transaction per active factory per rotation cycle. With APO, that drops to zero for cooperative rotations — on-chain transactions occur only when clients enter or exit.
+LN-Symmetry (also called eltoo) is the Lightning-level protocol that APO enables. At the leaf channel level, LN-Symmetry replaces Poon-Dryja channels:
 
-For an LSP serving thousands of clients across many factories, this is a substantial fee reduction. The on-chain footprint becomes proportional to client churn rather than calendar time.
+- No penalty transactions
+- No per-update revocation secrets
+- Any party can broadcast the latest state
+- Simpler watchtower requirements
+
+SuperScalar's leaf channels could adopt LN-Symmetry semantics if APO activates, independent of what happens at the factory layer above.
 
 ---
 
 ## Status
 
-APO is specified in [BIP-118](https://github.com/bitcoin/bips/blob/master/bip-0118.mediawiki) and requires a soft fork. It is not yet activated on mainnet. The SuperScalar codebase is structured to support APO as an additive upgrade: kickoff transaction construction is isolated in `factory.c` and tapscript construction in `tapscript.c`. No architectural changes are required.
+APO is specified in [BIP-118](https://github.com/bitcoin/bips/blob/master/bip-0118.mediawiki) and requires a soft fork. It is not activated on mainnet. The SuperScalar codebase isolates DW invalidation logic in `factory.c` and tapscript construction in `tapscript.c`, making an eventual APO-based redesign of the state invalidation layer tractable without touching the rest of the system.
