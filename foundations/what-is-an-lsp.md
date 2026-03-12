@@ -39,8 +39,7 @@ LSP discovery and client onboarding are out of scope for the SuperScalar protoco
 | Guarantee | Why |
 |-----------|-----|
 | **Cannot steal funds** | Every transaction uses N-of-N multisig — the LSP is just one signer among many |
-| **Cannot block exit** | State updates require cooperation, but the LSP refusing to cooperate cannot prevent unilateral exit |
-| **Cannot prevent exit** | Exit transactions are pre-signed during construction; clients can always broadcast them |
+| **Cannot block exit** | Exit transactions are pre-signed during construction; the LSP refusing to cooperate cannot prevent unilateral exit |
 | **Cannot refuse refund** | If the LSP stops cooperating, clients force-close and get their funds on-chain |
 
 ### The Economics

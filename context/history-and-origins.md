@@ -90,7 +90,7 @@ Several design changes emerged from the thread discussion:
 
 ## The Implementation
 
-The design was originally **zero code** — purely theoretical. The implementation accompanying these docs is building out the protocol in phases:
+The design was originally **zero code** — purely theoretical. The reference implementation delivers the protocol in phases:
 
 - **Phase 0** (complete): Decker-Wattenhofer invalidation prototype
 - **Phase 1** (complete): Factory transaction tree
