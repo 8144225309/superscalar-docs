@@ -93,7 +93,7 @@ Only the participants in an affected subtree need to be online. If Alice wants t
 
 ## Async Payments
 
-### The Other Half of the Offline Problem
+### Receiving Payments Offline
 
 Nested MuSig2 helps with **signing** while some participants are offline. Async payments solve the other side: **receiving payments** while offline.
 
@@ -136,7 +136,7 @@ Factory-hosted channels are a natural fit for async payments. The LSP already ma
 
 ## Factory Watchtowers
 
-### Why Factories Are Harder to Watch
+### Watchtower Complexity
 
 Factory watchtowers must monitor revoked states across multiple Decker-Wattenhofer layers, not just a single revoked commitment transaction.
 
@@ -146,9 +146,9 @@ graph TD
     R1 --> P1["Broadcast penalty tx"]
 
     W2["Factory Watchtower"] --> R2["Watch for revoked state<br/>at ANY DW layer"]
-    R2 --> L1["Layer 0: broadcast<br/>current kickoff + state"]
-    R2 --> L2["Layer 1: broadcast<br/>current state at layer 1"]
-    R2 --> L3["Layer 2: broadcast<br/>current state at layer 2"]
+    R2 --> L1["DW Layer 0: broadcast<br/>current kickoff + state"]
+    R2 --> L2["DW Layer 1: broadcast<br/>current state"]
+    R2 --> L3["DW Layer 2: broadcast<br/>current state"]
     L1 --> CH["Then watch for revoked<br/>channel commitments<br/>at leaf outputs"]
     L2 --> CH
     L3 --> CH
@@ -160,7 +160,7 @@ graph TD
 The watchtower needs to:
 1. Recognize which DW layer a revoked state belongs to
 2. Broadcast the correct current state for that layer
-3. Handle the [[shachain-revocation]] punishment mechanism
+3. Handle the [[shachain-revocation|revocation]] punishment mechanism
 4. Monitor leaf channel outputs for revoked commitments too
 5. Manage fee-bumping for all these transactions
 
@@ -221,7 +221,7 @@ SuperScalar already needs adaptor signatures for **PTLC key turnover** — the a
 
 **FROST** (Flexible Round-Optimized Schnorr Threshold signatures) enables t-of-n signing — for example, 3-of-5 instead of 5-of-5.
 
-### NOT for the Factory
+### Incompatible with Factory-Level Signing
 
 FROST is **architecturally incompatible** with SuperScalar's factory signing. The entire security model depends on n-of-n: every participant must sign, so no single party (including the LSP) can move funds alone. Replacing n-of-n with t-of-n at the factory level means a colluding quorum could steal. Different trust model, different protocol.
 
@@ -288,7 +288,7 @@ The strongest configuration is **VLS + FROST**: policy-validated signing with di
 - [[what-is-musig2]] — The signing protocol that nested MuSig2 extends
 - [[musig2-signing-rounds]] — Current signing implementation details
 - [[factory-tree-topology]] — The tree structure that nested signing would optimize
-- [[shachain-revocation]] — Revocation mechanism that factory watchtowers must enforce
+- [[shachain-revocation|Revocation Secrets]] — Revocation mechanism that factory watchtowers must enforce
 - [[soft-fork-landscape]] — Detailed analysis of each soft fork proposal
 - [[security-model]] — Why n-of-n matters for the trust model
 - [[ephemeral-anchors]] — The upgrade that is ready to implement now

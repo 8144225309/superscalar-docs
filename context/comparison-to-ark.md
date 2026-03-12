@@ -20,7 +20,7 @@ Both protocols require a service provider: SuperScalar calls this the LSP (Light
 | **On-chain exit** | O(log N) transactions (tree publication) | O(1) transaction (VTXO redemption) |
 | **State updates** | Only affected subtree signers needed | All users participate in round |
 | **Interactivity** | High (MuSig2 signing ceremonies) | Lower (ASP constructs rounds) |
-| **Maturity** | Implementation in progress | Testnet implementations exist; production development ongoing |
+| **Maturity** | Reference implementation available | Testnet implementations exist; production development ongoing |
 
 ## Trust Model Deep Dive
 
