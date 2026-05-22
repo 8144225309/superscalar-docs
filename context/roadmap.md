@@ -44,16 +44,17 @@ The protocol stack is feature-complete for what's been designed; the remaining w
 
 ### Ecosystem ports
 
-- **LDK port** — see [[ports/coming-soon|Ecosystem Ports]].
-- **LND port** — see [[ports/coming-soon|Ecosystem Ports]].
+LDK and LND ports are coming soon — see [[ports/coming-soon|Ecosystem Ports]] for the current status of each.
 
 ### Trustless watchtower
 
-The current standalone watchtower needs shared state with the LSP (revocation secrets, pre-signed redistribution TXs). A trustless design lets third-party operators monitor and penalize old-state broadcasts without holding any client-coupled state:
+A trustless watchtower lets third-party operators monitor and penalize old-state broadcasts without holding any client-coupled state. Design properties:
 
 - Encrypted breach-remedy delivery to watchtower
 - Payment-for-service model (watchtower earns a portion of recovered funds)
 - Multi-tower redundancy for resilience against watchtower failure
+
+Being built before release.
 
 ---
 
