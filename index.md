@@ -32,15 +32,18 @@ graph TD
 - **No on-chain Bitcoin required**: Users can be onboarded with zero existing funds. The LSP provides initial liquidity.
 - **No consensus changes**: This works on Bitcoin **today**. No soft fork needed.
 
-At the leaves of the factory tree, each user gets a standard Lightning channel (Poon-Dryja) with the LSP. The distinguishing property is that these channels are backed by a shared UTXO rather than individual ones.
+At the leaves of the factory tree, each user gets a Lightning channel inside a **pseudo-Spilman (PS) leaf** (see [[pseudo-spilman-leaves]]). PS leaves are the canonical leaf mechanism — TX chaining replaces decrementing nSequence at the leaf level, so leaves use no relative timelock budget and need no per-leaf revocation keys.
 
 ## Key Mechanisms
 
-SuperScalar combines three mechanisms:
+The current SuperScalar design (per ZmnSCPxj's [t/1242 refinement](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)) combines:
 
-1. **[[decker-wattenhofer-invalidation]]** — Decrementing relative timelocks ensure newer state transactions confirm before older ones during unilateral close
-2. **[[timeout-sig-trees]]** — N-of-N multisig with CLTV timeout fallback so the LSP can recover capital if clients disappear
-3. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ≈1 tx/day
+1. **[[pseudo-spilman-leaves]]** — Canonical leaf mechanism. TX chaining: each state advance produces a new TX that spends the previous state's channel output, so old states cannot be activated without invalidating the chain ancestor. No nSequence delay, no revocation keys, no per-leaf watchtower needed.
+2. **[[l-stock-redistribution|L-stock SPK + Redistribution TX]]** — Per-leaf liquidity-stock output is `or(N-of-N MuSig, L+CSV)`. At every state advance, a pre-signed *redistribution transaction* is co-signed that redistributes the L-stock equally to clients if the LSP publishes a stale state. Replaces the older OP_RETURN burn from t/1143.
+3. **[[tree-shaping-and-multi-process|Mixed-arity tree shape]]** — Interior layers fan out at independently-configurable arities (e.g. `--arity 2,4,8`), with optional static-near-root depths that contribute no DW counter. Keeps worst-path exit time inside BOLT's 2016-block CLTV ceiling at N=128 clients per factory.
+4. **[[timeout-sig-trees]]** — N-of-N multisig key-path with CLTV timeout script-path fallback so the LSP can recover capital if clients disappear permanently.
+5. **[[decker-wattenhofer-invalidation]]** — Decrementing relative timelocks. Applies to the interior tree layers above the PS leaves; the leaves themselves use TX chaining instead.
+6. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ≈1 tx/day. A factory can also be refreshed in place without anyone migrating.
 
 ## Reading Order
 
@@ -58,14 +61,19 @@ See [[roadmap]] for the development plan and [[network-economics]] for cost and 
 
 </details>
 
-### Protocol Design
-1. [[decker-wattenhofer-invalidation]] — The time-delay state machine
-2. [[the-odometer-counter]] — How layers multiply state capacity
-3. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
-4. [[factory-tree-topology]] — The tree structure explained
-5. [[kickoff-vs-state-nodes]] — Why the tree alternates node types
-6. [[shachain-revocation|Revocation Secrets]] — Secret-based penalty for stale LSP liquidity grabs
+### Protocol Design — Current (Pseudo-Spilman era)
+1. [[pseudo-spilman-leaves]] — Canonical leaf mechanism (TX chaining)
+2. [[l-stock-redistribution|L-stock SPK + Redistribution TX]] — Cheating recovery via per-client redistribution
+3. [[tree-shaping-and-multi-process|Mixed-arity, sub-factories, multi-process]] — Tree shape configuration that keeps N=128 inside BOLT 2016
+4. [[factory-tree-topology]] — The tree structure
+5. [[kickoff-vs-state-nodes]] — Why interior layers alternate
+6. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
 7. [[laddering]] — Factory rotation and lifecycle
+
+### Protocol Design — Underlying primitives (still load-bearing for interior layers)
+1. [[decker-wattenhofer-invalidation]] — The time-delay state machine (interior layers only under the PS-canonical design)
+2. [[the-odometer-counter]] — How DW layers multiply state capacity
+3. [[shachain-revocation|Revocation Secrets]] — Per-commit revocation, still used inside the BOLT-2 channels that ride on top of the PS leaves
 
 ### Protocol Operations
 1. [[building-a-factory]] — Step-by-step construction
@@ -85,7 +93,6 @@ See [[roadmap]] for the development plan and [[network-economics]] for cost and 
 ### Advanced
 - [[splicing-integration]] — Resizing channels inside factories
 - [[jit-channel-fallbacks]] — On-chain safety net when factories can't help
-- [[pseudo-spilman-leaves]] — Wide leaves that reduce DW depth and CLTV delta
 - [[cooperative-factories]] — Multi-LSP and user-cooperative factory topologies
 
 ### Research
@@ -100,18 +107,20 @@ The reference implementation is available at [github.com/8144225309/SuperScalar]
 | Component | Status |
 |-----------|--------|
 | Factory construction (N-of-N MuSig2 tree signing) | Working |
-| Leaf Lightning channels (Poon-Dryja) with HTLC routing | Working |
+| Pseudo-Spilman leaves (TX chaining, canonical) | Working |
+| L-stock SPK + per-client redistribution TX (canonical, t/1242) | Working |
+| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=128) |
+| In-place whole-tree CLTV refresh | Working |
 | Force close / unilateral exit | Working |
-| Revocation (punishment for stale state) | Working |
 | PTLC assisted exit (key turnover) | Working |
 | Factory laddering with auto-rotation | Working |
 | Watchtower (old-state monitoring + penalty broadcast) | Working |
 | Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
 
-The implementation is written in C, with 461 tests (418 unit + 43 regtest) and CI on Linux, macOS, and ARM64. It links against `secp256k1-zkp` for MuSig2/Schnorr and `libsqlite3` for state persistence.
+The implementation is written in C, with 1377 unit + 42 regtest + 30 signet exhibition tests, and CI on Linux, macOS, and ARM64. It links against `secp256k1-zkp` for MuSig2/Schnorr and `libsqlite3` for state persistence.
 
 ## Origin
 
-SuperScalar was designed by **ZmnSCPxj** (funded by Spiral, Block's open-source arm) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The design combines ideas from Christian Decker & Roger Wattenhofer's 2015 paper on duplex micropayment channels with timeout trees and the MuSig2 signing protocol.
+SuperScalar was designed by **ZmnSCPxj** (funded by Spiral, Block's open-source arm) and published on [Delving Bitcoin](https://delvingbitcoin.org) in September 2024. The canonical leaf mechanism (pseudo-Spilman) and the L-stock + redistribution TX mechanism were introduced in the November 2024 refinement, [SuperScalar with Pseudo-Spilman Leaves](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242).
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj

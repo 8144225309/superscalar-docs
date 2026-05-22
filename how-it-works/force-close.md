@@ -116,13 +116,13 @@ Tree TX outputs:
 
 This solves the fee estimation problem: tree transactions are pre-signed with low endogenous fees. If the mempool is congested at force-close time, any participant can bump the fee by spending the P2A output.
 
-### Revocation Protection for P2A
+### Stale-state protection for P2A
 
-What prevents a griefing attack where someone fee-bumps an OLD state transaction? The [[shachain-revocation|revocation mechanism]]:
+What prevents a griefing attack where someone fee-bumps an OLD state transaction? The [[l-stock-redistribution|redistribution TX mechanism]]:
 
-- Old state transactions have liquidity stock outputs locked to revealed revocation secrets
-- If an old state confirms, clients can burn the LSP's liquidity stock to miner fees
-- This makes it economically irrational for the LSP to broadcast old states
+- Every L-stock UTXO has a matching pre-signed redistribution TX co-signed during the state advance that minted it
+- If an old state's L-stock UTXO appears on-chain, anyone can broadcast the matching redistribution TX, which redistributes the LSP's L-stock equally to clients in that leaf
+- This makes it economically irrational for the LSP to broadcast old states — the LSP loses the entire L-stock to clients
 
 ## Timing: How Long Does It Take?
 

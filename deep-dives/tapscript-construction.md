@@ -1,4 +1,4 @@
-# Tapscript Construction (Deep Dive)
+# Tapscript Construction
 
 > **Summary**: How the Taproot script trees are built — from raw Bitcoin script opcodes, through TapLeaf hashing, Merkle root computation, key tweaking, and control block construction for script-path spending.
 

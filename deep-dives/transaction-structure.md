@@ -1,4 +1,4 @@
-# Transaction Structure (Deep Dive)
+# Transaction Structure
 
 > **Summary**: Every transaction in the SuperScalar factory tree is a standard Bitcoin transaction with specific version, nSequence, and witness fields that implement the DW mechanism, Taproot spending, and P2A fee-bumping.
 
@@ -102,41 +102,41 @@ Key properties:
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Leaf State TX (e.g., state_left)            │
+│ Leaf State TX (canonical pseudo-Spilman)    │
 ├─────────────────────────────────────────────┤
 │ nVersion: 2                                 │
 │ Input 0:                                    │
-│   prev_txid: kickoff_left                   │
+│   prev_txid: previous PS chain TX           │
+│             (or parent kickoff for state 0) │
 │   prev_vout: 0                              │
-│   nSequence: 288 (DW Layer 1 delay)         │
+│   nSequence: 0xFFFFFFFE (BIP-68 disabled —  │
+│              chain ordering is structural)  │
 │   witness: <64-byte MuSig2 signature>       │
+│             (2-of-2: client + LSP)          │
 │                                             │
-│ Output 0: P2TR (Alice & LSP channel)        │
+│ Output 0: P2TR (Client & LSP channel)       │
 │   amount: channel capacity                  │
-│   scriptPubKey: OP_1 <MuSig2(A, L)>        │
+│   scriptPubKey: OP_1 <MuSig2(client, L)>   │
 │                                             │
-│ Output 1: P2TR (Bob & LSP channel)          │
-│   amount: channel capacity                  │
-│   scriptPubKey: OP_1 <MuSig2(B, L)>        │
-│                                             │
-│ Output 2: P2TR (LSP liquidity stock)        │
+│ Output 1: P2TR (LSP liquidity stock)        │
 │   amount: remaining liquidity               │
-│   scriptPubKey: OP_1 <L_tweaked>            │
-│     script tree: hashlock (preimage reveal) │
+│   scriptPubKey: OP_1 <output_key>           │
+│     internal: MuSig2(client, L)             │
+│     script-leaf: <csv> CSV DROP <L> CHECKSIG│
 │                                             │
 │ nLockTime: 0                                │
 └─────────────────────────────────────────────┘
 ```
 
-The leaf outputs are the actual Lightning channels and LSP liquidity stock. Channel outputs have no script tree (they use standard Poon-Dryja internally). The liquidity stock output includes a hashlock script-path leaf: anyone who reveals the 32-byte [[shachain-revocation|revocation secret]] preimage can spend it. The burn transaction directs the full value to an `OP_RETURN` output, making the funds unspendable — the entire amount becomes miner fees.
+The leaf carries one bidirectional BOLT-2 Lightning channel (Output 0) plus the LSP's liquidity stock (Output 1). State advances append a new TX to the chain rather than replacing the previous state via decrementing nSequence; see [[pseudo-spilman-leaves]] for the chain ordering semantics. The L-stock script-path is a relative-timelock-gated unilateral drain for the LSP (default ~144 blocks); the cooperative key-path is what every legitimate spend uses, and is also what the pre-signed [[l-stock-redistribution|redistribution TX]] uses if the LSP publishes a stale leaf state.
 
-### L-Stock Hashlock Script
+### L-stock script-path
 
 ```
-OP_SIZE OP_PUSHBYTES_1 0x20 OP_EQUALVERIFY OP_SHA256 OP_PUSHBYTES_32 <hash> OP_EQUAL
+<csv_blocks> OP_CHECKSEQUENCEVERIFY OP_DROP <LSP_xonly> OP_CHECKSIG
 ```
 
-This verifies only that the witness provides a 32-byte value whose SHA256 matches the committed hash. No signature is required — anyone who knows the preimage can spend it. The preimage is the revocation secret revealed by the LSP when advancing to a new epoch.
+A relative-timelock gate on LSP unilateral drain of the L-stock. The CSV delay gives clients and the watchtower time to broadcast the matching pre-signed redistribution TX if the LSP is publishing a stale state.
 
 ## Distribution Transaction
 
@@ -201,20 +201,21 @@ witness:
 
 The script-path witness is larger than a key-path spend. It is only required when the cooperative (key-path) signing path is unavailable.
 
-### Script-Path Spend (L-Stock Burn)
+### Script-Path Spend (L-stock CSV drain)
 ```
 witness:
-  <32-byte preimage>             ← the revocation secret
-  <script bytes>                 ← the hashlock script (37 bytes)
+  <64-byte Schnorr signature>    ← signed by LSP's key
+  <script bytes>                 ← <csv> CSV DROP <LSP> CHECKSIG
   <control block>                ← leaf_version | internal_key (33 bytes)
 ```
 
-No signature required. The preimage is the revocation secret for the epoch being punished. The spending transaction sends all funds to `OP_RETURN` (miner fees).
+The LSP's unilateral fallback for draining its own L-stock, gated by the CSV delay. The delay gives the client and watchtower time to broadcast the matching pre-signed [[l-stock-redistribution|redistribution TX]] (key-path) if the LSP is publishing a stale leaf state.
 
 ## Related Concepts
 
-- [[decker-wattenhofer-invalidation]] — How nSequence values encode the state machine
+- [[decker-wattenhofer-invalidation]] — How nSequence values encode the state machine (interior layers)
+- [[pseudo-spilman-leaves]] — TX chaining at the leaves
+- [[l-stock-redistribution]] — Pre-signed redistribution TX co-signed at every state advance
 - [[tapscript-construction]] — How script trees and control blocks are built
 - [[musig2-signing-rounds]] — How the key-path signatures are created
 - [[force-close]] — When these transactions actually hit the blockchain
-- [[shachain-revocation|Revocation Secrets]] — The hashlock preimage mechanism for L-stock punishment

@@ -1,115 +1,67 @@
 # Roadmap
 
-> **Summary**: SuperScalar is a working prototype with a clear path to production deployment. The reference implementation demonstrates the full protocol stack today; the roadmap focuses on specification, hardening, integration, and tooling for real-world LSP operation.
+> **Summary**: SuperScalar covers the complete protocol stack today across three repositories — the C reference implementation, a CLN fork carrying the BLIP-56 wire layer, and a CLN plugin that runs SuperScalar logic on top. A user-facing wallet is the fourth piece. This page lists where each lives and what's next.
 
-## Current State
+## The full stack today
 
-The reference implementation is written in C and covers the complete protocol:
+| Repo | Role | What it does |
+|---|---|---|
+| **[github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar)** | Reference implementation (C) | LSP + standalone watchtower + reference client. Contains the factory tree builder, MuSig2 wire ceremonies, L-stock + redistribution TX, whole-tree refresh, sub-factory chain extension, mixed-arity / static-near-root tree shaping, and the regtest / signet exhibition test suite. |
+| **[github.com/8144225309/cln-blip56](https://github.com/8144225309/cln-blip56)** | CLN fork (BLIP-56 wire layer) | Fork of Core Lightning carrying the BLIP-56 baseline: feature bit 271, TLV 65600 `channel_in_factory` on `open_channel`, custommsg 32800 dispatch. See [[blip-56-integration|BLIP-56 Integration]]. |
+| **[github.com/8144225309/superscalar-cln](https://github.com/8144225309/superscalar-cln)** | CLN plugin | Runs the SuperScalar-specific factory protocol on top of cln-blip56. Provides the factory-join lifecycle, ceremony coordination, and the RPCs a wallet talks to. |
+| **[github.com/8144225309/superscalar-wallet](https://github.com/8144225309/superscalar-wallet)** | End-user wallet | React/Node wallet for joining factories, sending/receiving Lightning, and handling factory rotation. |
+
+If you want to try the full stack, clone all four. The reference implementation alone is enough for a regtest demo — see its README for build + run instructions.
+
+## Current state (reference implementation)
 
 | Component | Status |
 |---|---|
 | Factory construction (N-of-N MuSig2 tree signing) | Working |
-| Leaf Lightning channels (Poon-Dryja) with HTLC routing | Working |
+| Pseudo-Spilman leaves (canonical leaf mechanism) | Working |
+| L-stock SPK + per-client redistribution TX (canonical, t/1242) | Working |
+| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=128) |
+| Whole-tree CLTV refresh (in-place rotation) | Working |
+| Sub-factory k² PS chain extension | Working |
 | Force close / unilateral exit | Working |
-| Revocation (punishment for stale state) | Working |
 | PTLC assisted exit (key turnover) | Working |
 | Factory laddering with auto-rotation | Working |
-| Watchtower (old-state monitoring + penalty broadcast) | Working |
+| Standalone watchtower (old-state monitoring + penalty broadcast) | Working |
 | Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
+| BLIP-56 wire integration (cln-blip56 fork + superscalar-cln plugin) | Working |
 
-461 tests (418 unit + 43 regtest), CI on Linux, macOS, and ARM64. Source: [github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar).
+1377 unit + 42 regtest + 30 signet exhibition tests, CI on Linux, macOS, and ARM64.
 
----
+## What's next
 
-## Phase 1 — Protocol Specification
+The protocol stack is feature-complete for what's been designed; the remaining work is hardening, ecosystem fit, and unsolved-research items.
 
-**Formal Protocol Specification**
+### Hardening
 
-The protocol is currently defined by implementation and documentation. A formal specification — BOLT-style, defining all message types, state machine transitions, transaction formats, and signing protocols — is required for independent implementations, security review, and standardization.
+- **State persistence + recovery** — crash recovery, backup and restore, safe re-entry after unexpected shutdown across all four ceremonies (per-leaf advance, per-leaf realloc, sub-factory advance, whole-tree refresh).
+- **Operator tooling** — dashboards and CLI for managing laddered factory deployments: capital utilization, per-client status, rotation scheduling, fee-rate monitoring.
+- **Independent review** — the protocol benefits from outside scrutiny; pursuing free / community review channels.
 
-- Wire protocol messages for factory construction, state updates, and client migration
-- Formal state machine for each participant role (LSP, client, watchtower)
-- Transaction format specification with test vectors
-- Signing round protocol with edge case handling and failure modes
+### Ecosystem ports
 
----
+- **LDK port** — see [[ports/coming-soon|Ecosystem Ports]].
+- **LND port** — see [[ports/coming-soon|Ecosystem Ports]].
 
-## Phase 2 — Production Hardening
+### Trustless watchtower
 
-**State Persistence & Recovery**
+The current standalone watchtower needs shared state with the LSP (revocation secrets, pre-signed redistribution TXs). A trustless design lets third-party operators monitor and penalize old-state broadcasts without holding any client-coupled state:
 
-Production deployments require robust state management: crash recovery, backup and restore, and safe re-entry after unexpected shutdown. The current implementation handles the cooperative path; production requires handling all failure modes without loss of funds.
-
-- Atomic state transitions with write-ahead logging
-- Client-side backup protocol for the pre-signed transaction set
-- Recovery procedure for mid-protocol failures (partial signing rounds)
-- State audit tooling for LSP operators
-
-**C Library / SDK**
-
-A clean SDK separates the protocol library from the test harness and exposes a stable API for LSP and wallet integration:
-
-- Public API surface with documented ABI
-- Packaging for Linux, macOS, and ARM64
-- Language bindings (Python, Rust FFI)
-- Integration guide for LSP operators
-
----
-
-## Phase 3 — Integration
-
-**Pluggable Factory Protocol**
-
-For SuperScalar to coexist with standard Lightning implementations (CLN, LND, LDK, Eclair), a TLV-based protocol extension allows factory-hosted channels to be managed by a plugin without modifying core LN software. Includes the `blocks_early` parameter ensuring all HTLCs resolve before factory CLTV timeout.
-
-**Trustless Watchtower Protocol**
-
-The current watchtower requires trust or runs within the LSP. A trustless design allows third-party operators to monitor and penalize old-state broadcasts without holding client funds or private keys:
-
-- Encrypted breach remedy transaction delivery to watchtower
+- Encrypted breach-remedy delivery to watchtower
 - Payment-for-service model (watchtower earns a portion of recovered funds)
 - Multi-tower redundancy for resilience against watchtower failure
 
 ---
 
-## Phase 4 — Client Tooling
+## Related
 
-**Reference Wallet**
-
-A minimal reference wallet demonstrating the full client-side flow:
-
-- Factory enrollment and channel receipt with zero on-chain Bitcoin
-- Lightning payments (send and receive)
-- Factory rotation (background, no user action required)
-- Force-close and fund recovery
-
-**LSP Operator Tooling**
-
-Dashboard and CLI tools for LSP operators managing laddered factory deployments: capital utilization, client status, rotation scheduling, and fee rate monitoring.
-
----
-
-## Phase 5 — Open Research
-
-**Coordination Layer**
-
-The hardest unsolved problem in SuperScalar deployment: how do clients who do not know each other form UTXO-sharing relationships safely and trustlessly?
-
-Clients must agree on factory membership, contribution sizes, and signing schedules. A naive approach trusts the LSP to assign clients to factories — which is practical but requires trusting the LSP not to stack factories with sockpuppet accounts. A fully trustless approach requires P2P coordination without a central authority.
-
-The design space includes:
-
-- **LSP-coordinated matchmaking** — centralized, practical, the likely first deployment model
-- **P2P gossip / DHT-based discovery** — fully trustless, high coordination complexity
-- **Reputation-based grouping** — semi-decentralized, requires persistent identity
-
-The coordination layer determines whether factory formation becomes as seamless as opening a standard Lightning channel, and how resistant it is to Sybil attacks and group manipulation. This work is ongoing.
-
----
-
-## Related Concepts
-
-- [[network-economics]] — Cost model and capital efficiency of deployed factories
+- [[blip-56-integration|BLIP-56 Integration]] — wire protocol layer (cln-blip56 fork details)
+- [[network-economics]] — Cost model and capital efficiency
 - [[laddering]] — The rotation lifecycle the roadmap builds around
-- [[security-model]] — Current threat model and open problems
+- [[security-model]] — Current threat model
+- [[l-stock-redistribution]] — Canonical cheating-recovery mechanism (replaces older t/1143 burn)
 - [[soft-fork-landscape]] — Covenant upgrades that could affect the roadmap

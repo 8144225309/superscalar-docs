@@ -2,6 +2,8 @@
 
 > **Summary**: By stacking multiple Decker-Wattenhofer layers, you get exponentially more states. 2 layers with 4 states each = 4^2 = 16 total states. 3 layers with 4 states each = 4^3 = 64. The inner layer ticks fastest and carries over to the next outer layer.
 
+> **Where this applies in current SuperScalar**: The odometer applies to the **interior DW tree layers**. The leaves themselves no longer participate in the odometer — they use [[pseudo-spilman-leaves|pseudo-Spilman TX chaining]], which is unbounded in state count and consumes no nSequence budget.
+
 ## The Problem
 
 A single [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] layer with 4 states only gives you 4 updates. This is insufficient — a factory running for 30 days may need 64 state changes for channel opens, closes, and rebalances.

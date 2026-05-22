@@ -2,6 +2,8 @@
 
 > **Summary**: A state machine where newer states always beat older states on-chain, because each update gets a shorter time delay. No punishment needed — old states simply can't win the race.
 
+> **Where this applies in current SuperScalar**: DW invalidation is used at the **interior tree layers** (above the leaves). The leaves themselves now use **TX chaining** instead, as introduced in ZmnSCPxj's [t/1242 refinement](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242). See [[pseudo-spilman-leaves]] for the canonical leaf mechanism. The rest of this page describes how DW works at the layers where it still applies.
+
 ## The Core Idea
 
 In a [[what-is-a-payment-channel|payment channel]], you need a way to make old states useless. Lightning (Poon-Dryja) does this with **punishment** — broadcast an old state and you lose everything. Decker-Wattenhofer uses a different approach: **relative time delays**.

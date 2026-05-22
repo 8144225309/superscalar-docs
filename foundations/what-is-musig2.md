@@ -79,7 +79,7 @@ For a factory with many nodes, each signer needs many nonces — one per transac
 
 - Factory construction can sign all tree transactions in one coordinated session
 - State updates only need nonces from the affected subtree's signers
-- Nonces are never reused (see [[#The Critical Safety Rule|below]])
+- Nonces are never reused (see "The Critical Safety Rule" below)
 
 ### Taproot Integration
 

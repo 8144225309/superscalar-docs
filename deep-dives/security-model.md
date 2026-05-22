@@ -2,6 +2,8 @@
 
 > **Summary**: SuperScalar's security guarantee is simple — every client can always exit unilaterally, and the LSP cannot steal funds. The N-of-N multisig means no single party has unilateral control. The trade-offs are in liveness requirements, force-close costs, and the unsolved forced expiration spam problem.
 
+> **Note (current design)**: This page describes the original t/1143 design. The cheating-recovery mechanism for the LSP's liquidity stock is now per-client redistribution via a pre-signed redistribution TX — see [[l-stock-redistribution]]. The threat-analysis structure and the rest of the trust model below are unchanged.
+
 ## Core Property
 
 > *"Each client can unilaterally exit; LSP cannot steal."*
@@ -47,7 +49,7 @@ graph TD
 
 **Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay. If any honest party broadcasts the newer state, it confirms before the old one. The DW mechanism guarantees the newer state wins the race, but only if someone holding it is online to broadcast it.
 
-**Defense (secondary)**: [[shachain-revocation|Revocation secrets]] — if the honest party is offline and an old state confirms, clients hold the revealed revocation secret for that epoch's liquidity stock outputs. They can burn the LSP's liquidity stock to miner fees, making cheating economically irrational even in this case.
+**Defense (secondary)**: [[l-stock-redistribution|Pre-signed redistribution TX]] — if the honest party is offline and an old state confirms, the matching redistribution TX (co-signed at every state advance, held by clients and the watchtower) can be broadcast by anyone. It redistributes the LSP's L-stock equally to clients in the affected leaf, making cheating economically irrational even in this case.
 
 **Verdict**: LSP cannot profitably steal.
 
@@ -113,11 +115,11 @@ Beyond cryptographic guarantees, SuperScalar relies on **economic incentives**:
 | LSP Action | Cost to LSP | Benefit to LSP |
 |-----------|-------------|---------------|
 | Cooperate honestly | Operational costs | Revenue from liquidity sales |
-| Broadcast old state | Liquidity stock burned (revocation) | Whatever was in the old state |
+| Broadcast old state | L-stock redistributed to clients via redistribution TX | Whatever was in the old state |
 | Refuse to cooperate | Loses all future revenue from client | Nothing |
 | Shut down entirely | Loses all business | N/A |
 
-Cheating is unprofitable under normal conditions because the revocation punishment destroys more value than the LSP could gain from an old state.
+Cheating is unprofitable under normal conditions because the redistribution TX strips the entire L-stock from the LSP and redistributes it to clients — the LSP loses more from cheating than any old state could recover.
 
 ## Open Problems
 
@@ -133,8 +135,8 @@ If a client's channel balance falls below the on-chain fee cost of a force-close
 ### 4. Are 64 States Enough?
 With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
 
-### 5. Revocation Burn Proportionality
-The revocation burn destroys the LSP's liquidity stock from the old state. If a client's balance has grown far beyond the available L-stock (e.g., through heavy routing), the burn amount shrinks relative to the potential gain from broadcasting old state. This is the same class of risk as standard Lightning: if you are offline and your watchtower is offline, your counterparty can broadcast a revoked state. SuperScalar is no worse than a standard Lightning channel here — the DW nSequence race (primary defense) and revocation burn (secondary defense) provide equivalent or stronger protection. A well-capitalized LSP maintains sufficient L-stock reserves as a matter of operational practice.
+### 5. Sockpuppet sybil against per-client redistribution share
+The [[l-stock-redistribution|redistribution TX]] redistributes the LSP's L-stock equally to non-LSP signers in the affected leaf. If a hostile LSP populates a leaf with sockpuppet "clients" alongside one real client, the real client's per-client share of L-stock shrinks relative to the LSP's potential gain from broadcasting old state. ZmnSCPxj's t/1242 acknowledges this directly. The mitigation is voluntary: clients with substantial holdings maintain an external UTXO reserve so they don't depend on the per-client redistribution share alone. A well-capitalized LSP also maintains sufficient L-stock reserves as a matter of operational practice.
 
 ## Comparison to Other Trust Models
 
@@ -149,8 +151,8 @@ SuperScalar's trust model matches on-chain multisig: no single party can move fu
 
 ## Related Concepts
 
-- [[decker-wattenhofer-invalidation]] — Defense against old state broadcasts
-- [[shachain-revocation|Revocation Secrets]] — Economic punishment for cheating
+- [[decker-wattenhofer-invalidation]] — Defense against old state broadcasts (at interior tree layers)
+- [[l-stock-redistribution]] — Canonical cheating-recovery mechanism for the LSP's liquidity stock
 - [[timeout-sig-trees]] — Defense against permanent client disappearance
 - [[force-close]] — The mechanism that enforces all guarantees
 - [[comparison-to-ark]] — Different trust model comparison

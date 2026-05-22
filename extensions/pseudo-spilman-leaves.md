@@ -1,121 +1,85 @@
 # Pseudo-Spilman Leaves
 
-> **Summary**: An alternative leaf design that replaces one layer of Decker-Wattenhofer with a simpler unidirectional construct. Each "wide leaf" groups four clients under two pseudo-Spilman factories, reducing the total DW depth and shortening the CLTV delta imposed on public-network HTLCs.
+> **Summary**: Pseudo-Spilman is the canonical leaf mechanism for SuperScalar. Each leaf is a 2-of-2 MuSig between one client and the LSP; state advances are TX-chained rather than nSequence-replaced, so leaves consume zero relative-timelock budget, need no per-leaf revocation keys, and need no per-leaf watchtower. The leaves carry standard bidirectional BOLT-2 Lightning channels on top.
 
-## The Base Design vs This Refinement
+## What it is
 
-The base SuperScalar design uses **pure Decker-Wattenhofer all the way down** — every level of the [[factory-tree-topology|factory tree]] is a DW layer, and the leaves are standard 2-of-2 Poon-Dryja channels.
+A pseudo-Spilman leaf is a sequence of pre-signed Bitcoin transactions, each one spending the channel output of the previous one. Each transaction in the chain represents the current state of one Lightning channel between a client and the LSP plus the LSP's remaining liquidity stock allocated to that channel.
 
-Pseudo-Spilman leaves are a **leaf-level design variant** introduced in ZmnSCPxj's refined design ([Delving Bitcoin, November 2024](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)). They trade one DW layer for a simpler unidirectional construct, reducing CLTV budget consumption — relevant when deep trees impose CLTV deltas that constrain multi-hop routing.
-
-## Tree Depth and CLTV Budget
-
-Every DW layer adds a relative timelock (via [[what-is-nsequence|nSequence]]) that accumulates from root to leaf. This total delay directly inflates the `min_final_cltv_expiry_delta` that clients must advertise on the public network.
-
-For a 3-layer DW tree with ≈3 days per layer, the total DW-imposed delay is ≈9 days — consuming most of the typical 2-week CLTV budget and limiting the number of hops an HTLC can traverse before reaching the client.
-
-### Why this matters concretely
-
-Every HTLC routed through the Lightning Network needs a CLTV budget — time for each hop to claim or refund the payment. The BOLT spec allows roughly 2 weeks total. If the factory's internal DW layers eat 9 of those 14 days, only 5 days remain for the rest of the route. That means fewer hops, which means the client must be well-connected (typically 1-2 hops from the LSP to the destination). Removing one DW layer frees ≈3 days of CLTV budget, allowing more routing flexibility.
-
-## The Refinement: Wide Leaves
-
-ZmnSCPxj proposed replacing the lowest DW layer with a **pseudo-Spilman channel factory** — a simpler construct that doesn't require decrementing nSequence timelocks.
-
-In an arity-2 tree, each wide leaf contains:
-
-- **4 clients** (instead of 2)
-- **2 pseudo-Spilman factories** (each serving 2 clients + LSP)
-- **1 fewer DW layer** than the base design
-
-```mermaid
-graph TD
-    DW["DW State Node<br/>(one layer higher)"]
-
-    DW --> PS1["Pseudo-Spilman Factory 1<br/>Clients A, B + LSP"]
-    DW --> PS2["Pseudo-Spilman Factory 2<br/>Clients C, D + LSP"]
-
-    PS1 --> CA["A ↔ LSP channel"]
-    PS1 --> CB["B ↔ LSP channel"]
-    PS1 --> L1["LSP liquidity stock"]
-
-    PS2 --> CC["C ↔ LSP channel"]
-    PS2 --> CD["D ↔ LSP channel"]
-    PS2 --> L2["LSP liquidity stock"]
-```
-
-## What Is a Pseudo-Spilman Factory?
-
-A standard Spilman channel is **unidirectional**: one party funds it, the other receives increasing payments over time. It terminates when the funder's balance reaches zero or a timeout expires.
-
-The pseudo-Spilman variant adapts this for multi-party liquidity distribution:
-
-1. The LSP starts with a liquidity stock allocation for a group of clients.
-2. New states are **chained on top** of old states (appended, not replaced). Each state transaction spends the output of the previous one.
-3. The LSP distributes liquidity to clients by signing new state transactions that increase client channel capacities and decrease the LSP's remaining stock.
+When the channel state advances (a payment, a splice, a liquidity purchase), the LSP and the client co-sign a new transaction that spends the prior chain TX's channel output. The new TX is now the latest valid state; the old one is structurally superseded because its child output is gone.
 
 ```mermaid
 graph LR
-    S0["State 0<br/>LSP: 1.0 BTC<br/>A: 0, B: 0"] --> S1["State 1<br/>LSP: 0.7 BTC<br/>A: 0.3, B: 0"]
-    S1 --> S2["State 2<br/>LSP: 0.4 BTC<br/>A: 0.3, B: 0.3"]
+    S0["State 0<br/>(genesis)"] --> O0["channel UTXO 0"]
+    O0 --> S1["State 1<br/>(spends UTXO 0)"]
+    S1 --> O1["channel UTXO 1"]
+    O1 --> S2["State 2<br/>(spends UTXO 1, latest)"]
+
+    style S2 fill:#51cf66,color:#fff
+    style O2 fill:#51cf66,color:#fff
 ```
 
-### Why "Pseudo"?
+The leaf cohort is **1 client + LSP**, 2-of-2 MuSig. The MuSig key aggregation is computed once at factory build (`node->keyagg.agg_pubkey`) and reused for every state advance in the chain.
 
-A true Spilman channel is a two-party construct. The pseudo-Spilman variant is multi-party (2 clients + LSP) and uses **chaining** instead of replacement to prevent a sockpuppet attack: if old states could simply be replaced (as in DW), the LSP could create fake clients and broadcast old states to reclaim liquidity already sold to honest clients. Chaining prevents this because each state transaction spends the previous state's output — state 1 spends state 0's output, state 2 spends state 1's output. Publishing state 0 forces state 1 to also be published, and so on. The chain is self-ordering without requiring timelocks.
+## Why "pseudo"
 
-The trade-off: every state update adds another transaction to the unilateral-exit chain. If there have been K updates, force-close requires publishing K transactions for that leaf.
+A true Spilman channel is a two-party unidirectional construct: one party funds the channel and the other receives increasing payments over time. The "pseudo" variant in SuperScalar:
 
-## How It Compares to Pure DW Leaves
+- Is multi-party (1 client + LSP, but the broader factory contains many leaves)
+- Uses TX chaining to enforce state ordering structurally — no decrementing nSequence, no time-delay race
+- Carries a standard bidirectional BOLT-2 Lightning channel on top, so HTLC flow is fully bidirectional even though the leaf-level state advances are LSP-triggered
 
-| Property | DW at Leaves | Pseudo-Spilman at Leaves |
-|----------|-------------|-------------------------|
-| **DW layers removed** | 0 | 1 |
-| **CLTV delta reduction** | — | ≈3 days (one fewer nSequence layer) |
-| **Clients per leaf** | 2 | 4 |
-| **Signers for leaf update** | 3 (2 clients + LSP) | 3 (2 clients in one PS factory + LSP) |
-| **Unilateral exit cost** | Fixed (one tx per DW layer) | Grows with updates (K txs per PS leaf) |
-| **Direction** | Bidirectional (DW supports any reallocation) | Unidirectional (LSP → clients only) |
+It's not a true Spilman channel; it borrows the chaining idea and applies it to factory leaves.
 
-## The Core Difference: Replace vs Append
+## Chain ordering replaces nSequence
 
-This is the key distinction between DW and pseudo-Spilman at the leaves:
+The defining property of pseudo-Spilman leaves: **old states cannot be activated without re-publishing the entire chain.**
 
-**Decker-Wattenhofer** uses decrementing nSequence to **replace** old states. State 5 has a shorter delay than state 4, so it confirms first. Only the latest state hits the chain during force-close. The cost: each replacement consumes one nSequence tick, and the total delay across all ticks adds to the CLTV budget.
+If the LSP attempts to broadcast state N-1 instead of the latest state N, it can — but state N-1's channel output has already been spent by state N's input. Two transactions cannot spend the same output; only one can confirm. As soon as N hits the mempool, N-1's child outputs become irrelevant.
 
-**Pseudo-Spilman** doesn't replace anything — it **appends**. State 1 spends state 0's output. State 2 spends state 1's output. There's no timelock race because the chain is structurally ordered: you can't publish state 2 without state 1 already being on-chain. No nSequence needed, so no CLTV cost.
+This removes the need for:
 
-The trade-off is direct:
-- **DW**: Fixed force-close size, but eats CLTV budget
-- **Pseudo-Spilman**: Zero CLTV cost, but force-close grows by one transaction per state update
+- Per-leaf revocation keys
+- Per-state revocation secrets
+- Per-leaf watchtower coverage
+- nSequence delay budget at the leaf layer
 
-In practice, the number of leaf updates is bounded by the factory's lifetime — a 30-day factory with infrequent liquidity purchases may only accumulate a handful of pseudo-Spilman states, keeping the force-close chain short.
+What it **does** need is a defense against the LSP (or counterparty) tricking the other side into co-signing two different state advances that both spend the same parent UTXO. A participant signing a leaf advance keeps a persistent record of the `(parent_txid, parent_vout)` it has already signed for in this factory:
 
-## Old State Protection
+- If there's no record for the proposed parent UTXO, it's safe to sign — and the partial sig + sighash are recorded before the wire reply goes out.
+- If a record exists with the same sighash as the new request, this is an idempotent retry and replay is safe.
+- If a record exists with a *different* sighash for the same parent UTXO, that's a double-sign attempt — refused, and logged.
 
-Pseudo-Spilman's chaining structure provides inherent ordering — old states cannot be published without triggering the entire chain. Additionally, ZmnSCPxj describes a **poisoning mechanism** specific to pseudo-Spilman leaves: if the LSP broadcasts an old DW state above the leaves, a pre-signed "poisoning" transaction splits the LSP's liquidity stock among all clients in the affected subtree. Any client can CPFP this transaction to get it confirmed. This is distinct from the [[shachain-revocation|revocation secret]] mechanism used at the DW layers above — pseudo-Spilman leaves rely on structural chaining and poisoning rather than secret-based burn.
+Recording the partial sig before sending the wire reply makes the ceremony crash-safe.
 
-## When to Use Which Design
+## L-stock + redistribution TX
 
-The choice between pure DW leaves and pseudo-Spilman leaves depends on deployment priorities:
+The leaf state also commits to the LSP's liquidity stock for that channel. The L-stock output uses a dual-condition Taproot script:
 
-- **CLTV budget is tight** (many routing hops needed) → pseudo-Spilman leaves
-- **Minimal force-close footprint** is the priority → pure DW leaves
-- **Leaf updates are infrequent** (clients rarely buy liquidity) → pseudo-Spilman is cheap
-- **Leaf updates are frequent** (active liquidity market) → pure DW leaves avoid chain growth
+- **Key-path** — N-of-N MuSig of the leaf cohort. Used by the cooperative-close path *and* by the pre-signed *redistribution transaction*.
+- **Script-path** — `<csv_blocks> OP_CSV OP_DROP <LSP_xonly> OP_CHECKSIG`. LSP-only unilateral drain after the CSV delay (default 144 blocks).
 
-ZmnSCPxj presented pseudo-Spilman leaves as a refinement for mobile-first deployments where the CLTV delta reduction matters more than worst-case force-close size.
+If the LSP publishes a stale leaf state, the matching pre-signed redistribution TX (co-signed during state advance, held by the client and the watchtower) becomes valid and redistributes the L-stock equally to all clients in that leaf. The LSP receives nothing from the redistribution TX, so it has no incentive to publish stale state.
 
-## Current Status
+See [[l-stock-redistribution]] for the full redistribution TX mechanism.
 
-- **Proposed**: By ZmnSCPxj on [Delving Bitcoin](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242) (November 4, 2024)
-- **Prototype**: Uses pure DW leaves (no pseudo-Spilman)
-- **When relevant**: If CLTV budget becomes a constraint in production deployments with multi-hop routing
+## What still uses revocation
 
-## Related Concepts
+The Lightning channels riding on top of the PS leaves are standard BOLT-2 channels. They still use:
 
-- [[factory-tree-topology]] — The tree structure that pseudo-Spilman leaves modify
-- [[decker-wattenhofer-invalidation]] — The mechanism pseudo-Spilman replaces at leaves
-- [[shachain-revocation|Revocation Secrets]] — DW-layer old state protection (pseudo-Spilman uses poisoning instead)
-- [[the-odometer-counter]] — DW state counting that pseudo-Spilman leaves bypass
-- [[force-close]] — How unilateral exit changes with chained pseudo-Spilman transactions
+- Per-commitment revocation keys
+- HTLC commitment transactions with revocation paths
+- Watchtower coverage of the inner channel
+
+This is orthogonal to the leaf-level mechanism. The leaf is a non-revocable container; the channel inside it is a normal Lightning channel with normal revocation.
+
+## Status
+
+Canonical leaf mechanism. Default in the reference implementation. Verified at N=2, N=8, N=64, and N=128 clients per factory under regtest and on signet. ZmnSCPxj introduced the design in [SuperScalar with Pseudo-Spilman Leaves (Delving t/1242, November 2024)](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242).
+
+## Related
+
+- [[l-stock-redistribution]] — How the L-stock output is protected against stale leaf states
+- [[tree-shaping-and-multi-process]] — How PS leaves combine with mixed-arity interior layers
+- [[factory-tree-topology]] — Where PS leaves sit in the full tree
+- [[force-close]] — Unilateral exit involves publishing the latest PS state TX
