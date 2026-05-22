@@ -7,8 +7,8 @@
 | Repo | Role | What it does |
 |---|---|---|
 | **[github.com/8144225309/SuperScalar](https://github.com/8144225309/SuperScalar)** | Reference implementation (C) | LSP + standalone watchtower + reference client. Contains the factory tree builder, MuSig2 wire ceremonies, L-stock + redistribution TX, whole-tree refresh, sub-factory chain extension, mixed-arity / static-near-root tree shaping, and the regtest / signet exhibition test suite. |
-| **[github.com/8144225309/cln-blip56](https://github.com/8144225309/cln-blip56)** | CLN fork (BLIP-56 wire layer) | Fork of Core Lightning carrying the BLIP-56 baseline: feature bit 271, TLV 65600 `channel_in_factory` on `open_channel`, custommsg 32800 dispatch. See [[blip-56-integration|BLIP-56 Integration]]. |
-| **[github.com/8144225309/superscalar-cln](https://github.com/8144225309/superscalar-cln)** | CLN plugin | Runs the SuperScalar-specific factory protocol on top of cln-blip56. Provides the factory-join lifecycle, ceremony coordination, and the RPCs a wallet talks to. |
+| **[github.com/8144225309/lightning (branch `blip-56`)](https://github.com/8144225309/lightning/tree/blip-56)** | CLN fork (BLIP-56 wire layer) | Fork of Core Lightning carrying the BLIP-56 baseline: feature bit 270/271, TLV 65600 `channel_in_factory` on `open_channel`, custommsg 33001 dispatch. See [[blip-56-integration|BLIP-56 Integration]]. |
+| **[github.com/8144225309/superscalar-cln](https://github.com/8144225309/superscalar-cln)** | CLN plugin | Runs the SuperScalar-specific factory protocol on top of the CLN fork. Provides the factory-join lifecycle, ceremony coordination, and the RPCs a wallet talks to. |
 | **[github.com/8144225309/superscalar-wallet](https://github.com/8144225309/superscalar-wallet)** | End-user wallet | React/Node wallet for joining factories, sending/receiving Lightning, and handling factory rotation. |
 
 If you want to try the full stack, clone all four. The reference implementation alone is enough for a regtest demo — see its README for build + run instructions.
@@ -28,7 +28,7 @@ If you want to try the full stack, clone all four. The reference implementation 
 | Factory laddering with auto-rotation | Working |
 | Standalone watchtower (old-state monitoring + penalty broadcast) | Working |
 | Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
-| BLIP-56 wire integration (cln-blip56 fork + superscalar-cln plugin) | Working |
+| BLIP-56 wire integration (CLN fork + superscalar-cln plugin) | Working |
 
 1377 unit + 42 regtest + 30 signet exhibition tests, CI on Linux, macOS, and ARM64.
 
@@ -60,7 +60,7 @@ Being built before release.
 
 ## Related
 
-- [[blip-56-integration|BLIP-56 Integration]] — wire protocol layer (cln-blip56 fork details)
+- [[blip-56-integration|BLIP-56 Integration]] — wire protocol layer (CLN fork details)
 - [[network-economics]] — Cost model and capital efficiency
 - [[laddering]] — The rotation lifecycle the roadmap builds around
 - [[security-model]] — Current threat model

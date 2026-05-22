@@ -12,9 +12,9 @@ BLIP-56's design intent: let factory logic live in a **plugin**, with the LN nod
 
 ## The three load-bearing changes
 
-### 1. Feature bit 271 `pluggable_channel_factories`
+### 1. Feature bit 270/271 `pluggable_channel_factories`
 
-Advertised in `init` and `node_announcement`. Odd (optional). Nodes that don't understand it can ignore peer messages.
+Even/odd pair per standard Lightning feature-bit convention: 270 is the required form, 271 is the optional form. Advertised in `init` and `node_announcement`. Peers that haven't advertised the bit are never sent factory messages.
 
 ### 2. TLV 65600 `channel_in_factory` on `open_channel`
 
@@ -33,9 +33,17 @@ Channels opened with this TLV MUST:
 - NOT broadcast funding TX directly
 - Raise early-warning events when HTLCs approach factory timeout
 
-### 3. Custommsg 32800 `factory_message_id`
+### 3. Custommsg 33001 `factory_message_id`
 
 Wraps all factory plugin-to-plugin messages. Body is `factory_submessage_id` (u16) + submsg payload.
+
+The bLIP-56 draft assigns `factory_message_id` = **32800 (EVEN)**. The CLN reference implementation uses **33001 (ODD)** instead, because:
+
+- CLN's plugin API only dispatches ODD custommsg types to plugins; the EVEN range is reserved for CLN internals
+- Feature-bit 270/271 negotiation already provides the must-understand guarantee that the EVEN convention was designed to give
+- BLIP-17 (Hosted Channels) set the same precedent for the same reason
+
+The choice has been proposed back to the bLIP-56 author as upstream feedback on PR #56. Only the type number differs from the draft; the `factory_piggyback` payload format is unchanged.
 
 ## The `factory_early_warning_time` parameter
 
@@ -65,8 +73,8 @@ The flow: STFU quiescence → factory state transition messages → multiple `co
 
 Three repositories make up the SuperScalar BLIP-56 stack:
 
-- **[github.com/8144225309/cln-blip56](https://github.com/8144225309/cln-blip56)** — Fork of Core Lightning carrying the BLIP-56 wire baseline (feature bit 271, TLV 65600, custommsg 32800).
-- **[github.com/8144225309/superscalar-cln](https://github.com/8144225309/superscalar-cln)** — CLN plugin that runs the SuperScalar-specific factory protocol on top of cln-blip56.
+- **[github.com/8144225309/lightning (branch `blip-56`)](https://github.com/8144225309/lightning/tree/blip-56)** — Fork of Core Lightning carrying the BLIP-56 wire baseline (feature bit 270/271, TLV 65600, custommsg 33001).
+- **[github.com/8144225309/superscalar-cln](https://github.com/8144225309/superscalar-cln)** — CLN plugin that runs the SuperScalar-specific factory protocol on top of the CLN fork.
 - **[github.com/8144225309/superscalar-wallet](https://github.com/8144225309/superscalar-wallet)** — End-user wallet that speaks to the plugin.
 
 See each repository's README for current build instructions and status.
