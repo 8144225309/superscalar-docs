@@ -109,6 +109,12 @@ The client receives their funds on-chain. More expensive (on-chain transaction) 
 ### Option 3: PTLC Assisted Exit
 The client hands over their private key for the old factory (via a PTLC) and receives funds on-chain. The LSP can then sign as the departed client for the rest of the old factory's lifetime, reducing coordination overhead.
 
+### Option 4: Refresh the Factory in Place
+
+A factory can also be refreshed without anyone migrating. If the same set of clients is happy to stay together, the LSP and all clients co-sign a new state across every node in the tree with a fresh CLTV timeout. The factory keeps the same on-chain UTXO; only the pre-signed transactions are replaced. Zero on-chain transactions, one signing ceremony. This is the cheapest path when the factory's composition isn't changing.
+
+See [[updating-state]] for how this fits alongside the smaller, more common per-leaf advance ceremony.
+
 ## The On-Chain Footprint
 
 ```mermaid

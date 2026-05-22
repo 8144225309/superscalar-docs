@@ -1,136 +1,161 @@
 # Updating State
 
-> **Summary**: When clients buy liquidity or channels need restructuring, the factory's state must advance. A leaf update only needs 3 signers (2 clients + LSP). Each update ticks the odometer and produces a new set of pre-signed transactions with lower nSequence values.
+> **Summary**: SuperScalar's tree state changes entirely off-chain. Different kinds of changes wake up different participants — most of the time just one client + LSP, occasionally a sub-factory's cohort, very rarely the whole tree. None of them broadcast a transaction on chain; what changes is the set of pre-signed transactions everyone is holding.
 
-## State Update Triggers
+## When does the factory tree change?
 
-State updates happen at the **factory level**, not for regular Lightning payments. Regular payments flow through the leaf channels using standard Poon-Dryja mechanics and don't consume factory states.
+Two things are happening at once inside a factory, and only one of them touches the tree:
 
-Factory state updates are triggered by:
+- **Lightning payments** flow through the inner BOLT-2 channel inside each leaf. They use standard Lightning commitment-update mechanics. **The factory tree is not involved.**
+- **Structural changes** — buying liquidity, extending a leaf's PS chain, refreshing the factory's lifetime — do update the tree. These are what this page is about.
 
-| Trigger | Example | Scope |
-|---------|---------|-------|
-| **Liquidity purchase** | Alice buys inbound liquidity from LSP | Leaf update (3 signers) |
-| **Channel rebalance** | Move liquidity from one subtree to another | Subtree or root update |
-| **Client exit** | Bob leaves the factory | Leaf update or subtree update |
-| **New client** | New client joins (rare, usually happens at factory creation) | Root update (all signers) |
+Every structural change is a signing ceremony. Nobody broadcasts a transaction. The participants just replace the pre-signed transaction set they were each holding with a new one. On-chain, nothing happens.
 
-## Update Scope: Who Needs to Be Online?
+## Three sizes of ceremony
 
-The tree structure ensures **most updates are local**:
+The ceremonies form a small hierarchy by how many participants need to wake up:
 
 ```mermaid
 graph TD
-    R["Root Update<br/>ALL clients + LSP<br/>9 signers"]
-    R --> M["Subtree Update<br/>Half the clients + LSP<br/>5 signers"]
-    M --> L["Leaf Update<br/>2 clients + LSP<br/>3 signers"]
+    PL["<b>Per-leaf advance</b><br/>1 client + LSP<br/><i>very common</i>"]
+    SF["<b>Sub-factory chain extension</b><br/>sub-factory cohort + LSP<br/><i>opt-in (k≥2 deployments)</i>"]
+    FR["<b>Factory refresh</b><br/>all clients + LSP<br/><i>rare</i>"]
 
-    style R fill:#ff6b6b,color:#fff
-    style M fill:#ff922b,color:#fff
-    style L fill:#51cf66,color:#fff
+    style PL fill:#15aabf,color:#fff
+    style SF fill:#fcc419,color:#000
+    style FR fill:#fa5252,color:#fff
 ```
 
-| Update Level | Who Must Be Online | How Common |
-|-------------|-------------------|-----------|
-| Leaf state (DW Layer 1) | 2 local clients + LSP | **Very common** |
-| One level up | 4 clients in half-tree + LSP | Occasional |
-| Root state (Layer 0) | All clients + LSP | Rare |
+The rest of this page walks through each one, from most common to rarest.
 
-**Most updates are leaf updates.**
+---
 
-## How a Leaf Update Works
+## Per-leaf advance
 
-Say Alice wants to buy inbound liquidity from the LSP. Alice and Bob are in the same leaf:
+> One client + LSP. The workhorse — every liquidity buy, every leaf-local state change.
+
+A leaf's [[pseudo-spilman-leaves|PS chain]] gets extended by one TX. The signing cohort is just the one client whose leaf it is, plus the LSP.
+
+### The flow
 
 ```mermaid
 sequenceDiagram
     participant A as Alice
-    participant B as Bob
     participant L as LSP
 
-    Note over A,L: Step 1: Agree on new state
-    A->>L: "I want to buy 50k sats of inbound liquidity"
-    L->>L: Computes new leaf outputs
+    Note over A,L: 1. Propose
+    A->>L: "I'd like 50k sats of inbound"
+    L->>L: Build new leaf state TX +<br/>matching redistribution TX
 
-    Note over A,L: Step 2: MuSig2 Round 1 (Nonces)
-    A->>L: Alice's public nonce
-    B->>L: Bob's public nonce
-    L->>A: All public nonces (Alice, Bob, LSP)
-    L->>B: All public nonces (Alice, Bob, LSP)
+    Note over A,L: 2. MuSig2 round 1 — public nonces
+    A->>L: Alice's pubnonces
+    L->>A: Aggregated nonces
 
-    Note over A,L: Step 3: MuSig2 Round 2 (Partial Sigs)
-    A->>L: Alice's partial signature
-    B->>L: Bob's partial signature
-    L->>L: LSP partial signature
-    L->>L: Aggregates into final signature
+    Note over A,L: 3. MuSig2 round 2 — partial sigs
+    A->>L: Alice's partial sigs
+    L->>L: Aggregate to final 64-byte sigs
 
-    Note over A,L: Step 4: Advance DW counter
-    Note over A,L: Old state: nSeq=288<br/>New state: nSeq=144
-
-    Note over A,L: Step 5: LSP reveals old revocation secret
-    L->>A: Revocation secret for old epoch
-    L->>B: Revocation secret for old epoch
+    Note over A,L: 4. Done
+    L->>A: Both parties persist the new state
 ```
 
-### What Changed?
+### What both parties hold afterwards
 
-**Before (epoch 1):**
-```
-state_left (nSeq = 288):
-  - Alice & LSP channel: 100k sats
-  - Bob & LSP channel: 80k sats
-  - LSP liquidity stock: 200k sats
-```
+- The new PS state TX (one TX deeper into the leaf's chain), pre-signed but not broadcast
+- The matching pre-signed [[l-stock-redistribution|redistribution TX]] for the new state's L-stock UTXO
+- The previous state's redistribution TX, still valid against the previous state's L-stock UTXO if the LSP ever publishes that old state
 
-**After (epoch 2):**
-```
-state_left (nSeq = 144):
-  - Alice & LSP channel: 150k sats (50k more inbound)
-  - Bob & LSP channel: 80k sats (unchanged)
-  - LSP liquidity stock: 150k sats (50k less — sold to Alice)
-```
+### What does NOT happen
 
-The [[the-odometer-counter|odometer]] ticked from epoch 1 to epoch 2. The new state transaction has a **lower nSequence** (144 vs 288), so it will always beat the old state on-chain.
+Nothing on chain. No funding-output spend, no miner fee, no confirmation wait. The chain is unaware that any of this took place.
 
-## The Odometer Tick
+### What if the LSP is offline
 
-Each leaf update ticks the **inner layer** of the odometer. When the inner layer reaches its terminal value:
+Alice waits. There's no on-chain timeout pressure for a leaf advance — the leaf just sits at its current state until the LSP comes back online.
 
-```
-Epoch 3:  Layer0=432, Layer1=0     (inner layer at terminal value)
-Epoch 4:  Layer0=288, Layer1=432   (CARRY: outer ticks, inner resets)
-```
+### What if Alice is offline
 
-A carry requires a **higher-level update** — more signers must be online to sign the new root-level state transaction. This is rare (happens every K leaf updates, where K is states per layer).
+The LSP waits, typically with a push notification to nudge Alice to come online. The leaf can't advance until she does.
 
-## Participation Requirements
+### Crash safety
 
-Even though Bob's channel didn't change, Bob must sign the new leaf state transaction. The leaf state transaction is a **3-of-3 MuSig2** (Alice, Bob, LSP) — all three must sign every new version. This ensures Bob consents to the new state, preventing the LSP from secretly moving Bob's funds.
+Both parties persist their partial signature *before* sending the wire reply. If anyone crashes mid-ceremony, the retry sees the persisted record and resumes cleanly. A per-leaf double-sign defense ensures you cannot accidentally sign two different children for the same parent UTXO.
 
-### Offline Participants
+---
 
-If Bob is offline, Alice can't do a leaf update. Options:
+## Sub-factory chain extension
 
-1. **Wait** for Bob to come online (push notification)
-2. **Incentivize Bob** — the LSP might offer Bob a small amount of free inbound liquidity as compensation for waking up
-3. **Higher-level update** — restructure the subtree (requires more signers, more complex)
+> The sub-factory's cohort + LSP. Only active when the LSP deploys with sub-factory arity ≥ 2. Triggered when a leaf's PS chain has burned through its channel-output value via per-advance fees.
 
-> *"When B is woken up to help A: LSP offers B a small amount of free inbound liquidity as compensation."* — ZmnSCPxj
+A PS leaf's chain can extend in principle, but each chain TX consumes a small amount of channel value as fee. Eventually the channel runs low and the chain needs more headroom.
 
-## What Doesn't Consume Factory State
+When the LSP deploys with **sub-factory arity ≥ 2** (the t/1242 k² shape — `k` clients per sub-factory, `k²` clients per leaf), each leaf carries one or more pre-built sub-factories. When a leaf's channel runs low, a sub-factory chain extension ceremony inserts a fresh allocation from that sub-factory's sales-stock, and the leaf keeps chaining.
 
-**Regular Lightning payments within leaf channels do NOT update factory state.** Once Alice has a channel with the LSP at the leaf, she can:
+The ceremony shape is the same as per-leaf advance — two-round MuSig2, bundled redistribution-TX co-signing — just with a larger cohort (the LSP plus the `k` clients in that sub-factory).
 
-- Send payments through the LSP to the wider Lightning network
-- Receive payments via the LSP
-- Route payments (if configured)
+**Note on deployment shape.** The default deployment is `k = 1`: one client per leaf, no sub-factories. In a default deployment, sub-factory chain extension never fires, and the per-leaf advance is the only common ceremony. Operators who deploy at `k ≥ 2` (to support more clients per leaf with fewer DW layers) opt into the sub-factory machinery.
 
-All of this uses standard Lightning commitment transactions within the Alice-LSP channel. The factory tree is not involved. Factory state is only consumed by **structural changes** (liquidity purchases, channel opens/closes, rebalancing).
+---
+
+## Factory refresh
+
+> All clients + LSP. Rare. Replaces the whole pre-signed transaction set in place — same on-chain UTXO, fresh CLTV.
+
+When a factory's lifetime is approaching its CLTV timeout, normally the LSP rotates it: cooperatively close the old factory, open a new one. That costs one on-chain transaction and resets everyone.
+
+A refresh skips the on-chain step. The same factory continues with a fresh CLTV; only the pre-signed transaction set is replaced. Cheaper, but requires the factory's composition to stay the same — every existing client has to participate in the ceremony to consent to the refresh.
+
+It's also what runs if the interior DW counter ever rolls over and needs reset.
+
+### Why it's rare
+
+A factory's normal life is mostly per-leaf advances. Whole-tree refreshes happen at most a couple of times across the factory's months-long lifetime.
+
+### How it compares to rotation
+
+| | Rotation | Refresh |
+|---|---|---|
+| Same on-chain UTXO? | No (new factory funded) | Yes |
+| On-chain TXs | 1 (close + new fund, combined) | 0 |
+| Composition can change? | Yes | No |
+| When to use | End-of-life with shape or composition change | Same composition, just need fresh CLTV |
+
+Rotation is described in [[laddering]]; refresh is its lower-cost in-place alternative.
+
+---
+
+## What does NOT consume factory state
+
+| Action | Touches the factory tree? |
+|---|---|
+| Sending a Lightning payment through the LSP | No — inner channel commit-update only |
+| Receiving a Lightning payment | No — same |
+| Routing through the LSP | No — same |
+| Buying inbound liquidity from the LSP | **Yes** — per-leaf advance |
+| Extending a leaf's PS chain when its channel fills up | **Yes** — sub-factory chain extension |
+| Refreshing the factory's CLTV without rotation | **Yes** — factory refresh |
+| Cooperative close + migration to a new factory | This is rotation, not an update — see [[laddering]] |
+
+Regular Lightning operations stay inside the leaf's BOLT-2 channel. Only structural changes to the factory itself need one of the three ceremonies above.
+
+---
+
+## Why off-chain ceremonies are binding
+
+An old version of the tree's state is replaced not by broadcast but by everyone collectively discarding it. As long as no one broadcasts the now-old transactions, the new state is what counts.
+
+If a malicious party does broadcast an old state to try to roll back:
+
+- At the **interior tree layers**, [[decker-wattenhofer-invalidation|DW invalidation]] ensures the newer state wins the on-chain race.
+- At the **leaves**, [[pseudo-spilman-leaves|PS chain ordering]] ensures the newer state's input already consumed the old state's child UTXO — old states are structurally invalidated.
+- The **LSP's liquidity stock** in any stale state is protected by the pre-signed [[l-stock-redistribution|redistribution TX]] that fires if the stale state ever lands on chain.
+
+Together, these mean an off-chain replacement is as binding as an on-chain commitment, without the on-chain cost.
 
 ## Related Concepts
 
-- [[the-odometer-counter]] — How state epochs are tracked
-- [[decker-wattenhofer-invalidation]] — Why lower nSequence beats higher
-- [[shachain-revocation|Revocation Secrets]] — The secrets shared when invalidating old states
-- [[building-a-factory]] — How the initial state was created
-- [[cooperative-close]] — What happens at the end of the factory's life
+- [[pseudo-spilman-leaves]] — TX chaining mechanism that per-leaf advance extends
+- [[l-stock-redistribution]] — Pre-signed cheating-recovery TX co-signed in every ceremony
+- [[building-a-factory]] — The initial signing ceremony that creates the first state
+- [[laddering]] — Where factory refresh fits into a factory's end-of-life
+- [[cooperative-close]] — The other end-of-life path (rotation, not refresh)

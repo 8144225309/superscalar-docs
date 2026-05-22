@@ -34,7 +34,6 @@
     overflow: hidden;
   }
 
-  /* Sidebar */
   #sidebar {
     width: var(--sidebar-w);
     min-width: var(--sidebar-w);
@@ -74,6 +73,8 @@
     color: var(--text-muted);
   }
 
+  /* Highlight "new" section labels so the reviewer can spot what's been added */
+
   .nav-link {
     display: block;
     padding: 6px 14px 6px 22px;
@@ -98,13 +99,11 @@
     font-weight: 500;
   }
 
-  /* Subtle top border on section labels (except the first) */
   .nav-section:not(:first-of-type) {
     border-top: 1px solid var(--border);
     margin-top: 6px;
   }
 
-  /* Main content */
   #main {
     flex: 1;
     overflow-y: auto;
@@ -118,7 +117,6 @@
     line-height: 1.7;
   }
 
-  /* Typography */
   #content h1 {
     font-size: 32px;
     font-weight: 700;
@@ -144,18 +142,9 @@
     margin-bottom: 8px;
   }
 
-  #content p {
-    margin-bottom: 16px;
-  }
-
-  #content a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  #content a:hover {
-    text-decoration: underline;
-  }
+  #content p { margin-bottom: 16px; }
+  #content a { color: var(--accent); text-decoration: none; }
+  #content a:hover { text-decoration: underline; }
 
   #content blockquote {
     border-left: 3px solid var(--accent);
@@ -167,9 +156,7 @@
   }
 
   #content blockquote strong,
-  #content blockquote em {
-    color: var(--text);
-  }
+  #content blockquote em { color: var(--text); }
 
   #content code {
     background: var(--bg-secondary);
@@ -197,7 +184,6 @@
     line-height: 1.5;
   }
 
-  /* Tables */
   #content table {
     width: 100%;
     border-collapse: collapse;
@@ -218,20 +204,11 @@
     border: 1px solid var(--border);
   }
 
-  #content tr:nth-child(even) {
-    background: var(--bg-secondary);
-  }
+  #content tr:nth-child(even) { background: var(--bg-secondary); }
 
-  /* Lists */
-  #content ul, #content ol {
-    margin: 8px 0 16px 24px;
-  }
+  #content ul, #content ol { margin: 8px 0 16px 24px; }
+  #content li { margin-bottom: 4px; }
 
-  #content li {
-    margin-bottom: 4px;
-  }
-
-  /* Mermaid diagrams */
   .mermaid {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
@@ -241,11 +218,8 @@
     text-align: center;
   }
 
-  .mermaid svg {
-    max-width: 100%;
-  }
+  .mermaid svg { max-width: 100%; }
 
-  /* Wikilinks */
   a.wikilink {
     color: var(--green);
     cursor: pointer;
@@ -257,7 +231,6 @@
     border-bottom-style: solid;
   }
 
-  /* Summary callout — first blockquote on the page (right after the h1) */
   #content > h1 + blockquote,
   #content > h1 + p + blockquote {
     border-left-color: var(--green);
@@ -265,35 +238,25 @@
     font-size: 15px;
   }
 
-  /* Breadcrumb */
   #breadcrumb {
     font-size: 12px;
     color: var(--text-muted);
     margin-bottom: 16px;
   }
 
-  #breadcrumb a {
-    color: var(--text-muted);
-    text-decoration: none;
-  }
+  #breadcrumb a { color: var(--text-muted); text-decoration: none; }
+  #breadcrumb a:hover { color: var(--accent); }
 
-  #breadcrumb a:hover {
-    color: var(--accent);
-  }
-
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-  /* Mobile */
   @media (max-width: 768px) {
     #sidebar { display: none; }
     #main { padding: 20px; }
   }
 
-  /* Hamburger for mobile */
   #menu-toggle {
     display: none;
     position: fixed;
@@ -314,21 +277,18 @@
     #sidebar.open { display: flex; position: fixed; z-index: 99; height: 100vh; }
   }
 
-  /* Loading */
   .loading {
     text-align: center;
     padding: 60px;
     color: var(--text-muted);
   }
 
-  /* Horizontal rule */
   #content hr {
     border: none;
     border-top: 1px solid var(--border);
     margin: 32px 0;
   }
 
-  /* Prerequisites collapsible */
   #content details {
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -358,23 +318,17 @@
     flex-shrink: 0;
   }
 
-  #content details[open] summary::before {
-    transform: rotate(90deg);
-  }
+  #content details[open] summary::before { transform: rotate(90deg); }
 
   #content details[open] summary {
     border-bottom: 1px solid var(--border);
     border-radius: 6px 6px 0 0;
   }
 
-  #content details > *:not(summary) {
-    padding: 12px 16px;
-  }
+  #content details > *:not(summary) { padding: 12px 16px; }
 
-  /* Strong/em in context */
   #content strong { color: #fff; }
 
-  /* Collapsible nav sections */
   .nav-section-toggle {
     padding: 14px 16px 6px;
     font-size: 11px;
@@ -394,19 +348,14 @@
     font-size: 8px;
     transition: transform 0.15s;
   }
-  .nav-section-toggle.open::before {
-    transform: rotate(90deg);
-  }
+  .nav-section-toggle.open::before { transform: rotate(90deg); }
+
   .nav-section-toggle:not(:first-of-type) {
     border-top: 1px solid var(--border);
     margin-top: 6px;
   }
-  .nav-collapsible {
-    display: none;
-  }
-  .nav-collapsible.open {
-    display: block;
-  }
+  .nav-collapsible { display: none; }
+  .nav-collapsible.open { display: block; }
 </style>
 </head>
 <body>
@@ -435,19 +384,24 @@
   </div>
 
   <div class="nav-section">Protocol Design</div>
-  <a class="nav-link" data-page="core-concepts/decker-wattenhofer-invalidation">DW Invalidation</a>
-  <a class="nav-link" data-page="core-concepts/the-odometer-counter">The Odometer Counter</a>
-  <a class="nav-link" data-page="core-concepts/timeout-sig-trees">Timeout-Sig-Trees</a>
   <a class="nav-link" data-page="core-concepts/factory-tree-topology">Factory Tree Topology</a>
   <a class="nav-link" data-page="core-concepts/kickoff-vs-state-nodes">Kickoff vs State Nodes</a>
-  <a class="nav-link" data-page="core-concepts/shachain-revocation">Revocation Secrets</a>
+  <a class="nav-link" data-page="core-concepts/timeout-sig-trees">Timeout-Sig-Trees</a>
   <a class="nav-link" data-page="core-concepts/laddering">Laddering</a>
+  <a class="nav-link" data-page="extensions/pseudo-spilman-leaves">Pseudo-Spilman Leaves</a>
+  <a class="nav-link" data-page="core-concepts/l-stock-redistribution">L-stock SPK + Redistribution TX</a>
+  <a class="nav-link" data-page="core-concepts/tree-shaping-and-multi-process">Mixed-Arity, Sub-Factories, Multi-Process</a>
+
+  <div class="nav-section">Underlying Primitives</div>
+  <a class="nav-link" data-page="core-concepts/decker-wattenhofer-invalidation">DW Invalidation</a>
+  <a class="nav-link" data-page="core-concepts/the-odometer-counter">The Odometer Counter</a>
+  <a class="nav-link" data-page="core-concepts/shachain-revocation">Revocation Secrets</a>
 
   <div class="nav-section">Protocol Operations</div>
   <a class="nav-link" data-page="how-it-works/building-a-factory">Building a Factory</a>
   <a class="nav-link" data-page="how-it-works/updating-state">Updating State</a>
   <a class="nav-link" data-page="how-it-works/cooperative-close">Cooperative Close</a>
-  <a class="nav-link" data-page="how-it-works/force-close">Force Close</a>
+  <a class="nav-link" data-page="how-it-works/force-close">Force Close (Unilateral Exit)</a>
   <a class="nav-link" data-page="how-it-works/client-migration">Client Migration</a>
 
   <div class="nav-section">Technical Reference</div>
@@ -455,19 +409,24 @@
   <a class="nav-link" data-page="deep-dives/tapscript-construction">Tapscript Construction</a>
   <a class="nav-link" data-page="deep-dives/musig2-signing-rounds">MuSig2 Signing Rounds</a>
   <a class="nav-link" data-page="extensions/dual-state-management">Dual State Management</a>
-  <a class="nav-link" data-page="extensions/ephemeral-anchors">P2A & Fee Bumping</a>
+  <a class="nav-link" data-page="extensions/ephemeral-anchors">P2A &amp; Fee Bumping</a>
   <a class="nav-link" data-page="deep-dives/security-model">Security Model</a>
   <a class="nav-link" data-page="deep-dives/network-economics">Network Economics</a>
 
   <div class="nav-section">Extensions</div>
   <a class="nav-link" data-page="extensions/splicing-integration">Splicing Integration</a>
   <a class="nav-link" data-page="extensions/jit-channel-fallbacks">JIT Channel Fallbacks</a>
-  <a class="nav-link" data-page="extensions/pseudo-spilman-leaves">Pseudo-Spilman Leaves</a>
   <a class="nav-link" data-page="extensions/cooperative-factories">Cooperative Factories</a>
 
   <div class="nav-section">Covenant Upgrades</div>
   <a class="nav-link" data-page="extensions/apo-integration">APO (SIGHASH_ANYPREVOUT)</a>
   <a class="nav-link" data-page="extensions/ctv-integration">CTV (OP_CHECKTEMPLATEVERIFY)</a>
+
+  <div class="nav-section">BLIP-56 Integration</div>
+  <a class="nav-link" data-page="blip-56/overview">Overview</a>
+
+  <div class="nav-section">Ecosystem Ports</div>
+  <a class="nav-link" data-page="ports/coming-soon">LDK / LND — Coming Soon</a>
 
   <div class="nav-section">Research</div>
   <a class="nav-link" data-page="research/research-horizon">Research Horizon</a>
@@ -481,7 +440,6 @@
 </main>
 
 <script>
-// Page slug → file path mapping for wikilinks
 const WIKILINK_MAP = {
   'what-is-a-payment-channel': 'foundations/what-is-a-payment-channel',
   'what-is-multisig': 'foundations/what-is-multisig',
@@ -517,17 +475,21 @@ const WIKILINK_MAP = {
   'cooperative-factories': 'extensions/cooperative-factories',
   'pseudo-spilman-leaves': 'extensions/pseudo-spilman-leaves',
   'feerate-futures': 'extensions/feerate-futures',
+  'apo-integration': 'extensions/apo-integration',
+  'ctv-integration': 'extensions/ctv-integration',
   'research-horizon': 'research/research-horizon',
   'roadmap': 'context/roadmap',
   'network-economics': 'deep-dives/network-economics',
+  // ---- NEW pages added in 2026-05 rewrite ----
+  'l-stock-redistribution': 'core-concepts/l-stock-redistribution',
+  'tree-shaping-and-multi-process': 'core-concepts/tree-shaping-and-multi-process',
+  'blip-56-integration': 'blip-56/overview',
 };
 
-// Resolve a wikilink slug to a full page path
 function resolveWikilink(slug) {
   return WIKILINK_MAP[slug] || slug;
 }
 
-// Convert [[wikilinks]] and [[slug|display text]] in markdown
 function processWikilinks(md) {
   return md.replace(/\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g, (match, slug, display) => {
     const pagePath = resolveWikilink(slug);
@@ -536,10 +498,9 @@ function processWikilinks(md) {
   });
 }
 
-// Extract mermaid blocks before marked processes them
 function extractMermaid(md) {
   const blocks = [];
-  const processed = md.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
+  const processed = md.replace(/```mermaid\r?\n([\s\S]*?)```/g, (match, code) => {
     const id = `mermaid-${blocks.length}`;
     blocks.push({ id, code: code.trim() });
     return `<div class="mermaid" id="${id}"></div>`;
@@ -547,29 +508,24 @@ function extractMermaid(md) {
   return { md: processed, blocks };
 }
 
-// Render mermaid diagrams — each in isolation to prevent one failure from killing the rest
 async function renderMermaid(blocks) {
   if (blocks.length === 0) return;
   for (const block of blocks) {
     const el = document.getElementById(block.id);
     if (!el) continue;
     try {
-      // Use a unique ID with timestamp to avoid Mermaid's internal ID cache collisions
       const renderId = `${block.id}-svg-${Date.now()}`;
       const { svg } = await mermaid.render(renderId, block.code);
       el.innerHTML = svg;
-      // Clean up any detached error containers Mermaid may have injected
       const stray = document.getElementById('d' + renderId);
       if (stray) stray.remove();
     } catch (e) {
       el.innerHTML = `<pre style="color:var(--red);text-align:left;">${block.code}\n\nMermaid error: ${e.message}</pre>`;
-      // Mermaid v11 can inject error containers into document.body — clean them up
       document.querySelectorAll('[id^="dmermaid-"]').forEach(n => n.remove());
     }
   }
 }
 
-// Section name from path
 const SECTION_NAMES = {
   'foundations': 'Foundations',
   'core-concepts': 'Protocol Design',
@@ -578,6 +534,13 @@ const SECTION_NAMES = {
   'extensions': 'Extensions',
   'context': 'Context',
   'research': 'Research',
+  'shipped': 'Shipped Mechanisms',
+  'blip-56': 'BLIP-56 Integration',
+  'protocol-spec': 'Protocol Spec',
+  'guides': 'Guides',
+  'adjacent-projects': 'Adjacent Projects',
+  'ports': 'Ecosystem Ports',
+  'bootstrapping': 'Bootstrapping',
 };
 function sectionFromPath(path) {
   if (path === 'index') return 'Home';
@@ -586,17 +549,14 @@ function sectionFromPath(path) {
   return SECTION_NAMES[parts[0]] || parts[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// Load and render a page
 async function loadPage(pagePath) {
   const contentEl = document.getElementById('content');
   const breadcrumbEl = document.getElementById('breadcrumb');
 
   contentEl.innerHTML = '<div class="loading">Loading...</div>';
 
-  // Update active nav link
   document.querySelectorAll('.nav-link').forEach(link => {
     link.classList.toggle('active', link.dataset.page === pagePath);
-    // Auto-expand collapsible section if active link is inside one
     if (link.dataset.page === pagePath) {
       const collapsible = link.closest('.nav-collapsible');
       if (collapsible) {
@@ -612,22 +572,17 @@ async function loadPage(pagePath) {
     if (!res.ok) throw new Error(`${res.status}`);
     let md = await res.text();
 
-    // Process wikilinks first (before marked touches them)
     md = processWikilinks(md);
 
-    // Extract mermaid blocks
     const { md: processedMd, blocks } = extractMermaid(md);
 
-    // Configure marked
     marked.setOptions({
       breaks: false,
       gfm: true,
     });
 
-    // Render markdown
     contentEl.innerHTML = marked.parse(processedMd);
 
-    // Breadcrumb
     const section = sectionFromPath(pagePath);
     if (section && section !== 'Home') {
       breadcrumbEl.innerHTML = `<a href="#index">Home</a> / ${section}`;
@@ -635,13 +590,9 @@ async function loadPage(pagePath) {
       breadcrumbEl.innerHTML = '';
     }
 
-    // Render mermaid
     await renderMermaid(blocks);
 
-    // Scroll to top
     document.getElementById('main').scrollTop = 0;
-
-    // Close mobile sidebar
     document.getElementById('sidebar').classList.remove('open');
 
   } catch (e) {
@@ -649,13 +600,11 @@ async function loadPage(pagePath) {
   }
 }
 
-// Handle hash-based routing
 function handleRoute() {
   const hash = location.hash.slice(1) || 'index';
   loadPage(hash);
 }
 
-// Click handlers for wikilinks (delegated)
 document.getElementById('content')?.addEventListener('click', (e) => {
   const link = e.target.closest('a.wikilink');
   if (link) {
@@ -665,16 +614,14 @@ document.getElementById('content')?.addEventListener('click', (e) => {
   }
 });
 
-// Nav click handlers
 document.querySelectorAll('.nav-link').forEach(link => {
   link.addEventListener('click', (e) => {
-    if (!link.dataset.page) return; // external links: let browser handle normally
+    if (!link.dataset.page) return;
     e.preventDefault();
     location.hash = link.dataset.page;
   });
 });
 
-// Init
 mermaid.initialize({
   startOnLoad: false,
   theme: 'dark',

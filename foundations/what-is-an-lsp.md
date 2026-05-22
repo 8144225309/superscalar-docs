@@ -77,7 +77,7 @@ A factory-hosted channel allows clients to receive their first sats without owni
 
 > *"The goal of SuperScalar is to be able to onboard people, possibly people who do not have an existing UTXO they can use to pay exogenous fees."* — ZmnSCPxj
 
-If an LSP misbehaves, a client without funds to pay exit fees can take their pre-signed exit transactions to a competing LSP, which can broadcast them and earn a bounty for the revocation punishment.
+If an LSP misbehaves by publishing a stale leaf state, the matching pre-signed redistribution transaction redistributes the LSP's liquidity stock to clients in that leaf. The client's own redistribution-share output can be CPFP'd by the client themselves, so a client without on-chain funds to pay exit fees can still get their share confirmed.
 
 ## Multiple LSPs
 

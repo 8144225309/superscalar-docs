@@ -78,4 +78,4 @@ Before Taproot, N-of-N multisig required revealing all N public keys and N signa
 - [[what-is-musig2]] — How the key-path aggregate signature is created
 - [[timeout-sig-trees]] — The specific script trees used in SuperScalar
 - [[tapscript-construction]] — Technical deep dive on building Taproot scripts
-- [[shachain-revocation|Revocation Secrets]] — How the LSP liquidity stock scripts prevent cheating
+- [[l-stock-redistribution]] — How the LSP liquidity stock outputs are protected against stale-state cheating
