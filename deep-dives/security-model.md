@@ -2,7 +2,7 @@
 
 > **Summary**: SuperScalar's security guarantee is simple — every client can always exit unilaterally, and the LSP cannot steal funds. The N-of-N multisig means no single party has unilateral control. The trade-offs are in liveness requirements, force-close costs, and the unsolved forced expiration spam problem.
 
-> **Note (current design)**: This page describes the original t/1143 design. The cheating-recovery mechanism for the LSP's liquidity stock is now per-client redistribution via a pre-signed redistribution TX — see [[l-stock-redistribution]]. The threat-analysis structure and the rest of the trust model below are unchanged.
+> **Note (current design)**: This page describes the original t/1143 design. Two things changed in the current canonical design. (1) The leaves now use **pseudo-Spilman TX chaining** ([[pseudo-spilman-leaves]]) instead of Decker-Wattenhofer state nodes, so DW invalidation applies only to the **interior** tree layers and the per-leaf state-budget model no longer applies. (2) The cheating-recovery mechanism for the LSP's liquidity stock is now per-client redistribution via a pre-signed redistribution TX — see [[l-stock-redistribution]]. The threat-analysis structure and the rest of the trust model below are otherwise unchanged.
 
 ## Core Property
 
@@ -47,9 +47,9 @@ graph TD
 
 **Attack**: LSP broadcasts an old state to reclaim liquidity it had already sold to clients.
 
-**Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay. If any honest party broadcasts the newer state, it confirms before the old one. The DW mechanism guarantees the newer state wins the race, but only if someone holding it is online to broadcast it.
+**Defense (primary, at the leaves)**: [[pseudo-spilman-leaves|Pseudo-Spilman chaining]] + the [[l-stock-redistribution|pre-signed redistribution TX]]. Each leaf state advance is a TX that spends the prior state's channel output, so an old leaf state is **structurally invalidated** — its output is already spent on-chain. If the LSP nonetheless publishes an old L-stock state, the matching redistribution TX (co-signed at every state advance, held by clients and the watchtower) can be broadcast by anyone; it redistributes the LSP's L-stock equally to clients in the affected leaf, making cheating economically irrational.
 
-**Defense (secondary)**: [[l-stock-redistribution|Pre-signed redistribution TX]] — if the honest party is offline and an old state confirms, the matching redistribution TX (co-signed at every state advance, held by clients and the watchtower) can be broadcast by anyone. It redistributes the LSP's L-stock equally to clients in the affected leaf, making cheating economically irrational even in this case.
+**Defense (interior layers)**: [[decker-wattenhofer-invalidation]] — for the interior tree nodes above the leaves, the newest state has the lowest nSequence delay, so if any honest party broadcasts the newer state it confirms before the old one. This protects against state rollback at the interior DW layers.
 
 **Verdict**: LSP cannot profitably steal.
 
@@ -133,7 +133,7 @@ The PTLC-based key handover is atomic, but there's no guarantee the LSP will ini
 If a client's channel balance falls below the on-chain fee cost of a force-close transaction, the funds are not economically recoverable. **Why unsolved**: inherent to any UTXO-based system. Mitigation is a minimum balance requirement enforced by the LSP at onboarding; no protocol-level fix exists.
 
 ### 4. Are 64 States Enough?
-With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
+With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. Note that in the current design [[pseudo-spilman-leaves|pseudo-Spilman]] leaf advances are TX chains that consume **no** DW epoch budget, so this concern applies only to interior restructures (re-shaping the tree, adding or removing clients), not to ordinary per-leaf state updates. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
 
 ### 5. Sockpuppet sybil against per-client redistribution share
 The [[l-stock-redistribution|redistribution TX]] redistributes the LSP's L-stock equally to non-LSP signers in the affected leaf. If a hostile LSP populates a leaf with sockpuppet "clients" alongside one real client, the real client's per-client share of L-stock shrinks relative to the LSP's potential gain from broadcasting old state. ZmnSCPxj's t/1242 acknowledges this directly. The mitigation is voluntary: clients with substantial holdings maintain an external UTXO reserve so they don't depend on the per-client redistribution share alone. A well-capitalized LSP also maintains sufficient L-stock reserves as a matter of operational practice.

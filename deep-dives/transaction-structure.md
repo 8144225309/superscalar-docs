@@ -9,7 +9,7 @@
 | **Funding tx** | 2 | wallet default | 0 | LSP's regular spend |
 | **Kickoff tx** | 2 | 0xFFFFFFFF (disabled) | 0 | MuSig2 key-path sig |
 | **State tx** | 2 | BIP-68 relative delay | 0 | MuSig2 key-path sig |
-| **Distribution tx** | 2 | 0xFFFFFFFF | nLockTime (inverted) | MuSig2 key-path sig |
+| **Distribution tx** | 2 | 0xFFFFFFFE | nLockTime (inverted) | MuSig2 key-path sig |
 | **Channel close** | 2 | varies (Poon-Dryja) | varies | Channel-specific |
 | **Fee-bump child** | 2 | any | 0 | Spends P2A output |
 

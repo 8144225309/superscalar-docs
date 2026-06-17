@@ -2,6 +2,8 @@
 
 > **Summary**: If the LSP misbehaves or a client cannot cooperate, any participant can publish pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. The process takes up to a week and requires on-chain fees, but funds are always recoverable.
 
+> **Leaf note**: At the **leaves**, SuperScalar now uses [[pseudo-spilman-leaves|pseudo-Spilman]] chaining — a unilateral exit publishes the **latest PS state TX** (which spends the prior state's output), with **no DW/nSequence delay at the leaf**. The Decker-Wattenhofer races described below apply to the **interior** tree layers.
+
 ## When Does Force-Close Happen?
 
 | Scenario | Who Initiates |
@@ -106,15 +108,15 @@ The tree structure **contains the blast radius**. Only Alice's half of the tree 
 
 ## Fee Bumping with P2A
 
-Every tree transaction includes a **P2A (Pay-to-Anchor)** output — a special output that anyone can spend to attach a CPFP (Child-Pays-for-Parent) fee bump:
+Tree node transactions (kickoff, state, leaf state) are pre-signed with **endogenous fees** baked in at signing time — they do **not** carry a P2A output. The **P2A (Pay-to-Anchor)** outputs live on the **distribution transaction** and on the **channel commitment/penalty transactions**, where market-rate fee-bumping is needed at broadcast time (see [[transaction-structure]]):
 
 ```
-Tree TX outputs:
-  Output 0: Taproot (normal tree output)
-  Output 1: P2A (anyone can spend → attach fee-bump child tx)
+Distribution / channel TX outputs:
+  Output 0..N: payouts (Taproot)
+  Output N+1: P2A (anyone can spend → attach fee-bump child tx)
 ```
 
-This solves the fee estimation problem: tree transactions are pre-signed with low endogenous fees. If the mempool is congested at force-close time, any participant can bump the fee by spending the P2A output.
+This solves the fee estimation problem: tree transactions carry low endogenous fees, while the transactions that actually settle value on-chain expose a P2A anchor — so if the mempool is congested at force-close time, any participant can attach a CPFP child to bump the fee.
 
 ### Stale-state protection for P2A
 
@@ -149,6 +151,6 @@ With the [[timeout-sig-trees|inverted timelock]] design, even if a client cannot
 
 - [[decker-wattenhofer-invalidation]] — The race mechanism at each state level
 - [[kickoff-vs-state-nodes]] — Why the alternation prevents cascade failures
-- [[shachain-revocation|Revocation Secrets]] — Punishment for broadcasting old states
+- [[shachain-revocation|Revocation Secrets]] — Punishment at the **inner channel** (BOLT-2 / Poon-Dryja) level for broadcasting an old commitment; the factory-tree L-stock instead uses the [[l-stock-redistribution|redistribution TX]]
 - [[cooperative-close]] — The much better alternative
 - [[security-model]] — Threat analysis and trust assumptions, including force-close guarantees

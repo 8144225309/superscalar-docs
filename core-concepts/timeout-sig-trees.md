@@ -109,6 +109,8 @@ state_left → leaf outputs
 
 The CLTV timeout paths are on **internal tree nodes**, not on the final leaf channels. Leaf channels use standard Poon-Dryja mechanics.
 
+> **Note (current design)**: The leaf framing above is the simplified Decker-Wattenhofer model. In the current canonical design the leaves are [[pseudo-spilman-leaves|pseudo-Spilman]] (TX-chained, CLTV-gated), and the LSP liquidity stock is **not** "LSP-controlled, no channel partner": its SPK is key-path **N-of-N MuSig2 (LSP + clients)** with a `<csv_blocks> OP_CSV OP_DROP <LSP_xonly> OP_CHECKSIG` script-path fallback, and stale-state cheating is handled by the [[l-stock-redistribution|redistribution TX]].
+
 ## Related Concepts
 
 - [[what-is-taproot]] — The Bitcoin feature that enables dual spending paths

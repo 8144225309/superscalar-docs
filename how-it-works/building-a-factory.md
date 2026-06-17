@@ -2,6 +2,8 @@
 
 > **Summary**: The LSP gathers online clients, constructs a tree of pre-signed transactions, and funds the whole structure with one on-chain UTXO — all without any individual client needing on-chain Bitcoin. Many users safely share a single UTXO, with standard Lightning channels at the leaves.
 
+> **Leaf note**: In the current canonical design the factory **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels — TX-chained and CLTV-gated, with **no Decker-Wattenhofer nSequence delay at the leaf**. The tree diagrams below show the simplified original DW model at every layer; DW now applies only to the **interior** nodes.
+
 ## Overview
 
 Building a factory is a coordinated ceremony between the LSP and all participating clients. It runs once at factory creation, producing a set of pre-signed transactions that encode all unilateral exit paths.
@@ -102,7 +104,7 @@ Once ALL tree transactions are signed:
 ```
 Funding TX:
   Input:  LSP's existing UTXO(s)
-  Output: P2TR(MuSig2(A, B, C, D, LSP) | CLTV timeout)
+  Output: P2TR(MuSig2(A, B, C, D, LSP))
           Amount: e.g., 1.0 BTC total
 ```
 

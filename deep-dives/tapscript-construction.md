@@ -22,14 +22,14 @@ OP_CHECKSIG
 **Byte-by-byte breakdown:**
 
 ```
-03 [3 bytes: CLTV timeout as little-endian int]    ← e.g., block 890000 (0x0D9530)
+03 [3 bytes: CLTV timeout as little-endian int]    ← e.g., block 890000 (0x0D9490, pushed little-endian as 90 94 0D)
 b1                                                  ← OP_CHECKLOCKTIMEVERIFY
 75                                                  ← OP_DROP
 20 [32 bytes: LSP x-only pubkey]                    ← BIP-340 format
 ac                                                  ← OP_CHECKSIG
 ```
 
-Total script size: **40 bytes** (1 push opcode + 3 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG). The CLTV value size varies by block height; 3 bytes covers heights up to 16,777,215 (≈320 years at current pace).
+Total script size: **40 bytes** (1 push opcode + 3 CLTV value + 1 OP_CLTV + 1 OP_DROP + 1 push opcode + 32 pubkey + 1 OP_CHECKSIG). The CLTV value size varies by block height; 3 bytes covers heights up to 8,388,607 (CScriptNum is signed, so the limit is 2^23-1, not 2^24-1; ≈160 years at current pace); CLTV permits up to 5-byte operands for greater heights.
 
 ## TapLeaf Hashing
 

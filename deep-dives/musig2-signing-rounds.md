@@ -45,7 +45,7 @@ Sends (R₁ᵢ, R₂ᵢ) to all other signers
 Once all public nonces are collected:
 
 ```
-b = H("MuSig/noncecoef", R₁₁||R₂₁||...||R₁ₙ||R₂ₙ||P||message)
+b = H("MuSig/noncecoef", R₁ || R₂ || Q || message)   where R₁ = Σ(R₁ᵢ), R₂ = Σ(R₂ᵢ), Q = tweaked aggregate key
 
 Aggregate nonce: R = Σ(R₁ᵢ) + b × Σ(R₂ᵢ)
 ```

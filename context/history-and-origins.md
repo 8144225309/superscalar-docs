@@ -96,9 +96,9 @@ The design was originally **zero code** — purely theoretical. The reference im
 - **Phase 1** (complete): Factory transaction tree
 - **Phase 2** (complete): Timeout-sig-tree script paths
 - **Phase 3** (complete): Split-round MuSig2 signing and nonce pool
-- **Phase 4–5** (complete): Shachain revocation, L-output invalidation, Poon-Dryja channels
+- **Phase 4–5** (complete): Shachain revocation, L-stock + redistribution TX, Poon-Dryja channels
 - **Phase 6–7** (complete): HTLC outputs and cooperative close
-- **Phase 8** (in progress): Laddering with factory rotation
+- **Phase 8** (complete): Laddering with factory rotation
 
 ## Why It Took This Long
 

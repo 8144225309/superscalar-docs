@@ -117,7 +117,7 @@ The reference implementation is available at [github.com/8144225309/SuperScalar]
 | Watchtower (old-state monitoring + penalty broadcast) | Working |
 | Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
 
-The implementation is written in C, with 1377 unit + 42 regtest + 30 signet exhibition tests, and CI on Linux, macOS, and ARM64. It links against `secp256k1-zkp` for MuSig2/Schnorr and `libsqlite3` for state persistence.
+The implementation is written in C, with over 1,500 unit tests, plus regtest and signet exhibition suites, and CI on Linux, macOS, and ARM64. It links against `secp256k1-zkp` for MuSig2/Schnorr and `libsqlite3` for state persistence.
 
 ## Origin
 

@@ -2,6 +2,8 @@
 
 > **Summary**: The factory is a tree of pre-signed transactions rooted in a single shared UTXO. Internal nodes split participants into smaller groups. Leaf state nodes produce standard Lightning channel outputs. The tree alternates between kickoff nodes (circuit breakers) and state nodes (Decker-Wattenhofer state machines).
 
+> **Note (current design)**: This page uses the simplified original binary model in which the leaves are drawn as Decker-Wattenhofer state nodes. The current canonical design uses **[[pseudo-spilman-leaves|pseudo-Spilman leaves]]** instead — TX-chained, CLTV-gated, one client per leaf, with no DW/nSequence delay at the leaf — and DW applies only to the interior layers. See [[pseudo-spilman-leaves]] and [[tree-shaping-and-multi-process]] for how the tree is shaped under the current model. The diagrams below are kept as the original conceptual model.
+
 ## Why a Tree?
 
 The fundamental tension in SuperScalar is:

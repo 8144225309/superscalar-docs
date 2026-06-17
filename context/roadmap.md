@@ -30,7 +30,7 @@ If you want to try the full stack, clone all four. The reference implementation 
 | Sub-1-sat/vB fee support with automatic P2A anchor control | Working |
 | BLIP-56 wire integration (CLN fork + superscalar-cln plugin) | Working |
 
-1377 unit + 42 regtest + 30 signet exhibition tests, CI on Linux, macOS, and ARM64.
+over 1,500 unit tests, plus regtest and signet exhibition suites, CI on Linux, macOS, and ARM64.
 
 ## What's next
 
