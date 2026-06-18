@@ -248,7 +248,7 @@ The worst a malicious coordinator can do is **disrupt service**, not steal funds
 - **Self-custody**: Every member holds their signing key. No one can spend their funds without their signature.
 - **Unilateral exit**: Pre-signed transactions guarantee on-chain recovery without anyone's cooperation.
 - **State verification**: Members verify their channel allocation before signing each factory tree.
-- **Old state punishment**: [[shachain-revocation|Revocation secrets]] allow members to burn the coordinator's funds if old states are broadcast.
+- **Old state recovery**: old leaf/factory states are **structurally superseded** ([[pseudo-spilman-leaves|PS]] chaining at the leaves, the [[decker-wattenhofer-invalidation|DW]] race at the interior), and the coordinator's L-stock is clawed back by the [[l-stock-redistribution|redistribution TX]] — redistributed to members, not burned. The [[shachain-revocation|Poon-Dryja penalty]] is the separate mechanism that punishes a revoked **inner-channel** commitment.
 - **Inverted timelock**: If the coordinator disappears, a pre-signed [[timeout-sig-trees|nLockTime transaction]] distributes funds to members automatically at the factory timeout.
 
 ### What Requires Trust (Reduced but Not Eliminated)

@@ -2,8 +2,6 @@
 
 > **Summary**: SuperScalar's security guarantee is simple — every client can always exit unilaterally, and the LSP cannot steal funds. The N-of-N multisig means no single party has unilateral control. The trade-offs are in liveness requirements, force-close costs, and the unsolved forced expiration spam problem.
 
-> **Note (current design)**: This page describes the original t/1143 design. The cheating-recovery mechanism for the LSP's liquidity stock is now per-client redistribution via a pre-signed redistribution TX — see [[l-stock-redistribution]]. The threat-analysis structure and the rest of the trust model below are unchanged.
-
 ## Core Property
 
 > *"Each client can unilaterally exit; LSP cannot steal."*
@@ -47,9 +45,9 @@ graph TD
 
 **Attack**: LSP broadcasts an old state to reclaim liquidity it had already sold to clients.
 
-**Defense (primary)**: [[decker-wattenhofer-invalidation]] — the newest state has the lowest nSequence delay. If any honest party broadcasts the newer state, it confirms before the old one. The DW mechanism guarantees the newer state wins the race, but only if someone holding it is online to broadcast it.
+**Defense (primary, at the leaves)**: [[pseudo-spilman-leaves|Pseudo-Spilman chaining]] + the [[l-stock-redistribution|pre-signed redistribution TX]]. Each leaf state advance is a TX that spends the prior state's channel output, so an old leaf state is **structurally invalidated** — its output is already spent on-chain. If the LSP nonetheless publishes an old L-stock state, the matching redistribution TX (co-signed at every state advance, held by clients and the watchtower) can be broadcast by anyone; it redistributes the LSP's L-stock equally to clients in the affected leaf, making cheating economically irrational.
 
-**Defense (secondary)**: [[l-stock-redistribution|Pre-signed redistribution TX]] — if the honest party is offline and an old state confirms, the matching redistribution TX (co-signed at every state advance, held by clients and the watchtower) can be broadcast by anyone. It redistributes the LSP's L-stock equally to clients in the affected leaf, making cheating economically irrational even in this case.
+**Defense (interior layers)**: [[decker-wattenhofer-invalidation]] — for the interior tree nodes above the leaves, the newest state has the lowest nSequence delay, so if any honest party broadcasts the newer state it confirms before the old one. This protects against state rollback at the interior DW layers.
 
 **Verdict**: LSP cannot profitably steal.
 
@@ -59,7 +57,7 @@ graph TD
 
 **Defense**: All exit transactions are **pre-signed during factory construction**. Clients hold copies of every transaction needed to force-close. No cooperation from the LSP is needed.
 
-**Impact**: All clients must force-close. This is expensive (many on-chain transactions + fees) and slow (DW delays), but funds are recoverable.
+**Impact**: All clients must force-close. This is expensive (many on-chain transactions + fees) and slow (interior DW delays; the [[pseudo-spilman-leaves|pseudo-Spilman]] leaves themselves carry no relative-timelock delay), but funds are recoverable.
 
 **Verdict**: Inconvenient but safe.
 
@@ -89,11 +87,13 @@ graph TD
 
 ### Threat 5: Miner-Counterparty Collusion
 
-**Attack**: A miner colludes with the LSP to censor the honest client's newer state transaction, allowing the old state to confirm after the DW delay.
+**Attack**: A miner colludes with the LSP to censor an honest party's transaction long enough for a stale state to confirm. The shape of this attack differs between the interior tree layers and the leaves.
 
-**Defense**: Standard Bitcoin censorship resistance — the client can submit their newer state transaction to any miner. The defense window equals the nSequence difference between the old and new states (at minimum 144 blocks per DW step, approximately 1 day). The client's newer transaction, having a shorter delay, confirms first as long as any honest miner includes it within this window.
+**Defense (interior layers)**: Standard Bitcoin censorship resistance plus the [[decker-wattenhofer-invalidation|DW]] race. The newer interior state carries a lower nSequence, so the honest party's transaction has a shorter relative-timelock delay and confirms first — as long as any honest miner includes it within the window. That window equals the nSequence difference between the old and new states (at minimum 144 blocks per DW step, approximately 1 day).
 
-**Verdict**: Requires sustained mining censorship. Same assumption as all Lightning.
+**Defense (leaves)**: There is **no race** at a [[pseudo-spilman-leaves|pseudo-Spilman]] leaf. The latest leaf state structurally spends the prior state's channel output, so an old leaf state cannot confirm against an already-spent UTXO — censorship cannot resurrect it. The censorship surface at the leaf is instead the LSP publishing a stale **L-stock** state: the matching [[l-stock-redistribution|redistribution TX]] must be confirmed within the L-stock output's CSV window before the CSV-gated LSP claim path matures. Any party (client or watchtower) can broadcast it, and it needs only one honest miner to include it inside that window.
+
+**Verdict**: Requires sustained mining censorship — of either the newer interior state or the leaf's redistribution TX. Same assumption as all Lightning.
 
 ### Threat 6: LSP Refuses Assisted Exit
 
@@ -133,7 +133,7 @@ The PTLC-based key handover is atomic, but there's no guarantee the LSP will ini
 If a client's channel balance falls below the on-chain fee cost of a force-close transaction, the funds are not economically recoverable. **Why unsolved**: inherent to any UTXO-based system. Mitigation is a minimum balance requirement enforced by the LSP at onboarding; no protocol-level fix exists.
 
 ### 4. Are 64 States Enough?
-With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
+With 2 DW layers of 4 states each, the odometer provides 4^2 = 16 total epochs (the default for an 8-client binary tree). A deeper tree with 3 DW layers provides 4^3 = 64 epochs. The factory has a fixed number of state updates over its 30-day lifetime. If the factory is busy, epochs could be exhausted before expiry. Note that in the current design [[pseudo-spilman-leaves|pseudo-Spilman]] leaf advances are TX chains that consume **no** DW epoch budget, so this concern applies only to interior restructures (re-shaping the tree, adding or removing clients), not to ordinary per-leaf state updates. **Why unsolved**: requires empirical data from production deployments to know if 64 epochs is sufficient, or whether LSPs need to use deeper trees or shorter factory lifetimes. APO (eltoo) would eliminate this constraint entirely.
 
 ### 5. Sockpuppet sybil against per-client redistribution share
 The [[l-stock-redistribution|redistribution TX]] redistributes the LSP's L-stock equally to non-LSP signers in the affected leaf. If a hostile LSP populates a leaf with sockpuppet "clients" alongside one real client, the real client's per-client share of L-stock shrinks relative to the LSP's potential gain from broadcasting old state. ZmnSCPxj's t/1242 acknowledges this directly. The mitigation is voluntary: clients with substantial holdings maintain an external UTXO reserve so they don't depend on the per-client redistribution share alone. A well-capitalized LSP also maintains sufficient L-stock reserves as a matter of operational practice.
@@ -148,6 +148,10 @@ The [[l-stock-redistribution|redistribution TX]] redistributes the LSP's L-stock
 | **On-chain Bitcoin** | Zero trust | No (you hold the keys) |
 
 SuperScalar's trust model matches on-chain multisig: no single party can move funds unilaterally, and pre-signed transactions guarantee exit without cooperation.
+
+## Design note
+
+This threat analysis reflects the current canonical design ([[pseudo-spilman-leaves|pseudo-Spilman]] leaves, ZmnSCPxj's [t/1242 refinement](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)): the leaves are TX-chained channels between one client and the LSP, so [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] invalidation applies only to the **interior** tree layers, and the LSP's liquidity-stock cheating recovery is per-client redistribution via a pre-signed [[l-stock-redistribution|redistribution TX]]. (The original t/1143 design put DW state nodes at the leaves and recovered the L-stock differently; the threats above reflect the current PS-leaf model.)
 
 ## Related Concepts
 

@@ -108,7 +108,7 @@ Because the factory rotation schedule is regular and predictable (one transactio
 
 ## Covenant Upgrade Path
 
-If APO (BIP-118) activates, the DW state limit is removed — factories support unlimited state updates per rotation cycle instead of the current 64-epoch cap. Laddering rotation transactions remain, but the protocol sustains higher-frequency liquidity purchases without consuming state budget. Per-user rotation cost is unchanged; the gain is headroom, not fewer on-chain transactions.
+If APO (BIP-118) activates, the DW state limit is removed — factories support unlimited state updates per rotation cycle instead of the current interior-layer state cap (16 epochs with the default 2 DW layers, up to 64 with deeper interiors; PS leaf advances consume no epoch). Laddering rotation transactions remain, but the protocol sustains higher-frequency liquidity purchases without consuming state budget. Per-user rotation cost is unchanged; the gain is headroom, not fewer on-chain transactions.
 
 If CTV (BIP-119) activates, factory construction no longer requires all clients online simultaneously. LSPs can pre-build factories during off-peak hours and clients confirm participation asynchronously, removing the coordination deadline from the rotation lifecycle.
 

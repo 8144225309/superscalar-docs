@@ -30,7 +30,7 @@ graph TD
 - Clients could "claim their spot" in a new factory at any time during the dying period
 - Removes the biggest coordination bottleneck in factory construction
 
-CTV would be a construction improvement for SuperScalar, not a replacement.
+CTV would be a construction improvement for SuperScalar, not a replacement. See [[ctv-integration]] for the detailed integration design.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|
@@ -58,7 +58,7 @@ graph TD
 - Simpler tree structure (no need for multi-layer DW)
 - Shorter force-close times (fewer layers = fewer delays)
 
-APO would supersede the Decker-Wattenhofer component, but the rest of SuperScalar (timeout-sig-trees, laddering, tree topology) would remain.
+APO would supersede the Decker-Wattenhofer component, but the rest of SuperScalar (timeout-sig-trees, laddering, tree topology) would remain. See [[apo-integration]] for the detailed integration design.
 
 | Metric | Probability in 2 years | Probability ever |
 |--------|----------------------|-----------------|

@@ -38,7 +38,7 @@ DW requires multiple layers to achieve a sufficient state count budget. With elt
 Fewer DW layers mean fewer stacked `nSequence` delays on the unilateral exit path. The worst-case time to recover funds decreases proportionally.
 
 **No revocation data**
-DW invalidation requires retaining revocation secrets for every prior epoch. With eltoo, the LSP simply publishes the newest state — no revocation mechanism needed.
+DW invalidation requires retaining the superseded state transactions (the decrementing-`nSequence` chain) for every prior epoch — note DW itself uses **no** revocation secrets; that absence is the whole distinction from Poon-Dryja. With eltoo, the LSP simply publishes the newest state and prior states need not be retained at all.
 
 ---
 

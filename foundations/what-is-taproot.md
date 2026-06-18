@@ -36,7 +36,7 @@ Every output in the SuperScalar factory tree is a Taproot output with both paths
 | **Funding UTXO** | All N clients + LSP (N-of-N MuSig2) | — |
 | **Tree node output** | Subset of clients + LSP (MuSig2) | `<timeout> OP_CLTV OP_DROP <LSP_key> OP_CHECKSIG` |
 | **Client channel** | Client + LSP (2-of-2 MuSig2) | Standard Poon-Dryja scripts |
-| **LSP liquidity stock** | LSP only | `<revocation_secret> OP_DROP <LSP_key> OP_CHECKSIG` |
+| **LSP liquidity stock** | N-of-N MuSig2 (LSP + clients) — used by coop-close and the [[l-stock-redistribution]] TX | `<csv_blocks> OP_CSV OP_DROP <LSP_xonly> OP_CHECKSIG` |
 
 ### The Timeout Script Path
 

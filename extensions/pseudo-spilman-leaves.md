@@ -16,7 +16,6 @@ graph LR
     O1 --> S2["State 2<br/>(spends UTXO 1, latest)"]
 
     style S2 fill:#51cf66,color:#fff
-    style O2 fill:#51cf66,color:#fff
 ```
 
 The leaf cohort is **1 client + LSP**, 2-of-2 MuSig. The MuSig key aggregation is computed once at factory build (`node->keyagg.agg_pubkey`) and reused for every state advance in the chain.
@@ -75,7 +74,7 @@ This is orthogonal to the leaf-level mechanism. The leaf is a non-revocable cont
 
 ## Status
 
-Canonical leaf mechanism. Default in the reference implementation. Verified at N=2, N=8, N=64, and N=128 clients per factory under regtest and on signet. ZmnSCPxj introduced the design in [SuperScalar with Pseudo-Spilman Leaves (Delving t/1242, November 2024)](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242).
+Canonical leaf mechanism. Default in the reference implementation. Verified at N=4, N=64, and N=127 clients per factory (127 is the design maximum: 128 MuSig2 signers = LSP + 127 clients) under regtest and on signet. ZmnSCPxj introduced the design in [SuperScalar with Pseudo-Spilman Leaves (Delving t/1242, November 2024)](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242).
 
 ## Related
 

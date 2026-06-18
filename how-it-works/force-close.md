@@ -2,6 +2,7 @@
 
 > **Summary**: If the LSP misbehaves or a client cannot cooperate, any participant can publish pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. The process takes up to a week and requires on-chain fees, but funds are always recoverable.
 
+
 ## When Does Force-Close Happen?
 
 | Scenario | Who Initiates |
@@ -34,11 +35,11 @@ sequenceDiagram
     A->>Chain: 3. After state_root confirms:<br/>Publish kickoff_left (confirms next block)
     Note over Chain: No relative timelock
 
-    A->>Chain: 4. Publish state_left (latest version)
+    A->>Chain: 4. Publish state_left (innermost interior DW, latest version)
     Note over Chain: DW Layer 1 delay: up to 432 blocks
 
-    A->>Chain: 5. Publish state_left_sibling (must also resolve)
-    Note over Chain: DW Layer 1 delay
+    A->>Chain: 5. After state_left confirms:<br/>Publish Alice's latest PS leaf state TX
+    Note over Chain: NO DW/nSequence delay at the leaf —<br/>it spends the prior state's channel output,<br/>so the latest state wins structurally
 
     Note over Chain: Alice's channel is now on-chain
 
@@ -48,8 +49,8 @@ sequenceDiagram
 ### Transaction Count
 
 ```
-1 kickoff_root + 1 state_root + 1 kickoff_left + 2 state_leaves + 1 channel close
-= 6 transactions total
+1 kickoff_root + 1 state_root + 1 kickoff_left + 1 state_left (interior DW)
++ 1 PS leaf state TX + 1 channel close = 6 transactions total
 ```
 
 In general: **O(log N) tree transactions + 1 channel close**.
@@ -106,15 +107,15 @@ The tree structure **contains the blast radius**. Only Alice's half of the tree 
 
 ## Fee Bumping with P2A
 
-Every tree transaction includes a **P2A (Pay-to-Anchor)** output — a special output that anyone can spend to attach a CPFP (Child-Pays-for-Parent) fee bump:
+Tree node transactions (kickoff, state, leaf state) are pre-signed with **endogenous fees** baked in at signing time — they do **not** carry a P2A output. The **P2A (Pay-to-Anchor)** outputs live on the **distribution transaction** and on the **channel commitment/penalty transactions**, where market-rate fee-bumping is needed at broadcast time (see [[transaction-structure]]):
 
 ```
-Tree TX outputs:
-  Output 0: Taproot (normal tree output)
-  Output 1: P2A (anyone can spend → attach fee-bump child tx)
+Distribution / channel TX outputs:
+  Output 0..N: payouts (Taproot)
+  Output N+1: P2A (anyone can spend → attach fee-bump child tx)
 ```
 
-This solves the fee estimation problem: tree transactions are pre-signed with low endogenous fees. If the mempool is congested at force-close time, any participant can bump the fee by spending the P2A output.
+This solves the fee estimation problem: tree transactions carry low endogenous fees, while the transactions that actually settle value on-chain expose a P2A anchor — so if the mempool is congested at force-close time, any participant can attach a CPFP child to bump the fee.
 
 ### Stale-state protection for P2A
 
@@ -131,9 +132,10 @@ Worst-case timing for a 2-layer DW factory:
 | Step | Duration |
 |------|----------|
 | Kickoff root confirms | 1 block (≈10 min) |
-| State root DW delay | Up to 432 blocks (≈3 days) |
+| State root DW delay (interior) | Up to 432 blocks (≈3 days) |
 | Kickoff left confirms | 1 block (≈10 min) |
-| State left DW delay | Up to 432 blocks (≈3 days) |
+| State left DW delay (interior) | Up to 432 blocks (≈3 days) |
+| PS leaf publish (latest state TX) | No DW delay (PS chain) — confirms next block |
 | Channel-level to_self_delay (Poon-Dryja) | ≈144 blocks (≈1 day) |
 | **Total worst case** | **≈7 days** |
 
@@ -145,10 +147,14 @@ With the [[timeout-sig-trees|inverted timelock]] design, even if a client cannot
 
 > Any party holding a copy of the pre-signed timeout transaction can broadcast it after the CLTV height. The LSP must act before the timeout or lose its capital locked in the factory.
 
+## Design note
+
+The **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels (TX-chained, CLTV-gated), so a unilateral exit just publishes the latest PS state TX with no leaf-level relative-timelock delay — the Decker-Wattenhofer races described above apply only to the interior tree layers.
+
 ## Related Concepts
 
 - [[decker-wattenhofer-invalidation]] — The race mechanism at each state level
 - [[kickoff-vs-state-nodes]] — Why the alternation prevents cascade failures
-- [[shachain-revocation|Revocation Secrets]] — Punishment for broadcasting old states
+- [[shachain-revocation|Revocation Secrets]] — Punishment at the **inner channel** (BOLT-2 / Poon-Dryja) level for broadcasting an old commitment; the factory-tree L-stock instead uses the [[l-stock-redistribution|redistribution TX]]
 - [[cooperative-close]] — The much better alternative
 - [[security-model]] — Threat analysis and trust assumptions, including force-close guarantees

@@ -2,6 +2,7 @@
 
 > **Summary**: The LSP gathers online clients, constructs a tree of pre-signed transactions, and funds the whole structure with one on-chain UTXO — all without any individual client needing on-chain Bitcoin. Many users safely share a single UTXO, with standard Lightning channels at the leaves.
 
+
 ## Overview
 
 Building a factory is a coordinated ceremony between the LSP and all participating clients. It runs once at factory creation, producing a set of pre-signed transactions that encode all unilateral exit paths.
@@ -35,21 +36,21 @@ graph TD
     KR --> SR["State Root<br/>Signers: All clients + LSP<br/>nSeq: DW Layer 0"]
     SR --> KL["Kickoff Left<br/>Signers: A, B + LSP"]
     SR --> KRi["Kickoff Right<br/>Signers: C, D + LSP"]
-    KL --> SL["State Left<br/>Signers: A, B + LSP<br/>nSeq: DW Layer 1"]
-    KRi --> SRi["State Right<br/>Signers: C, D + LSP<br/>nSeq: DW Layer 1"]
-    SL --> ChA["A & LSP channel"]
-    SL --> ChB["B & LSP channel"]
-    SL --> LS1["LSP liquidity stock"]
-    SRi --> ChC["C & LSP channel"]
-    SRi --> ChD["D & LSP channel"]
-    SRi --> LS2["LSP liquidity stock"]
+    KL --> SL["State Left (interior)<br/>Signers: A, B + LSP<br/>nSeq: DW Layer 1"]
+    KRi --> SRi["State Right (interior)<br/>Signers: C, D + LSP<br/>nSeq: DW Layer 1"]
+    SL --> PA["PS leaf — Alice + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: A&LSP channel + L-stock"]
+    SL --> PB["PS leaf — Bob + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: B&LSP channel + L-stock"]
+    SRi --> PC["PS leaf — Carol + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: C&LSP channel + L-stock"]
+    SRi --> PD["PS leaf — Dave + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: D&LSP channel + L-stock"]
 ```
+
+Each bottom DW state node (`State Left` / `State Right`) is **interior** — it no longer holds channels directly. Its outputs feed per-client [[pseudo-spilman-leaves|pseudo-Spilman leaves]], and each leaf produces one client's channel plus that client's slice of the LSP L-stock.
 
 For each node, the LSP computes:
 - The [[what-is-musig2|MuSig2]] aggregate public key for the signer subset
 - The [[what-is-taproot|Taproot]] output key (with [[timeout-sig-trees|CLTV timeout]] script tree)
 - The transaction outputs and amounts
-- The initial [[decker-wattenhofer-invalidation|DW]] nSequence values
+- The initial [[decker-wattenhofer-invalidation|DW]] nSequence values for the **interior** state nodes (leaves are [[pseudo-spilman-leaves|pseudo-Spilman]] chains with no relative timelock)
 
 ## Step 3: Sign Everything (The MuSig2 Ceremony)
 
@@ -89,7 +90,7 @@ With N nodes in the tree, each requiring its own MuSig2 session, the LSP coordin
 
 ### Nonce Pools
 
-Since each signing session needs fresh nonces, signers pre-generate **nonce pools** — batches of 64+ nonces — so the ceremony can proceed without waiting for on-demand nonce generation.
+Since each signing session needs fresh nonces, signers pre-generate an in-memory **nonce pool** so the ceremony can proceed without waiting for on-demand nonce generation. Each secret nonce is **single-use**: it is consumed once, zeroed immediately after its partial signature is produced, and **never persisted to disk or reused**. A signer that restarts or reconnects generates a **fresh** pool and re-exchanges public nonces — reusing a secret nonce across sessions would leak the private key (per BIP-327), so the design is deliberately *stateless* about secret nonces.
 
 ## Step 4: Fund On-Chain
 
@@ -102,7 +103,7 @@ Once ALL tree transactions are signed:
 ```
 Funding TX:
   Input:  LSP's existing UTXO(s)
-  Output: P2TR(MuSig2(A, B, C, D, LSP) | CLTV timeout)
+  Output: P2TR(MuSig2(A, B, C, D, LSP))
           Amount: e.g., 1.0 BTC total
 ```
 
@@ -136,6 +137,10 @@ Clients can enter the factory with **zero on-chain Bitcoin**. The LSP provides a
 | Nonce reuse | Private key leaked | Mitigated by single-use nonce pools with consumption tracking |
 | LSP refuses to fund after signing | No factory created | Clients lose nothing (no funds were committed) |
 | Funding tx doesn't confirm | Factory delayed | Wait for confirmation, or RBF the funding tx |
+
+## Design note
+
+The factory **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels — one client + the LSP, TX-chained and CLTV-gated, with no Decker-Wattenhofer nSequence at the leaf. The DW nSequence values computed above apply only to the interior tree nodes.
 
 ## Related Concepts
 

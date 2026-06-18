@@ -160,13 +160,13 @@ graph TD
 The watchtower needs to:
 1. Recognize which DW layer a revoked state belongs to
 2. Broadcast the correct current state for that layer
-3. Handle the [[shachain-revocation|revocation]] punishment mechanism
+3. Handle the inner BOLT-2 leaf-channel [[shachain-revocation|revocation]] punishment (leaf commitments only — not the DW layers)
 4. Monitor leaf channel outputs for revoked commitments too
 5. Manage fee-bumping for all these transactions
 
 ### The Storage Problem
 
-For a factory with 3 DW layers and 4 states per layer (64 epochs), the watchtower needs to store response data for each possible revoked state across each layer. With 8 clients, that's a lot of pre-signed penalty data to hold.
+For a factory with 3 DW layers, the watchtower stores just the **current** state per layer to rebroadcast (winning the nSequence race) — *not* per-revoked-state penalty data, which at the DW layers does not exist. Per-state penalty data applies only to the inner leaf-channel commitments, and the L-stock is handled by the [[l-stock-redistribution|redistribution TX]]. The bulk to hold is therefore the inner-channel revocation responses across all clients.
 
 ### Current Status
 

@@ -9,7 +9,7 @@ Every Bitcoin transaction input has a 32-bit `nSequence` field. When certain bit
 ```
 BIP-68 nSequence encoding:
 [31]    = disable flag (if set, BIP-68 relative timelock is not enforced)
-[30:23] = reserved (must be zero for BIP-68 enforcement)
+[30:23] = ignored by consensus (BIP-68 only checks bit 31, bit 22, and bits 15:0)
 [22]    = type flag (0 = blocks, 1 = 512-second intervals)
 [15:0]  = value (number of blocks or number of 512-second intervals)
 ```
