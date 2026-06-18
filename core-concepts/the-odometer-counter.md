@@ -89,9 +89,11 @@ Root kickoff  ─── (no delay)
 
 A deeper tree with an additional level of branching would add a 3rd DW layer, giving 64 states — suitable for factories requiring more frequent structural updates.
 
-When a leaf state update happens:
-1. The inner layer ticks — its nSequence decrements by one step
+When an **interior** state update happens (a structural change — re-shaping a subtree, adding or removing a client, or a factory refresh):
+1. The inner DW layer ticks — its nSequence decrements by one step
 2. If the inner layer has exhausted all states, it resets and the outer layer ticks (a carry)
+
+Ordinary **per-leaf advances** (payments, splices, liquidity buys) do **not** tick the odometer — they extend a [[pseudo-spilman-leaves|pseudo-Spilman]] chain and consume no nSequence budget. Only interior restructures advance the DW counter.
 
 ## What Happens When It Runs Out?
 

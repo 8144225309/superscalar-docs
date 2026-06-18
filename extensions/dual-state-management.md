@@ -1,31 +1,31 @@
 # Dual State Management
 
-> **Summary**: When a factory updates state, the leaf channels must transition from the old funding outpoint to the new one. During the transition, both states are valid simultaneously — the same problem splicing solves, applied to off-chain factory state.
+> **Summary**: When a leaf advances its state, its inner channel must transition from the old funding outpoint to the new one. During the transition, both states are valid simultaneously — the same problem splicing solves, applied to off-chain factory state.
 
 ## The Problem
 
-When the [[the-odometer-counter|DW odometer]] advances (a factory state update), the leaf state transactions change. This means the **funding outpoint** for each Lightning channel at the leaves changes too:
+When a leaf advances its [[pseudo-spilman-leaves|pseudo-Spilman chain]] (a per-leaf state advance — a rebalance, a splice, or a liquidity buy), the new leaf state transaction carries a **fresh channel output**. This means the **funding outpoint** for that leaf's inner Lightning channel changes:
 
 ```mermaid
 graph TD
-    subgraph "Before Update (Epoch 4)"
-        S1["state_left (nSeq=288)<br/>txid: abc123..."]
+    subgraph "Before advance (leaf state N)"
+        S1["PS leaf state N<br/>txid: abc123..."]
         S1 --> CH1["Alice & LSP Channel<br/>funding: abc123:0"]
     end
 
-    subgraph "After Update (Epoch 5)"
-        S2["state_left (nSeq=144)<br/>txid: def456..."]
+    subgraph "After advance (leaf state N+1)"
+        S2["PS leaf state N+1<br/>(spends abc123 channel out)<br/>txid: def456..."]
         S2 --> CH2["Alice & LSP Channel<br/>funding: def456:0"]
     end
 
     S1 -.->|"Same channel,<br/>different outpoint"| S2
 ```
 
-The channel balance is unchanged, but the funding outpoint it spends from has changed. The channel must maintain valid commitment transactions for both outpoints during the transition, since either the old or new factory state could end up on-chain.
+The channel balance is unchanged, but the funding outpoint it spends from has changed. The channel must maintain valid commitment transactions for both outpoints during the transition, since either the old or new leaf state could end up on-chain. (An interior restructure that re-publishes the tree path above a leaf has the same effect on the outpoint, but the common trigger is the per-leaf advance.)
 
 ## Failure Mode Without Dual State
 
-If the channel only tracks the new funding outpoint but the old factory state ends up on-chain (e.g., during a force-close race), the channel's commitment transactions become **invalid** — they reference an outpoint that was never published on-chain. Alice could lose her funds.
+If the channel only tracks the new funding outpoint but the old leaf state ends up on-chain (e.g., during a force-close race), the channel's commitment transactions become **invalid** — they reference an outpoint that was never published on-chain. Alice could lose her funds.
 
 **Both states must be maintained until the transition is finalized.**
 
@@ -90,10 +90,10 @@ Once both commitment sets are exchanged, the channel resumes normal operation. N
 
 The old state commitments can be safely discarded when:
 
-1. The new factory state is **fully signed** by all participants (the DW mechanism ensures it can outrace the old state on-chain, assuming an honest party broadcasts it)
-2. The old state's [[shachain-revocation|shachain secret]] has been shared (making it economically irrational for the LSP to broadcast the old factory state)
+1. The new leaf state TX is **fully co-signed** (1 client + LSP). Because each [[pseudo-spilman-leaves|pseudo-Spilman]] state spends the prior state's channel output, the new state **structurally supersedes** the old one — the old state's channel output is already spent, so it can no longer put a competing funding outpoint on-chain.
+2. The matching pre-signed [[l-stock-redistribution|redistribution TX]] for the new state has been co-signed, so if the LSP ever publishes the old leaf state, its liquidity stock is clawed back to clients.
 
-Both conditions are typically satisfied simultaneously during a state advance. In practice, old state commitment sets are retained until the next state update replaces them.
+Both conditions are satisfied simultaneously during a state advance (the redistribution TX is co-signed in the same ceremony). In practice, old-state commitment sets are retained until the next state advance replaces them. Note this is leaf-level **structural ordering plus L-stock redistribution — not revocation**: the factory/leaf state itself has no revocation secret. Revocation applies only to the inner BOLT-2 channel (see [[shachain-revocation]]).
 
 ## Batched Commitment Signing
 
@@ -107,17 +107,18 @@ For efficiency, the dual state commitments can be batched — old and new state 
 | **Dual state needed** | Yes — old/new splice | Yes — old/new factory state |
 | **Quiesce required** | Yes | Yes |
 | **Commitment signing** | Both outpoints | Both outpoints |
-| **Resolution** | Splice tx confirms on-chain | DW nSequence race (unilateral) or revocation (cooperative) |
+| **Resolution** | Splice tx confirms on-chain | PS chain ordering at the leaf + [[l-stock-redistribution]] (unilateral); cooperative close otherwise |
 
 The machinery is conceptually similar. Existing splicing implementations in CLN, Eclair, and LDK demonstrate the dual-state pattern, though factory transitions differ in that the funding outpoint changes off-chain rather than via an on-chain transaction.
 
 ## Implementation
 
-Dual state management is required for factory state updates — without it, advancing the DW odometer would invalidate leaf channel commitment transactions. The implementation signs commitment transactions for both the old and new funding outpoints during every state advance, and the test suite verifies that the correct state resolves on-chain regardless of which factory epoch is published.
+Dual state management is required for leaf state advances — without it, extending a leaf's pseudo-Spilman chain (which moves the channel to a new funding outpoint) would invalidate the inner channel's existing commitment transactions. The implementation signs commitment transactions for both the old and new funding outpoints during every state advance, and the test suite verifies that the correct state resolves on-chain regardless of which leaf state is published.
 
 ## Related Concepts
 
 - [[splicing-integration]] — The analogous on-chain mechanism
 - [[updating-state]] — What triggers the need for dual state management
+- [[pseudo-spilman-leaves]] — The leaf chain whose advance moves the channel's funding outpoint
+- [[l-stock-redistribution]] — Protects the old state's L-stock if the LSP ever publishes it
 - [[force-close]] — Why both states must be valid simultaneously
-- [[the-odometer-counter]] — The state machine that drives transitions

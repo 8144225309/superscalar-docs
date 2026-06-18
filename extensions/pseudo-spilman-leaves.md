@@ -16,7 +16,6 @@ graph LR
     O1 --> S2["State 2<br/>(spends UTXO 1, latest)"]
 
     style S2 fill:#51cf66,color:#fff
-    style O2 fill:#51cf66,color:#fff
 ```
 
 The leaf cohort is **1 client + LSP**, 2-of-2 MuSig. The MuSig key aggregation is computed once at factory build (`node->keyagg.agg_pubkey`) and reused for every state advance in the chain.
