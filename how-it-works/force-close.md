@@ -36,11 +36,11 @@ sequenceDiagram
     A->>Chain: 3. After state_root confirms:<br/>Publish kickoff_left (confirms next block)
     Note over Chain: No relative timelock
 
-    A->>Chain: 4. Publish state_left (latest version)
+    A->>Chain: 4. Publish state_left (innermost interior DW, latest version)
     Note over Chain: DW Layer 1 delay: up to 432 blocks
 
-    A->>Chain: 5. Publish state_left_sibling (must also resolve)
-    Note over Chain: DW Layer 1 delay
+    A->>Chain: 5. After state_left confirms:<br/>Publish Alice's latest PS leaf state TX
+    Note over Chain: NO DW/nSequence delay at the leaf —<br/>it spends the prior state's channel output,<br/>so the latest state wins structurally
 
     Note over Chain: Alice's channel is now on-chain
 
@@ -50,8 +50,8 @@ sequenceDiagram
 ### Transaction Count
 
 ```
-1 kickoff_root + 1 state_root + 1 kickoff_left + 2 state_leaves + 1 channel close
-= 6 transactions total
+1 kickoff_root + 1 state_root + 1 kickoff_left + 1 state_left (interior DW)
++ 1 PS leaf state TX + 1 channel close = 6 transactions total
 ```
 
 In general: **O(log N) tree transactions + 1 channel close**.
@@ -133,9 +133,10 @@ Worst-case timing for a 2-layer DW factory:
 | Step | Duration |
 |------|----------|
 | Kickoff root confirms | 1 block (≈10 min) |
-| State root DW delay | Up to 432 blocks (≈3 days) |
+| State root DW delay (interior) | Up to 432 blocks (≈3 days) |
 | Kickoff left confirms | 1 block (≈10 min) |
-| State left DW delay | Up to 432 blocks (≈3 days) |
+| State left DW delay (interior) | Up to 432 blocks (≈3 days) |
+| PS leaf publish (latest state TX) | No DW delay (PS chain) — confirms next block |
 | Channel-level to_self_delay (Poon-Dryja) | ≈144 blocks (≈1 day) |
 | **Total worst case** | **≈7 days** |
 

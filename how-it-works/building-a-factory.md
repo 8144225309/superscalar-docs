@@ -37,21 +37,21 @@ graph TD
     KR --> SR["State Root<br/>Signers: All clients + LSP<br/>nSeq: DW Layer 0"]
     SR --> KL["Kickoff Left<br/>Signers: A, B + LSP"]
     SR --> KRi["Kickoff Right<br/>Signers: C, D + LSP"]
-    KL --> SL["State Left<br/>Signers: A, B + LSP<br/>nSeq: DW Layer 1"]
-    KRi --> SRi["State Right<br/>Signers: C, D + LSP<br/>nSeq: DW Layer 1"]
-    SL --> ChA["A & LSP channel"]
-    SL --> ChB["B & LSP channel"]
-    SL --> LS1["LSP liquidity stock"]
-    SRi --> ChC["C & LSP channel"]
-    SRi --> ChD["D & LSP channel"]
-    SRi --> LS2["LSP liquidity stock"]
+    KL --> SL["State Left (interior)<br/>Signers: A, B + LSP<br/>nSeq: DW Layer 1"]
+    KRi --> SRi["State Right (interior)<br/>Signers: C, D + LSP<br/>nSeq: DW Layer 1"]
+    SL --> PA["PS leaf — Alice + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: A&LSP channel + L-stock"]
+    SL --> PB["PS leaf — Bob + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: B&LSP channel + L-stock"]
+    SRi --> PC["PS leaf — Carol + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: C&LSP channel + L-stock"]
+    SRi --> PD["PS leaf — Dave + LSP<br/>2-of-2; TX-chained, CLTV-gated<br/>out: D&LSP channel + L-stock"]
 ```
+
+Each bottom DW state node (`State Left` / `State Right`) is **interior** — it no longer holds channels directly. Its outputs feed per-client [[pseudo-spilman-leaves|pseudo-Spilman leaves]], and each leaf produces one client's channel plus that client's slice of the LSP L-stock.
 
 For each node, the LSP computes:
 - The [[what-is-musig2|MuSig2]] aggregate public key for the signer subset
 - The [[what-is-taproot|Taproot]] output key (with [[timeout-sig-trees|CLTV timeout]] script tree)
 - The transaction outputs and amounts
-- The initial [[decker-wattenhofer-invalidation|DW]] nSequence values
+- The initial [[decker-wattenhofer-invalidation|DW]] nSequence values for the **interior** state nodes (leaves are [[pseudo-spilman-leaves|pseudo-Spilman]] chains with no relative timelock)
 
 ## Step 3: Sign Everything (The MuSig2 Ceremony)
 

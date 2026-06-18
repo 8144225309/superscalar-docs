@@ -2,7 +2,7 @@
 
 > **Summary**: The factory tree alternates between two types of nodes. State nodes run the Decker-Wattenhofer time-delay mechanism. Kickoff nodes are "circuit breakers" that prevent a state update at one level from forcing all lower levels to be published on-chain.
 
-> **Note (current design)**: This page uses the simplified original binary model in which the leaves are drawn as Decker-Wattenhofer state nodes. The current canonical design uses **[[pseudo-spilman-leaves|pseudo-Spilman leaves]]** instead — TX-chained, CLTV-gated, one client per leaf, with no DW/nSequence delay at the leaf — and DW applies only to the interior layers. See [[pseudo-spilman-leaves]] and [[tree-shaping-and-multi-process]] for how the tree is shaped under the current model. The diagrams below are kept as the original conceptual model.
+> **Note (current design)**: The diagrams on this page show the canonical design — the kickoff/state alternation is **interior-only** (Decker-Wattenhofer), and at the bottom each innermost state node feeds **[[pseudo-spilman-leaves|pseudo-Spilman leaves]]** (TX-chained, CLTV-gated, one client per leaf, with no DW/nSequence delay at the leaf). The cascade-prevention argument here is about the **interior** DW layers; the PS leaves below them take no part in any DW race. See [[pseudo-spilman-leaves]] and [[tree-shaping-and-multi-process]] for how the tree is shaped.
 
 ## The Two Node Types
 
@@ -39,11 +39,13 @@ This is one of the most important design decisions in SuperScalar, and the answe
 Imagine a tree with ONLY state nodes (no kickoff nodes). Each state node uses decreasing nSequence values:
 
 ```
-state_root (nSeq = 288)
-  └── state_leaf (nSeq = 432)
+state_root   (nSeq = 288)          ← interior DW state node
+  └── state_inner (nSeq = 432)      ← innermost interior DW state node
+        ├── PS leaf (Alice + LSP)   ← TX-chained, NO nSequence (CLTV-gated)
+        └── PS leaf (Bob + LSP)     ← TX-chained, NO nSequence (CLTV-gated)
 ```
 
-Now you update the leaf state. The new leaf transaction has `nSeq = 288`. However, **the leaf transaction's nSequence is relative to when its parent confirms**. If the parent (state_root) is also a DW transaction that might be replaced, which version of the parent does the leaf's delay start from?
+The PS leaves at the bottom take no part in any DW race (they have no nSequence), so the problem is entirely between the two **interior** DW state nodes. Now you update the inner state. The new transaction has `nSeq = 288`. However, **its nSequence is relative to when its parent confirms**. If the parent (state_root) is also a DW transaction that might be replaced, which version of the parent does the inner node's delay start from?
 
 If `state_root` gets replaced (a newer version confirms first), every child transaction that referenced the old `state_root` output becomes invalid — the output they spend no longer exists. The entire subtree below it must be re-signed and re-published against the new output.
 
@@ -95,17 +97,21 @@ state_root (DW layer 0: 432→288→144→0) ← Multiple versions compete
 kickoff_left (disabled nSeq) ← Always the same transaction
     │
 state_left (DW layer 1: 432→288→144→0) ← Multiple versions compete
-    ├── A&L channel
-    ├── B&L channel
-    └── L liquidity stock (LSP-only funds for selling inbound liquidity)
+    ├── out_A → Alice PS leaf  (Alice + LSP, 2-of-2; TX-chained, no nSequence)
+    │             each state: [ A&L channel | L-stock ]
+    └── out_B → Bob   PS leaf  (Bob + LSP, 2-of-2; TX-chained, no nSequence)
+                  each state: [ B&L channel | L-stock ]
 ```
+
+`state_left` is the **innermost interior DW state node**; it no longer holds the channels directly. Each of its outputs feeds a per-client pseudo-Spilman leaf, and those leaves are CLTV-gated TX chains with no relative timelock.
 
 **Scenario**: Alice wants to force-close.
 1. Publish `kickoff_root` → confirms next block (no delay)
 2. Adversarial party publishes old `state_root` (nSeq=432) → honest party publishes latest `state_root` (nSeq=144) → latest wins
 3. After state_root confirms, publish `kickoff_left` → confirms next block (no delay)
 4. Same DW race for `state_left` → latest version wins
-5. Alice's channel is now on-chain
+5. After `state_left` confirms, Alice publishes her **latest PS leaf state TX** — no DW/nSequence delay at the leaf (it spends the prior state's channel output, so the latest wins structurally)
+6. Alice's channel is now on-chain
 
 **The two kickoff nodes prevented the DW races from interfering with each other.** Layer 0's race resolves independently of Layer 1's race.
 
