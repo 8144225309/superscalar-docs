@@ -2,7 +2,6 @@
 
 > **Summary**: The factory tree alternates between two types of nodes. State nodes run the Decker-Wattenhofer time-delay mechanism. Kickoff nodes are "circuit breakers" that prevent a state update at one level from forcing all lower levels to be published on-chain.
 
-> **Note (current design)**: The diagrams on this page show the canonical design — the kickoff/state alternation is **interior-only** (Decker-Wattenhofer), and at the bottom each innermost state node feeds **[[pseudo-spilman-leaves|pseudo-Spilman leaves]]** (TX-chained, CLTV-gated, one client per leaf, with no DW/nSequence delay at the leaf). The cascade-prevention argument here is about the **interior** DW layers; the PS leaves below them take no part in any DW race. See [[pseudo-spilman-leaves]] and [[tree-shaping-and-multi-process]] for how the tree is shaped.
 
 ## The Two Node Types
 

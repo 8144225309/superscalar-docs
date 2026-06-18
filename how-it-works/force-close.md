@@ -2,7 +2,6 @@
 
 > **Summary**: If the LSP misbehaves or a client cannot cooperate, any participant can publish pre-signed tree transactions on-chain. The Decker-Wattenhofer mechanism ensures the newest state wins. The process takes up to a week and requires on-chain fees, but funds are always recoverable.
 
-> **Leaf note**: At the **leaves**, SuperScalar now uses [[pseudo-spilman-leaves|pseudo-Spilman]] chaining — a unilateral exit publishes the **latest PS state TX** (which spends the prior state's output), with **no DW/nSequence delay at the leaf**. The Decker-Wattenhofer races described below apply to the **interior** tree layers.
 
 ## When Does Force-Close Happen?
 
@@ -147,6 +146,10 @@ This is significantly worse than a regular Lightning force-close (≈1 day). The
 With the [[timeout-sig-trees|inverted timelock]] design, even if a client cannot publish the tree (e.g., they lost the pre-signed transactions), a pre-signed `nLockTime` transaction exists that distributes funds to clients once the factory's CLTV timeout height is reached:
 
 > Any party holding a copy of the pre-signed timeout transaction can broadcast it after the CLTV height. The LSP must act before the timeout or lose its capital locked in the factory.
+
+## Design note
+
+The **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels (TX-chained, CLTV-gated), so a unilateral exit just publishes the latest PS state TX with no leaf-level relative-timelock delay — the Decker-Wattenhofer races described above apply only to the interior tree layers.
 
 ## Related Concepts
 

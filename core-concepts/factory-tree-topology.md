@@ -2,7 +2,6 @@
 
 > **Summary**: The factory is a tree of pre-signed transactions rooted in a single shared UTXO. The **interior** alternates between kickoff nodes (circuit breakers) and Decker-Wattenhofer state nodes (which split participants into smaller groups). At the **bottom**, each leaf is a **[[pseudo-spilman-leaves|pseudo-Spilman leaf]]** — one client + the LSP in a 2-of-2 MuSig, TX-chained and CLTV-gated — producing a standard Lightning channel output plus the LSP's liquidity stock.
 
-> **Note (current design)**: The diagrams on this page show the canonical design: **[[pseudo-spilman-leaves|pseudo-Spilman leaves]]** at the bottom (TX-chained, CLTV-gated, one client per leaf, with no DW/nSequence delay at the leaf), and **Decker-Wattenhofer only in the interior** kickoff/state layers. A single interior state node that groups two clients therefore feeds **two** PS leaves — one per client. See [[pseudo-spilman-leaves]] and [[tree-shaping-and-multi-process]] for how the tree is shaped.
 
 ## Why a Tree?
 
@@ -187,6 +186,10 @@ If Alice force-closes (the 4-client tree above):
 - **Carol, Dave** (other subtree): because `state_root` was published, their branch's parent is on-chain, so they must resolve their subtree too.
 
 **Subtree isolation** — where a whole sibling *half* of the tree stays completely off-chain — kicks in with **deeper trees**: in an 8-client tree, force-closing Alice publishes only her half, leaving the other four clients' subtree untouched. See [[tree-shaping-and-multi-process]].
+
+## Design note
+
+The leaf mechanism here is **pseudo-Spilman** (ZmnSCPxj's [t/1242 refinement](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242)): each leaf is a TX-chained channel between one client and the LSP, so [[decker-wattenhofer-invalidation|Decker-Wattenhofer]] invalidation applies only to the interior tree layers — not the leaves. (The original t/1143 design put DW state nodes at the leaves; the diagrams above reflect the current PS-leaf model.) Wider, multi-client leaves are handled by [[tree-shaping-and-multi-process|sub-factories]].
 
 ## Related Concepts
 

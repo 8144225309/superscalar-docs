@@ -2,7 +2,6 @@
 
 > **Summary**: The LSP gathers online clients, constructs a tree of pre-signed transactions, and funds the whole structure with one on-chain UTXO — all without any individual client needing on-chain Bitcoin. Many users safely share a single UTXO, with standard Lightning channels at the leaves.
 
-> **Leaf note**: In the current canonical design the factory **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels — TX-chained and CLTV-gated, with **no Decker-Wattenhofer nSequence delay at the leaf**. The tree diagrams below show the simplified original DW model at every layer; DW now applies only to the **interior** nodes.
 
 ## Overview
 
@@ -138,6 +137,10 @@ Clients can enter the factory with **zero on-chain Bitcoin**. The LSP provides a
 | Nonce reuse | Private key leaked | Mitigated by single-use nonce pools with consumption tracking |
 | LSP refuses to fund after signing | No factory created | Clients lose nothing (no funds were committed) |
 | Funding tx doesn't confirm | Factory delayed | Wait for confirmation, or RBF the funding tx |
+
+## Design note
+
+The factory **leaves** are [[pseudo-spilman-leaves|pseudo-Spilman]] channels — one client + the LSP, TX-chained and CLTV-gated, with no Decker-Wattenhofer nSequence at the leaf. The DW nSequence values computed above apply only to the interior tree nodes.
 
 ## Related Concepts
 
