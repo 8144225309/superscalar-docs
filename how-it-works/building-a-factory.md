@@ -90,7 +90,7 @@ With N nodes in the tree, each requiring its own MuSig2 session, the LSP coordin
 
 ### Nonce Pools
 
-Since each signing session needs fresh nonces, signers pre-generate **nonce pools** — batches of 64+ nonces — so the ceremony can proceed without waiting for on-demand nonce generation.
+Since each signing session needs fresh nonces, signers pre-generate an in-memory **nonce pool** so the ceremony can proceed without waiting for on-demand nonce generation. Each secret nonce is **single-use**: it is consumed once, zeroed immediately after its partial signature is produced, and **never persisted to disk or reused**. A signer that restarts or reconnects generates a **fresh** pool and re-exchanges public nonces — reusing a secret nonce across sessions would leak the private key (per BIP-327), so the design is deliberately *stateless* about secret nonces.
 
 ## Step 4: Fund On-Chain
 
