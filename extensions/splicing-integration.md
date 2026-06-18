@@ -6,7 +6,7 @@
 
 Splicing changes a channel's funding outpoint while keeping the channel operational; both old and new states coexist until the splice confirms on-chain.
 
-SuperScalar factory state transitions have a **directly analogous problem**: when the factory tree updates (via the [[the-odometer-counter|DW odometer]]), the funding outpoint for each leaf channel changes. The channel needs to seamlessly transition from the old factory state to the new one.
+SuperScalar leaf advances have a **directly analogous problem**: when a leaf advances its [[pseudo-spilman-leaves|pseudo-Spilman]] chain (a rebalance, a splice, or a liquidity buy), the funding outpoint for that leaf channel changes, and the channel needs to seamlessly transition from the old state to the new one. (Interior tree restructures move the outpoint too, but the per-leaf advance is the common case — and it consumes no [[the-odometer-counter|odometer]] budget.)
 
 ZmnSCPxj explicitly identified this connection:
 
@@ -19,7 +19,7 @@ See [[dual-state-management]] for the full details of how this works.
 ```mermaid
 graph TD
     subgraph "Current: Factory-Only Operations"
-        F1["Factory state update<br/>(DW odometer tick)"]
+        F1["Leaf advance<br/>(PS chain extension)"]
         F1 --> U["Channels update<br/>funding outpoint"]
     end
 

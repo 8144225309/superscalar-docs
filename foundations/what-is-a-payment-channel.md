@@ -52,7 +52,7 @@ This is the fundamental problem of payment channels, and different designs solve
 | **Decker-Wattenhofer** | Newer states have shorter time delays and always confirm first, making old states useless |
 | **eltoo / LN-Symmetry** | Any newer state can simply replace any older state (requires APO soft fork) |
 
-SuperScalar uses **both** Decker-Wattenhofer (for the factory tree) and Poon-Dryja (for the individual Lightning channels at the leaves). See [[decker-wattenhofer-invalidation]].
+SuperScalar uses all three, by layer: **Decker-Wattenhofer** at the interior tree layers, **[[pseudo-spilman-leaves|pseudo-Spilman]]** TX-chaining at the leaves, and **Poon-Dryja** inside each leaf's BOLT-2 Lightning channel. See [[decker-wattenhofer-invalidation]] and [[pseudo-spilman-leaves]].
 
 ## Why This Matters for SuperScalar
 
