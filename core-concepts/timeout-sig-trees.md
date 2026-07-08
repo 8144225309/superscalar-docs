@@ -68,7 +68,7 @@ Timeout-sig-trees emulate **OP_CHECKTEMPLATEVERIFY (CTV)** — a proposed soft f
 | LSP recovery if clients vanish | Built into tree structure | Via CLTV timeout script path |
 | Consensus changes required | **Yes** (soft fork) | **No** |
 
-## The Inverted Timelock (Design Refinement)
+## The Inverted Timelock
 
 In the original design, the timeout defaults **favored the LSP** — after timeout, the LSP gets everything. ZmnSCPxj later refined this by **inverting the default**:
 

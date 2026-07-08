@@ -15,7 +15,7 @@
 
 ### P2A Anchors and Fee-Bumping
 
-P2A anchors appear on the **distribution transaction** and **channel commitment/penalty transactions** — not on tree node transactions (kickoff, state, leaf state). Tree transactions use endogenous fees baked in at signing time. The distribution tx's P2A anchor allows fee-bumping the final payout during force-close.
+P2A anchors appear on the **tree node transactions** (kickoff, state, leaf state), the **distribution transaction**, and **channel commitment/penalty transactions**. The tree-node anchors were added for the mass-exit fee-race — the "thundering herd" at the shared factory CLTV: when many clients force-close at once, any exiting party can attach a CPFP child to its branch to bump the fee, rather than relying only on the endogenous fee baked in at signing time (which may be stale by the time of a mass exit). Verified on signet — force-close tree + commitment txs carry the P2A anchor, and a live CPFP child spent one.
 
 > **Upgrade path**: Migrating to `nVersion=3` (v3/TRUC policy, available since Bitcoin Core 28) allows P2A anchors to carry 0 sats via the ephemeral dust exemption introduced in Bitcoin Core 29.
 

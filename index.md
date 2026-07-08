@@ -40,7 +40,7 @@ The current SuperScalar design (per ZmnSCPxj's [t/1242 refinement](https://delvi
 
 1. **[[pseudo-spilman-leaves]]** — Canonical leaf mechanism. TX chaining: each state advance produces a new TX that spends the previous state's channel output, so old states cannot be activated without invalidating the chain ancestor. No nSequence delay, no revocation keys, no per-leaf watchtower needed.
 2. **[[l-stock-redistribution|L-stock SPK + Redistribution TX]]** — Per-leaf liquidity-stock output is `or(N-of-N MuSig, L+CSV)`. At every state advance, a pre-signed *redistribution transaction* is co-signed that redistributes the L-stock equally to clients if the LSP publishes a stale state. Replaces the older OP_RETURN burn from t/1143.
-3. **[[tree-shaping-and-multi-process|Mixed-arity tree shape]]** — Interior layers fan out at independently-configurable arities (e.g. `--arity 2,4,8`), with optional static-near-root depths that contribute no DW counter. Keeps worst-path exit time inside BOLT's 2016-block CLTV ceiling at N=128 clients per factory.
+3. **[[tree-shaping-and-multi-process|Mixed-arity tree shape]]** — Interior layers fan out at independently-configurable arities (e.g. `--arity 2,4,8`), with optional static-near-root depths that contribute no DW counter. Keeps worst-path exit time inside BOLT's 2016-block CLTV ceiling at N=127 clients per factory (the design maximum — 128 MuSig2 signers = LSP + 127 clients).
 4. **[[timeout-sig-trees]]** — N-of-N multisig key-path with CLTV timeout script-path fallback so the LSP can recover capital if clients disappear permanently.
 5. **[[decker-wattenhofer-invalidation]]** — Decrementing relative timelocks. Applies to the interior tree layers above the PS leaves; the leaves themselves use TX chaining instead.
 6. **[[laddering]]** — Multiple factories with staggered lifetimes spread the on-chain footprint to ≈1 tx/day. A factory can also be refreshed in place without anyone migrating.
@@ -64,7 +64,7 @@ See [[roadmap]] for the development plan and [[network-economics]] for cost and 
 ### Protocol Design — Current (Pseudo-Spilman era)
 1. [[pseudo-spilman-leaves]] — Canonical leaf mechanism (TX chaining)
 2. [[l-stock-redistribution|L-stock SPK + Redistribution TX]] — Cheating recovery via per-client redistribution
-3. [[tree-shaping-and-multi-process|Mixed-arity, sub-factories, multi-process]] — Tree shape configuration that keeps N=128 inside BOLT 2016
+3. [[tree-shaping-and-multi-process|Mixed-arity, sub-factories, multi-process]] — Tree shape configuration that keeps N=127 inside BOLT 2016
 4. [[factory-tree-topology]] — The tree structure
 5. [[kickoff-vs-state-nodes]] — Why interior layers alternate
 6. [[timeout-sig-trees]] — N-of-N signing with LSP timeout fallback
@@ -109,7 +109,7 @@ The reference implementation is available at [github.com/8144225309/SuperScalar]
 | Factory construction (N-of-N MuSig2 tree signing) | Working |
 | Pseudo-Spilman leaves (TX chaining, canonical) | Working |
 | L-stock SPK + per-client redistribution TX (canonical, t/1242) | Working |
-| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=128) |
+| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=127) |
 | In-place whole-tree CLTV refresh | Working |
 | Force close / unilateral exit | Working |
 | PTLC assisted exit (key turnover) | Working |

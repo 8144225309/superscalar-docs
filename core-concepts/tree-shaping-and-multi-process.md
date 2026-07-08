@@ -1,10 +1,10 @@
 # Mixed-Arity Trees, Sub-Factories, and Multi-Process Operation
 
-> Three closely-related design features that together let a single factory hold many clients (verified to 128) with worst-path exit time inside BOLT's 2016-block CLTV ceiling, while letting each participant run in their own process — typically on their own machine.
+> Three closely-related design features that together let a single factory hold many clients (verified to 127 — the design maximum, since 128 MuSig2 signers = LSP + 127 clients) with worst-path exit time inside BOLT's 2016-block CLTV ceiling, while letting each participant run in their own process — typically on their own machine.
 
 ## Why mixed arity
 
-Every Decker-Wattenhofer state layer contributes `step_blocks × (states_per_layer − 1)` blocks of BIP-68 CSV delay to the worst-case unilateral-exit path. A binary tree of depth `d` stacks this delay linearly in tree depth. Combined with the BOLT 2016-block `final_cltv_expiry` ceiling, this caps the factory size — a uniformly-binary tree at N=128 has worst-path delay 3456 blocks, which exceeds the ceiling.
+Every Decker-Wattenhofer state layer contributes `step_blocks × (states_per_layer − 1)` blocks of BIP-68 CSV delay to the worst-case unilateral-exit path. A binary tree of depth `d` stacks this delay linearly in tree depth. Combined with the BOLT 2016-block `final_cltv_expiry` ceiling, this caps the factory size — a uniformly-binary tree at N=127 has worst-path delay 3456 blocks (tree depth 7), which exceeds the ceiling.
 
 ZmnSCPxj's recommendation in [t/1242](https://delvingbitcoin.org/t/superscalar-laddered-timeout-tree-structured-decker-wattenhofer-factories-with-pseudo-spilman-leaves/1242):
 
@@ -41,11 +41,11 @@ For comparison:
 
 | Shape | N | Worst-path delay | BOLT 2016 status |
 |-------|---|------------------|------------------|
-| Uniformly binary | 128 | 3456 blocks | rejected (exceeds ceiling) |
+| Uniformly binary | 127 | 3456 blocks | rejected (exceeds ceiling) |
 | Mixed-arity 2,4,8 | 64 | ≤ 2016 blocks | valid |
-| Mixed-arity 2,4,8 with static-near-root 2 | 128 | 864 blocks | canonical |
+| Mixed-arity 2,4,8 with static-near-root 2 | 127 | 864 blocks | canonical |
 
-The 864-block worst-path delay at N=128 leaves ample slack inside the BOLT 2016-block ceiling for routing CLTV delta on the HTLCs carried by the inner channels.
+The 864-block worst-path delay at N=127 leaves ample slack inside the BOLT 2016-block ceiling for routing CLTV delta on the HTLCs carried by the inner channels.
 
 ## Sub-factories: k² PS chain extension
 

@@ -20,7 +20,7 @@ If you want to try the full stack, clone all four. The reference implementation 
 | Factory construction (N-of-N MuSig2 tree signing) | Working |
 | Pseudo-Spilman leaves (canonical leaf mechanism) | Working |
 | L-stock SPK + per-client redistribution TX (canonical, t/1242) | Working |
-| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=128) |
+| Mixed-arity interior + static-near-root tree shapes | Working (verified to N=127) |
 | Whole-tree CLTV refresh (in-place rotation) | Working |
 | Sub-factory k² PS chain extension | Working |
 | Force close / unilateral exit | Working |
@@ -46,15 +46,13 @@ The protocol stack is feature-complete for what's been designed; the remaining w
 
 LDK and LND ports are coming soon — see [[ports/coming-soon|Ecosystem Ports]] for the current status of each.
 
-### Trustless watchtower
+### Trustless watchtower as a service
 
-A trustless watchtower lets third-party operators monitor and penalize old-state broadcasts without holding any client-coupled state. Design properties:
+The standalone watchtower already runs **trustlessly** today — it monitors old-state broadcasts and broadcasts the pre-signed penalty / L-stock poison without holding any client revocation secrets (see *Current state* above; proven on regtest and real signet). The remaining work turns that base into a third-party **service**:
 
-- Encrypted breach-remedy delivery to watchtower
+- Encrypted breach-remedy delivery to independent watchtower operators
 - Payment-for-service model (watchtower earns a portion of recovered funds)
 - Multi-tower redundancy for resilience against watchtower failure
-
-Being built before release.
 
 ---
 
