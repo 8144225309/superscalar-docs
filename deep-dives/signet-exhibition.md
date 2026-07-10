@@ -106,6 +106,27 @@ The timeout-tree leaves are timelock-gated (144-block CSV). Rather than a separa
 
 Anyone can verify this on-chain with no cooperation from us.
 
+## Exhibit 10 — The Decker-Wattenhofer odometer (state checkpoints)
+
+Inside a factory, balances are updated **off-chain** by re-signing the state tree. Each update **decrements the state's relative-timelock (nSequence)** — the "odometer" — so a newer state can always be published ahead of a stale one, which is how old states are invalidated. Here a factory advanced its DW counter and the state nodes' nSequence stepped **down** on-chain:
+
+```
+Node 3: nSequence 0x32 (50) → 0x1E (30)
+Node 5: nSequence 0x32 (50) → 0x1E (30)
+```
+
+| height | txid | what it is |
+|---|---|---|
+| 312619 | [`6e3264f7…`](https://mempool.space/signet/tx/6e3264f7c2c8676e8eec757296e2463568655419a76f1a26b095abbf55bf5e08) | re-signed state tree broadcast (nSequence decremented — the odometer) |
+
+A subtlety worth stating: **re-signing settles nothing on-chain.** It produces a new *agreed off-chain state* (the updated balances) and shortens the invalidation timelock; the funds stay pooled in the one shared UTXO. Settlement only happens at a **close** — cooperative (one distribution TX) or unilateral (broadcast the tree). This exhibit force-closes right after the advance purely to make the new state *visible* on-chain; in normal operation that broadcast never happens.
+
+## The full lifecycle: laddering and its liveness cost
+
+Stitching the exhibits into a factory's whole life: **create** (Exhibit 6) → **use** (real payments, Exhibit 6) → **checkpoint/advance** (Exhibit 10) → **rotate to a new epoch** (Exhibit 5, `d766282→09762ddd`) or **cooperatively retire** (Exhibit 8, `c116878`, 8/8) → or **exit unilaterally** (Exhibits 1–3).
+
+One honest limit surfaced here: driving a *single continuous factory* through **multiple** rotations back-to-back needs every client online and cooperating at **each** epoch boundary. That worked at one boundary (8/8, `c116878`), but a multi-epoch standalone run stalled when clients didn't all cooperate at a turnover — the same N-of-N liveness dependency as the 127-client close below. The rotation *mechanism* is proven; sustaining it across many epochs is an operational cost, not a protocol guarantee.
+
 ---
 
 ## Honest findings
