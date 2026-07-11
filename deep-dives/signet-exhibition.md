@@ -121,6 +121,26 @@ Node 5: nSequence 0x32 (50) → 0x1E (30)
 
 A subtlety worth stating: **re-signing settles nothing on-chain.** It produces a new *agreed off-chain state* (the updated balances) and shortens the invalidation timelock; the funds stay pooled in the one shared UTXO. Settlement only happens at a **close** — cooperative (one distribution TX) or unilateral (broadcast the tree). This exhibit force-closes right after the advance purely to make the new state *visible* on-chain; in normal operation that broadcast never happens.
 
+## Exhibit 11 — Distribution at expiry (the offline-forever safety net)
+
+If a factory reaches its shared CLTV **without** rotating or cooperatively closing — the clients are gone and no one drove a coordinated exit — the LSP broadcasts a **pre-signed, multi-party co-signed, client-favored distribution transaction** that spends the funding root and pays every client their balance directly on-chain. It needs no live cooperation at expiry: every party co-signed it at factory creation, so *anyone* can broadcast it once the timelock matures. Here a minimized factory (N=2, arity-2) reached its CLTV at block 312659 and the LSP auto-broadcast the distribution:
+
+| height (nLockTime) | txid | what it is |
+|---|---|---|
+| 312659 | [`9f3e0829…`](https://mempool.space/signet/tx/9f3e082943b4133261525d6e98137317535365c8f49f0535c4ae059ac9050997) | co-signed distribution TX at CLTV expiry (167 vB, 3 outputs — one per participant) |
+
+An honest note, because it is the kind of thing this exhibition exists to catch: producing this exhibit **surfaced and fixed a real bug**. The single-process `--test-distrib` path had been *rebuilding* the distribution TX with placeholder demo keys, which cannot spend a strong-key funding output — it was rejected on-chain with `Invalid Schnorr signature`. The fix routes the exhibit through the **actual** transaction the creation ceremony co-signs (`dist_signed_tx`), which is what a real deployment broadcasts. So this exhibit both demonstrates the mechanism and validates the production signing path end-to-end.
+
+## Exhibit 12 — JIT channels (just-in-time inbound liquidity)
+
+A client that needs inbound liquidity it does not yet have can be handed a **just-in-time channel**: on demand, the LSP funds a fresh 2-of-2 (LSP + client) channel from its own on-chain wallet, waits for confirmations, and the channel opens — no factory rebuild required. Here the ceremony was driven deterministically (`--test-jit`) and opened a real 50,000-sat channel on signet:
+
+| height | txid | what it is |
+|---|---|---|
+| 312657 | [`6d580835…`](https://mempool.space/signet/tx/6d580835f2913e68924c943c73771893b8dc49e1844e3157663f7d87ce6f1988) | JIT channel funding (2-of-2 LSP+client, 50k sats, channel id 0x8000) |
+
+The channel opened, the lifecycle test passed, and it then cooperatively closed cleanly. This is the first JIT channel exercised on **real signet** — earlier attempts kept *cooperatively closing the factory instead*, because a dying factory whose clients are cooperating correctly prefers rotation / coop-close over spinning up new JIT liquidity. `--test-jit` forces the JIT path so the mechanism can be shown on-chain.
+
 ## The full lifecycle: laddering and its liveness cost
 
 Stitching the exhibits into a factory's whole life: **create** (Exhibit 6) → **use** (real payments, Exhibit 6) → **checkpoint/advance** (Exhibit 10) → **rotate to a new epoch** (Exhibit 5, `d766282→09762ddd`) or **cooperatively retire** (Exhibit 8, `c116878`, 8/8) → or **exit unilaterally** (Exhibits 1–3).
@@ -134,7 +154,7 @@ One honest limit surfaced here: driving a *single continuous factory* through **
 The exhibition is deliberately not airbrushed. Three things are worth stating plainly, because they are real properties of the system, not blemishes to hide:
 
 - **A cooperative close at N=127 is a liveness bet.** The 24-hour soak lost roughly a quarter of its client daemons to ordinary attrition (running 127 daemons on one modest host is demanding). A cooperative close is N-of-N — it needs *every* participant — so it correctly could not complete and **fell back to force-close**. This is the designed behavior, and a useful data point: very large factories pay a real liveness cost, which is exactly why the timeout-tree fallback exists. (The factory funds were then recovered via the 128-key aggregate spend in Exhibit 7.)
-- **Distribution-at-expiry is a fallback, not the default.** When clients cooperate, a dying factory **rotates or cooperatively closes** (Exhibits 5 and 8) — the better outcome. A pre-signed distribution that fires purely on expiry is the safety net for when rotation *cannot* happen (clients gone), so with cooperative clients the LSP correctly prefers rotation.
+- **Distribution-at-expiry is a fallback, not the default.** When clients cooperate, a dying factory **rotates or cooperatively closes** (Exhibits 5 and 8) — the better outcome. A pre-signed distribution that fires purely on expiry is the safety net for when rotation *cannot* happen (clients gone) — now demonstrated on-chain in Exhibit 11 — so with cooperative clients the LSP correctly prefers rotation.
 - **Fees and timing.** Signet was congested during parts of this run, so low-fee transactions confirmed slowly. For the *cooperative* paths shown here this is harmless — their timing is relative, and a late confirmation simply shifts the schedule. Fee-adequacy only becomes security-critical on the **adversarial** recourse paths (a penalty or poison that must confirm before a timelock matures), which is treated separately in the [Security Model](#deep-dives/security-model) and network-economics work.
 
 ## Provenance and recovery
