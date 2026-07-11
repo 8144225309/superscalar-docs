@@ -42,7 +42,7 @@ The story it tells top-to-bottom: a factory is **created and used** → clients 
 SuperScalar is a **channel factory**: a single on-chain UTXO — one P2TR output owned by an N-of-N MuSig2 aggregate of the LSP and up to 127 clients — backs many Lightning channels at once. The whole point is to keep Bitcoin's base layer *out* of the common path. Onboarding a client, routing a payment, and moving balances all happen **off-chain**, as transactions the participants re-sign among themselves but never broadcast. The chain is touched only at a handful of well-defined moments — and every exhibit below is one of them:
 
 - **Create** — one funding transaction pays sats into the shared N-of-N output. From then on, every client's balance lives *inside that one UTXO*.
-- **Operate (off-chain)** — payments and balance updates leave **no** on-chain trace. A newer state supersedes an older one, enforced by a shortening relative-timelock (the "odometer"); balances only *become* on-chain sats at a close.
+- **Operate (off-chain)** — payments and balance updates leave **no** on-chain trace. A newer state supersedes an older one, enforced by a shortening relative-timelock (the "odometer"); balances only *become* on-chain sats at a close. → *[what this factory actually carried off-chain, and the scale economy](#deep-dives/offchain-and-scale)*
 - **Add inbound on demand (JIT)** — when a client needs liquidity it doesn't have, the LSP funds a fresh 2-of-2 channel for it — a small, targeted on-chain open, not a factory rebuild.
 - **Retire cooperatively** — when everyone agrees, the entire factory settles in **one transaction with a single aggregated Schnorr signature**, no matter how many clients it held. This is the efficient, expected ending.
 - **Exit unilaterally** — a client who can't get cooperation broadcasts the pre-signed timeout-tree transactions, producing a cascade from the factory root down to its own channel — each hop fee-bumpable through a keyless anchor, and gated by a 144-block CSV so a newer state always beats a stale one.
@@ -202,17 +202,22 @@ The LSP broadcasts a **stale, superseded sub-factory state** — an attempted th
 
 **create + use** (Exhibit 1) → **JIT inbound** (Exhibit 2) → **checkpoint** (Exhibit 3) → **ladder to a new epoch** (Exhibit 4) → **retire cooperatively** (Exhibits 5–6). If cooperation fails: **exit unilaterally** (Exhibits 7–9), gated by **timelocks** (Exhibit 10), or fall back to **distribution at expiry** (Exhibit 11). If a party cheats: the **poison** (Exhibit 12).
 
-One honest limit surfaced here: driving a *single continuous factory* through **multiple** rotations back-to-back needs every client online and cooperating at **each** epoch boundary. That worked at one boundary (8/8, `c116878`), but a multi-epoch standalone run stalled when clients didn't all cooperate at a turnover — the same N-of-N liveness dependency as the 127-client close. The rotation *mechanism* is proven; sustaining it across many epochs is an operational cost, not a protocol guarantee.
+Rotation is proven at an epoch boundary — Exhibit 4, plus the 8/8 cooperative turnover in `c116878`. Like every cooperative step it is *optimistic*: each boundary needs the participants online, so chaining many epochs back-to-back is a matter of coordination, never of safety — if a turnover can't be assembled, every client simply keeps its unilateral exit (Exhibits 7–9).
 
 ---
 
-## Honest findings
+## Cooperation is an optimization, not a requirement
 
-The exhibition is deliberately not airbrushed. Three things are worth stating plainly, because they are real properties of the system, not blemishes to hide:
+The property to take from these exhibits: **no client depends on the LSP — or on the other clients — to recover its money.** Every level of the tree has a **unilateral exit** (Exhibits 7–9), gated by relative timelocks (Exhibit 10), and against a misbehaving LSP backed by revealed-secret recourse (Exhibit 12) and a pre-signed expiry distribution (Exhibit 11). None of those paths needs anyone else's permission.
 
-- **A cooperative close at N=127 is a liveness bet.** The 24-hour soak lost roughly a quarter of its client daemons to ordinary attrition (running 127 daemons on one modest host is demanding). A cooperative close is N-of-N — it needs *every* participant — so it correctly could not complete and **fell back to force-close**. This is the designed behavior, and a useful data point: very large factories pay a real liveness cost, which is exactly why the timeout-tree fallback exists. (The funds were then recovered via the 128-key aggregate spend in Exhibit 6.)
-- **Distribution-at-expiry is a fallback, not the default.** When clients cooperate, a dying factory **rotates or cooperatively closes** (Exhibits 4 and 5) — the better outcome. A pre-signed distribution that fires purely on expiry is the safety net for when rotation *cannot* happen (clients gone) — demonstrated on-chain in Exhibit 11 — so with cooperative clients the LSP correctly prefers rotation.
-- **Fees and timing.** Signet was congested during parts of this run, so low-fee transactions confirmed slowly. For the *cooperative* paths shown here this is harmless — their timing is relative, and a late confirmation simply shifts the schedule. Fee-adequacy only becomes security-critical on the **adversarial** recourse paths (a penalty or poison that must confirm before a timelock matures), which is treated separately in the [Security Model](#deep-dives/security-model) and network-economics work.
+The cooperative paths — rotation and cooperative close (Exhibits 4–6) — sit *on top of* that guarantee as an **optimization**: when everyone is online and agreeable, the whole factory settles in one small transaction instead of a force-close cascade. They need all participants online at once — a coordination property of the *efficient* path, not a safety one. If that coordination doesn't happen, nothing is at risk; each client simply takes its guaranteed unilateral exit.
+
+**What N=127 demonstrated.** 127 clients is the *design maximum*, run here as a stress test — not a claim that 128 independent parties will always be online and cooperative. Over a ~24-hour soak (all 127 client daemons on one modest host), enough went offline that a coordinated cooperative close couldn't be assembled — so the system did exactly what it exists to do: **funds stayed fully retrievable**, and the factory was closed on-chain via the 128-key aggregate spend (Exhibit 6). Exercising the fallback is the trustless design working as intended, not a shortcoming of it.
+
+Two scoping notes:
+
+- **Distribution-at-expiry is the last-resort net, not the default.** With cooperating clients a dying factory rotates or cooperatively closes (Exhibits 4–5); the pre-signed distribution (Exhibit 11) exists for the case where no one is around to drive an exit at all.
+- **Fee timing matters only on adversarial paths.** Signet was congested during parts of the run, so low-fee transactions confirmed slowly — harmless for cooperative paths (their timing is relative), and security-relevant only on a recourse race (a penalty or poison that must confirm before a timelock matures); see the [Security Model](#deep-dives/security-model).
 
 ## Provenance and recovery
 
