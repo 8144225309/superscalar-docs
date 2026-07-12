@@ -104,12 +104,12 @@ A live factory doesn't have to force-close to be refreshed. When clients coopera
 
 ## 5. Retiring cooperatively at legible N — rotation into a cooperative close
 
-When a factory reaches the end of its schedule and its clients are online, the LSP's preferred path is not a force-close but a **cooperative** one: a key turnover followed by a clean close. Here an 8-client factory reaches its dying window and closes with **all 8 clients cooperating** — the same mechanism as Exhibit 6, at a size small enough to read every output.
+When a factory reaches the end of its schedule and its clients are online, the LSP's preferred path is not a force-close but a **cooperative** one: a key turnover followed by a clean close. Here an 8-client factory reaches its dying window and closes with **all 8 clients cooperating** — the same cooperative N-of-N signing as Exhibit 6, but a *rotation* that folds the factory into a single consolidated output rather than the terminal, per-client distribution of Exhibit 6 (its 1-input-to-128).
 
 | height | txid | what it is |
 |---|---|---|
 | 312532 | [`6aa35632…`](https://mempool.space/signet/tx/6aa35632cbeedeb5a92c22d30de962f8ad4cdcb8c8c335f693790766cab6203c) | factory funding (N=8) |
-| 312543 | [`c116878…`](https://mempool.space/signet/tx/c116878091ce0f5d5aa1b812edd119fd1408b9308579eda3ea2836ca687f3af7) | **clean cooperative close via rotation — 8/8 clients cooperated** |
+| 312543 | [`c116878…`](https://mempool.space/signet/tx/c116878091ce0f5d5aa1b812edd119fd1408b9308579eda3ea2836ca687f3af7) | **clean cooperative close via rotation — 8/8 clients cooperated**: the 2,000,000-sat factory folded into a single output (1,997,267 out, 2,733-sat fee) |
 
 ## 6. The live 127-party cooperative close — real payments, then one signature
 
