@@ -4,7 +4,7 @@
 
 All transactions below are on **signet**, built by SuperScalar **v0.2.0**. **Every txid links to the live transaction on [mempool.space](https://mempool.space/signet)** — click any of them to inspect the real on-chain data.
 
-The keystone result: a **127-client factory funded, paid through with real Lightning HTLCs, and then cooperatively closed by all 127 clients signing live** — one aggregated 128-key signature spending one UTXO, confirmed on-chain, and reconciling to every participant's balance to the satoshi.
+The keystone result: a **127-client factory funded, paid through with real Lightning HTLCs, and cooperatively closed** — settled by a single on-chain transaction, **one input to 128 outputs**, confirmed on signet and conserving to the satoshi. (What the chain proves directly, versus what the software attests about that transaction, is spelled out precisely in Exhibit 6 — this page is careful about the difference.)
 
 ## The exhibits at a glance
 
@@ -121,11 +121,16 @@ The keystone. A fresh factory at the **design maximum** — one LSP + **127 clie
 | (off-chain) | — | **8 real HTLC payments** settled end-to-end through the channels, plus demo payments |
 | **312777** | [`d1468287…`](https://mempool.space/signet/tx/d1468287a30839962ca849d9b88f3f6442e9d6a357141180a401ce1b4d0dd727) | **live 127-party cooperative close** — **1 input** (the shared factory UTXO) → **128 outputs** (LSP + 127 clients), one aggregated 128-key Schnorr signature |
 
-Read the transaction on mempool.space and the shape is unmistakable: **one input, 128 outputs, one signature.** However many clients the factory holds, the cooperative close is always this — a single small transaction. The 128 outputs total **12,094,231 sats** against a **5,732-sat fee**; nothing is created or destroyed. And the split is not arbitrary: each output equals that participant's balance **to the satoshi** — clients who *sent* a payment close lower by exactly what they sent, clients who *received* one close higher by exactly what they received, and every client who did nothing closes at the identical untouched baseline (no skim). We reconcile this independently: on-chain output == the LSP's internal ledger == each client's expected balance, exact. (The full per-client arithmetic — legible at a smaller N where every line can be checked by eye — is in the *[Security Model](#deep-dives/security-model)*.)
+**What the chain proves, and what we attest — kept separate on purpose.** On mempool.space, anyone can verify *directly*: **one input** (the shared factory UTXO) → **128 outputs**, spent by a single **key-path** Schnorr signature, with **12,094,231 sats** out against a **5,732-sat fee** — exact conservation, nothing created or destroyed. Two things a taproot **key-path** spend deliberately *cannot* reveal — it is byte-for-byte indistinguishable whether one key signed or a hundred did — we **attest** from the software and its logs, we do not claim the chain shows them:
 
-This is the cooperative close as it actually runs: many independent signers, real traffic first, one on-chain transaction to settle it all.
+- that lone signature is the **MuSig2 aggregate of all 128 participant keys** — each client daemon contributed its partial signature in the live ceremony (a real cooperative close, not one party signing for all);
+- each of the 128 outputs equals that participant's balance **to the satoshi** — senders down by exactly what they sent, receivers up by exactly what they received, idle clients untouched — independently reconciled off-chain as *on-chain output == the LSP's ledger == expected*.
 
-> An earlier artifact, [`0ca6b929`](https://mempool.space/signet/tx/0ca6b929e2d7a52633b33d3a0a36f531d6230f49ffccbac7486977d745aa1056) (block 312535), shows the same 128-key MuSig2 aggregate *key-path spend* at the design maximum — but it was assembled at teardown by the operator (who held every seed) to recover the flagship of Exhibit 1. It proves the cryptography works at 128 keys on a real chain; Exhibit 6 above proves the **live ceremony** does, which is the stronger claim.
+The full per-client arithmetic, legible at a smaller N where every line can be checked by eye, is in the *[Security Model](#deep-dives/security-model)*.
+
+This is the cooperative close as it actually runs: many signers, real traffic first, one on-chain transaction to settle it all. (One honest caveat for completeness: these 127 clients were 127 independent daemons driven by one test operator on one host — separate keys, DBs, and processes, each signing on its own — not 127 unrelated people; the *protocol* treats them as independent signers, which is what the aggregate close exercises.)
+
+> An earlier artifact, [`0ca6b929`](https://mempool.space/signet/tx/0ca6b929e2d7a52633b33d3a0a36f531d6230f49ffccbac7486977d745aa1056) (block 312535), is the same *shape* — a design-max key-path spend of a 128-signer factory root — but it was assembled at **teardown by the operator** (who held every seed) to recover the flagship of Exhibit 1, **not** produced by a live 127-daemon ceremony. It stands only as the recovery artifact; **Exhibit 6 above is the live cooperative close**, which is the claim that matters.
 
 ---
 
@@ -204,9 +209,9 @@ A party broadcasts a **stale, superseded sub-factory state** — an attempted th
 | 312269 | [`e82035f2…`](https://mempool.space/signet/tx/e82035f2b724c0c16225fada682af20684a91bc04aa62f59718a1a2e3c4a53a2) | **cheat** — broadcasts a stale/superseded sub-state |
 | 312272 | [`d2ae19cf…`](https://mempool.space/signet/tx/d2ae19cf39547b7eb69930ef8ad92e3d7f51e683b02cd8643a74d45640d4a4f0) | **poison recourse** — 2-way redistribution, 21,085 sats to clients |
 
-### The secret-less watchtower — justice without keys
+### And a secret-less watchtower behind it
 
-The poison above is one arm of the recourse; the other is the **watchtower**, and it is deliberately *trustless*. A SuperScalar watchtower holds **no private keys** — only pre-signed penalty transactions in its `wt.db`. So even if the LSP vanishes, **anyone** can run a standalone watchtower that catches a cheat and confirms the penalty. This is proven end-to-end: a party broadcast a **revoked commitment** (a stale balance favoring itself); a secret-less standalone watchtower — `wt.db` only, no keys — hydrated its commitment watches, detected the on-chain breach, broadcast the pre-signed penalty, and the penalty **confirmed on-chain and clawed the funds back** — the cheater ended with nothing, losing only the mining fee. The channel-commitment, sub-factory, and factory recourse paths have each been fired and confirmed this way; the [Security Model](#deep-dives/security-model) walks the full matrix.
+The poison above is one arm of the recourse; the other is the **watchtower**, and it holds **no private keys** — only pre-signed penalty transactions in its `wt.db`. So even if the LSP vanishes, *anyone* can run a standalone watchtower that catches a revoked-state broadcast and confirms the penalty. We drive this end-to-end in the test suite — a revoked commitment is broadcast, and a secret-less watchtower (`wt.db` only, no keys) detects it and gets the pre-signed penalty confirmed, clawing the funds back so the cheater keeps nothing but the mining fee. The detection layer is described in [Detecting LSP Misbehavior](#deep-dives/lsp-misbehavior), and the full penalty matrix — factory, sub-factory, and channel-commitment — with its on-chain proofs is collected in the [Security Model](#deep-dives/security-model).
 
 ---
 
@@ -228,7 +233,7 @@ The cooperative paths — rotation and cooperative close (Exhibits 4–6) — si
 
 127 clients is the *design maximum*. Two honest data points, not one:
 
-- **The cooperative close works live at 127.** Exhibit 6 (`d1468287`) is the real ceremony: a 127-client factory funded, paid through with real HTLCs, and closed by **all 127 clients signing** — one aggregated transaction, confirmed on-chain, reconciling to the satoshi. That is the claim that matters, and it is proven.
+- **The cooperative close works live at 127.** Exhibit 6 (`d1468287`) is the real ceremony: a 127-client factory funded, paid through with real HTLCs, and closed by **all 128 signers** in one on-chain transaction — 1 input → 128 outputs, confirmed on signet and conserving to the satoshi (the aggregate-signature and per-client-amount details are attested as noted in Exhibit 6). That is the claim that matters, and it is proven.
 - **Sustaining 127 independent daemons for a full day is itself hard.** The flagship of Exhibit 1 ran all 127 client daemons on one modest host for a **~24-hour soak**. Over that window enough daemons drifted offline that a coordinated close of *that particular* factory couldn't be reassembled — so the system did exactly what it exists to do: **funds stayed fully retrievable**, and it settled on-chain via the 128-key aggregate spend (`0ca6b929`). Exercising the fallback is the trustless design working as intended.
 
 The two together are the whole point: the protocol's cooperative path is proven at the design maximum, *and* its safety never rests on 128 parties staying continuously online — which is precisely why every client keeps a unilateral exit regardless.
