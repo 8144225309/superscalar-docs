@@ -1,6 +1,6 @@
 # SuperScalar off-chain: payments, state, and scale
 
-The [signet exhibition](#deep-dives/signet-exhibition-v4) is the **on-chain** story — the handful of transactions a factory writes to Bitcoin across its whole life. This page is the other half: the **off-chain** layer, where SuperScalar actually does its work, and the numbers a real run produced there.
+The [signet exhibition](#deep-dives/signet-exhibition) is the **on-chain** story — the handful of transactions a factory writes to Bitcoin across its whole life. This page is the other half: the **off-chain** layer, where SuperScalar actually does its work, and the numbers a real run produced there.
 
 ## Why almost nothing is on-chain
 
@@ -34,4 +34,4 @@ Done as individual Lightning channels, the same 127 would cost roughly **254** o
 
 The exhibition's transactions are independently verifiable — every txid is on-chain, inspectable by anyone. **The off-chain figures on this page are not, and by their nature can't be:** off-chain activity leaves no transaction, so the payment count and soak duration come from the LSP's own logs, not from Bitcoin. The one number here you *can* verify is the on-chain count — the two transactions linked above.
 
-For the trust model underneath all of this — why a client never has to rely on the LSP or on the other clients — see [*Cooperation is an optimization, not a requirement*](#deep-dives/signet-exhibition-v4) in the exhibition, and the [Security Model](#deep-dives/security-model).
+For the trust model underneath all of this — why a client never has to rely on the LSP or on the other clients — see [*Cooperation is an optimization, not a requirement*](#deep-dives/signet-exhibition) in the exhibition, and the [Security Model](#deep-dives/security-model).
