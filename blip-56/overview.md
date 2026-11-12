@@ -26,6 +26,14 @@ factory_early_warning_time   (u16)
 
 The `factory_protocol_id` distinguishes SuperScalar from other (future) factory protocols.
 
+SuperScalar's `factory_protocol_id` is the SHA-256 hash of the protocol name and major version, joined by `/` and encoded as UTF-8:
+
+- String: `SuperScalar/1`
+- Bytes (hex): `53757065725363616c61722f31`
+- `factory_protocol_id` = SHA-256 of those bytes: `c3a082d0fcb768d76999f4f8ad672f7110fbef6a13a1697686c7073961c842f1`
+
+bLIP-56 recommends deriving a protocol id as the SHA-256 of the protocol's name and major version, but does not require that form; any 32-byte value that is unique to the protocol is valid. SuperScalar follows the recommendation. A future incompatible major version would use `SuperScalar/2` and therefore a different id.
+
 Channels opened with this TLV MUST:
 - Use `option_zeroconf` channel type
 - Set HTLC `cltv_expiry ≥ current block + factory_early_warning_time + 1`
